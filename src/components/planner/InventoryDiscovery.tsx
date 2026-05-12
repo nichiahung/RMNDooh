@@ -22,20 +22,20 @@ export function InventoryDiscovery() {
         if (!matchName && !matchDistrict && !matchAddress) return false;
       }
 
-      if (filters.districts.length > 0) {
-        if (!filters.districts.includes(item.district)) return false;
+      if ((filters.districts?.length ?? 0) > 0) {
+        if (!filters.districts!.includes(item.district)) return false;
       }
 
-      if (filters.venueTypes.length > 0) {
-        if (!filters.venueTypes.includes(item.venueType)) return false;
+      if ((filters.venueTypes?.length ?? 0) > 0) {
+        if (!filters.venueTypes!.includes(item.venueType)) return false;
       }
 
-      if (filters.screenTypes.length > 0) {
-        if (!filters.screenTypes.includes(item.screenType)) return false;
+      if ((filters.screenTypes?.length ?? 0) > 0) {
+        if (!filters.screenTypes!.includes(item.screenType)) return false;
       }
 
-      if (filters.audienceTags.length > 0) {
-        const hasMatch = item.audienceTags.some(aud => filters.audienceTags.includes(aud));
+      if ((filters.audienceTags?.length ?? 0) > 0) {
+        const hasMatch = item.audienceTags.some(aud => filters.audienceTags!.includes(aud));
         if (!hasMatch) return false;
       }
 

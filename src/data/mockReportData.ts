@@ -130,7 +130,7 @@ export const mockReportData: CampaignReport[] = [
     campaignId: 'camp-rep-3',
     campaignName: 'Airport Traveler Promotion',
     advertiserName: 'Global Bank',
-    status: 'paused',
+    status: 'completed',
     startDate: getPastDate(5),
     endDate: getPastDate(-20),
     totalBudget: 300000,
@@ -145,10 +145,10 @@ export const mockReportData: CampaignReport[] = [
       { date: getPastDate(2), plays: 500, estimatedImpressions: 40000, budgetSpent: 15000 },
     ],
     locationDelivery: [
-      { locationId: 'inv-006', locationName: 'Songshan Airport', district: 'Songshan', screenCount: 1, plays: 1500, estimatedImpressions: 120000, budgetSpent: 45000, status: 'paused' },
+      { locationId: 'inv-006', locationName: 'Songshan Airport', district: 'Songshan', screenCount: 1, plays: 1500, estimatedImpressions: 120000, budgetSpent: 45000, status: 'completed' },
     ],
     creativeDelivery: [
-      { creativeId: 'cr-air-1', creativeName: 'bank_travel.mp4', creativeType: 'video/mp4', plays: 1500, completionRate: 0.80, estimatedImpressions: 120000, status: 'paused' },
+      { creativeId: 'cr-air-1', creativeName: 'bank_travel.mp4', creativeType: 'video/mp4', plays: 1500, completionRate: 0.80, estimatedImpressions: 120000, status: 'completed' },
     ],
     recentPoPLogs: []
   }
