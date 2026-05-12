@@ -2,6 +2,7 @@ import React from 'react';
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { X, MapPin, Users, Monitor, Building, Clock, Calendar, Check } from 'lucide-react';
+import { imgSrc } from '@/utils/imgSrc';
 
 interface Props {
   item: InventoryLocation;
@@ -18,7 +19,7 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
         {/* Header Image */}
         <div className="h-64 relative bg-slate-100 flex-shrink-0">
           <img 
-            src={item.imageUrl} 
+            src={imgSrc(item.imageUrl)}
             alt={item.name} 
             className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}

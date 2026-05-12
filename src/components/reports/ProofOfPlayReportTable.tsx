@@ -1,13 +1,16 @@
-import React from 'react';
+'use client';
+
 import { ProofOfPlayLog } from '@/types/inventory';
 import { CheckCircle, XCircle, PlayCircle, SkipForward } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   logs: ProofOfPlayLog[];
 }
 
 export function ProofOfPlayReportTable({ logs }: Props) {
-  
+  const { t } = useI18n();
+
   const getPlaybackIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
@@ -22,11 +25,11 @@ export function ProofOfPlayReportTable({ logs }: Props) {
     <table className="w-full text-sm text-left whitespace-nowrap">
       <thead className="text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
         <tr>
-          <th className="px-5 py-4 font-semibold">Timestamp</th>
-          <th className="px-5 py-4 font-semibold">Screen</th>
-          <th className="px-5 py-4 font-semibold">Creative</th>
-          <th className="px-5 py-4 font-semibold text-center">Duration</th>
-          <th className="px-5 py-4 font-semibold">Playback Status</th>
+          <th className="px-5 py-4 font-semibold">{t('reports.pop.col.timestamp')}</th>
+          <th className="px-5 py-4 font-semibold">{t('reports.pop.col.screen')}</th>
+          <th className="px-5 py-4 font-semibold">{t('reports.pop.col.creative')}</th>
+          <th className="px-5 py-4 font-semibold text-center">{t('reports.pop.col.duration')}</th>
+          <th className="px-5 py-4 font-semibold">{t('reports.pop.col.playbackStatus')}</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100 bg-white">
@@ -57,7 +60,7 @@ export function ProofOfPlayReportTable({ logs }: Props) {
         {logs.length === 0 && (
           <tr>
             <td colSpan={5} className="px-5 py-12 text-center text-slate-500">
-              No proof-of-play logs available for this campaign yet.
+              {t('reports.pop.noData')}
             </td>
           </tr>
         )}

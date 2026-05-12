@@ -1,23 +1,26 @@
-import React from 'react';
+'use client';
+
 import { LocationDeliveryData, DeliveryStatus } from '@/types/inventory';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   data: LocationDeliveryData[];
 }
 
 export function PlaysByLocationTable({ data }: Props) {
-  
+  const { t } = useI18n();
+
   const getStatusBadge = (status: DeliveryStatus) => {
     switch (status) {
       case 'on_track':
-        return <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">On Track</span>;
+        return <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{t('reports.status.onTrack')}</span>;
       case 'under_delivering':
-        return <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-200">Under Delivering</span>;
+        return <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-200">{t('reports.status.underDelivering')}</span>;
       case 'completed':
-        return <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Completed</span>;
+        return <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{t('reports.status.completed')}</span>;
       case 'paused':
-        return <span className="bg-red-50 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">Paused</span>;
+        return <span className="bg-red-50 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{t('reports.status.paused')}</span>;
       default:
         return <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">{status}</span>;
     }
@@ -27,12 +30,12 @@ export function PlaysByLocationTable({ data }: Props) {
     <table className="w-full text-sm text-left whitespace-nowrap">
       <thead className="text-xs text-slate-500 uppercase tracking-wider bg-slate-50 sticky top-0 border-b border-slate-100 z-10">
         <tr>
-          <th className="px-5 py-3 font-semibold">Location</th>
-          <th className="px-5 py-3 font-semibold text-right">Screens</th>
-          <th className="px-5 py-3 font-semibold text-right">Plays</th>
-          <th className="px-5 py-3 font-semibold text-right">Est. Imp.</th>
-          <th className="px-5 py-3 font-semibold text-right">Spend</th>
-          <th className="px-5 py-3 font-semibold">Status</th>
+          <th className="px-5 py-3 font-semibold">{t('reports.location.col.location')}</th>
+          <th className="px-5 py-3 font-semibold text-right">{t('reports.location.col.screens')}</th>
+          <th className="px-5 py-3 font-semibold text-right">{t('reports.location.col.plays')}</th>
+          <th className="px-5 py-3 font-semibold text-right">{t('reports.location.col.estImp')}</th>
+          <th className="px-5 py-3 font-semibold text-right">{t('reports.location.col.spend')}</th>
+          <th className="px-5 py-3 font-semibold">{t('reports.location.col.status')}</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100 bg-white">
@@ -51,7 +54,7 @@ export function PlaysByLocationTable({ data }: Props) {
         ))}
         {data.length === 0 && (
           <tr>
-            <td colSpan={6} className="px-5 py-8 text-center text-slate-500">No location data available</td>
+            <td colSpan={6} className="px-5 py-8 text-center text-slate-500">{t('reports.location.noData')}</td>
           </tr>
         )}
       </tbody>

@@ -1,7 +1,9 @@
-import React from 'react';
+'use client';
+
 import { Campaign } from '@/types/inventory';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 import { Search } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   campaigns: Campaign[];
@@ -9,7 +11,8 @@ interface Props {
 }
 
 export function CampaignTable({ campaigns, onViewDetails }: Props) {
-  
+  const { t } = useI18n();
+
   const getStatusBadge = (status: Campaign['status']) => {
     const styles: Record<string, string> = {
       draft: 'bg-slate-100 text-slate-600',
@@ -29,37 +32,35 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      
-      {/* Table Toolbar */}
+
       <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
         <div className="relative w-64">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-          <input 
+          <input
             type="text"
-            placeholder="Search campaigns..."
+            placeholder={t('admin.campaigns.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
         <div className="flex space-x-2">
           <select className="text-sm border-slate-300 rounded-lg py-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <option>All Statuses</option>
-            <option>Pending Review</option>
-            <option>Live</option>
+            <option>{t('admin.campaigns.allStatuses')}</option>
+            <option>{t('admin.campaigns.pendingReview')}</option>
+            <option>{t('admin.campaigns.live')}</option>
           </select>
         </div>
       </div>
 
-      {/* Data Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left whitespace-nowrap">
           <thead className="text-xs text-slate-500 uppercase tracking-wider bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="px-6 py-4 font-semibold">Campaign Name</th>
-              <th className="px-6 py-4 font-semibold">Advertiser</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
-              <th className="px-6 py-4 font-semibold text-right">Locations</th>
-              <th className="px-6 py-4 font-semibold text-right">Budget</th>
-              <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.name')}</th>
+              <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.advertiser')}</th>
+              <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.status')}</th>
+              <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.locations')}</th>
+              <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.budget')}</th>
+              <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -67,20 +68,18 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
               <tr key={campaign.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-semibold text-slate-900">{campaign.name}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Submitted: {new Date(campaign.submittedAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{t('admin.campaigns.submitted')} {new Date(campaign.submittedAt).toLocaleDateString()}</div>
                 </td>
                 <td className="px-6 py-4 text-slate-600">{campaign.advertiserName}</td>
-                <td className="px-6 py-4">
-                  {getStatusBadge(campaign.status)}
-                </td>
+                <td className="px-6 py-4">{getStatusBadge(campaign.status)}</td>
                 <td className="px-6 py-4 text-right text-slate-600">{campaign.selectedItems.length}</td>
                 <td className="px-6 py-4 text-right font-semibold text-indigo-600">{formatCurrency(campaign.estimatedBudget)}</td>
                 <td className="px-6 py-4 text-right">
-                  <button 
+                  <button
                     onClick={() => onViewDetails(campaign)}
                     className="text-indigo-600 hover:text-indigo-900 font-medium text-xs px-3 py-1.5 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
                   >
-                    View Details
+                    {t('admin.campaigns.viewDetails')}
                   </button>
                 </td>
               </tr>
@@ -88,7 +87,7 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
             {campaigns.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                  No campaigns found.
+                  {t('admin.campaigns.noResults')}
                 </td>
               </tr>
             )}

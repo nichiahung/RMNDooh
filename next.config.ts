@@ -7,7 +7,10 @@ const nextConfig: NextConfig = {
   basePath: isProd ? "/RMNDooh" : "",
   assetPrefix: isProd ? "/RMNDooh/" : "",
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
+  },
+  env: {
+    NEXT_PUBLIC_BASE_PATH: isProd ? "/RMNDooh" : "",
   },
 };
 

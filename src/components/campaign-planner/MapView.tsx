@@ -8,6 +8,7 @@ import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
 import { isInMediaPlan } from '@/utils/mediaPlanCalculations';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
+import { imgSrc } from '@/utils/imgSrc';
 
 interface Props {
   inventory: InventoryLocation[];
@@ -110,7 +111,7 @@ export function MapView({ inventory, selectedItems, onViewDetails }: Props) {
               <Popup>
                 <div className="w-56 font-sans">
                   <div className="h-24 w-full rounded overflow-hidden mb-2 bg-slate-100">
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    <img src={imgSrc(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                   <h4 className="font-bold text-slate-900 text-sm mb-0.5">{item.name}</h4>
                   <p className="text-xs text-slate-500 mb-2">{item.venueType} · {item.screenType}</p>

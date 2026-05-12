@@ -3,6 +3,7 @@ import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { MapPin, Users, Monitor, Building, Check, Plus, Info } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { imgSrc } from '@/utils/imgSrc';
 
 interface Props {
   item: InventoryLocation;
@@ -20,8 +21,8 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd }: Props)
       {/* Image Header */}
       <div className="h-40 relative overflow-hidden bg-slate-100">
         <img 
-          src={item.imageUrl} 
-          alt={item.name} 
+          src={imgSrc(item.imageUrl)}
+          alt={item.name}
           className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700"
           onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}
         />

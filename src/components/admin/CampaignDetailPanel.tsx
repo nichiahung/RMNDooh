@@ -1,7 +1,9 @@
-import React from 'react';
+'use client';
+
 import { Campaign, InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { X, Check, AlertTriangle, FileVideo, FileImage } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   campaign: Campaign;
@@ -11,7 +13,8 @@ interface Props {
 }
 
 export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStatus }: Props) {
-  
+  const { t } = useI18n();
+
   const handleApprove = () => onUpdateStatus(campaign.id, 'approved');
   const handleReject = () => {
     const notes = window.prompt("Enter rejection reason:");
@@ -21,52 +24,45 @@ export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStat
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
-        {/* Header */}
+
         <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{campaign.name}</h2>
-            <p className="text-sm text-slate-500 mt-1">Advertiser: {campaign.advertiserName}</p>
+            <p className="text-sm text-slate-500 mt-1">{t('admin.detail.advertiser')} {campaign.advertiserName}</p>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors"
-          >
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            
+
             <div className="col-span-2 space-y-6">
-              {/* Status Banner */}
               {campaign.approvalNotes && (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start">
                   <AlertTriangle className="w-5 h-5 text-amber-500 mr-3 flex-shrink-0" />
                   <div>
-                    <h4 className="text-sm font-semibold text-amber-800">Admin Notes</h4>
+                    <h4 className="text-sm font-semibold text-amber-800">{t('admin.detail.adminNotes')}</h4>
                     <p className="text-sm text-amber-700 mt-1">{campaign.approvalNotes}</p>
                   </div>
                 </div>
               )}
 
-              {/* Campaign Meta */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Campaign Details</h3>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">{t('admin.detail.campaignDetails')}</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><span className="text-slate-500">Status:</span> <span className="font-semibold text-slate-900 uppercase">{campaign.status}</span></div>
-                  <div><span className="text-slate-500">Objective:</span> <span className="font-semibold text-slate-900">{campaign.objective}</span></div>
-                  <div><span className="text-slate-500">Start Date:</span> <span className="font-semibold text-slate-900">{campaign.startDate}</span></div>
-                  <div><span className="text-slate-500">End Date:</span> <span className="font-semibold text-slate-900">{campaign.endDate}</span></div>
+                  <div><span className="text-slate-500">{t('admin.detail.status')}</span> <span className="font-semibold text-slate-900 uppercase">{campaign.status}</span></div>
+                  <div><span className="text-slate-500">{t('admin.detail.objective')}</span> <span className="font-semibold text-slate-900">{campaign.objective}</span></div>
+                  <div><span className="text-slate-500">{t('admin.detail.startDate')}</span> <span className="font-semibold text-slate-900">{campaign.startDate}</span></div>
+                  <div><span className="text-slate-500">{t('admin.detail.endDate')}</span> <span className="font-semibold text-slate-900">{campaign.endDate}</span></div>
                 </div>
               </div>
 
-              {/* Selected Inventory */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Selected Inventory ({campaign.selectedItems.length})</h3>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                  {t('admin.detail.selectedInventory')} ({campaign.selectedItems.length})
+                </h3>
                 <div className="space-y-3">
                   {campaign.selectedItems.map(item => {
                     const inv = inventory.find(i => i.id === item.inventoryId);
@@ -78,32 +74,28 @@ export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStat
                           <div className="text-xs text-slate-500">{inv.screenType} • {inv.venueType}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium text-slate-900">{item.days} days</div>
+                          <div className="text-sm font-medium text-slate-900">{item.days} {t('admin.detail.days')}</div>
                           <div className="text-xs text-indigo-600 font-semibold">{formatCurrency(inv.pricePerDay * item.days)}</div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
-
             </div>
 
-            {/* Right Column */}
             <div className="space-y-6">
-              
-              {/* Financials */}
               <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Total Budget</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">{t('admin.detail.totalBudget')}</div>
                 <div className="text-2xl font-bold text-indigo-600 mb-4">{formatCurrency(campaign.estimatedBudget)}</div>
-                
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Est. Impressions</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">{t('admin.detail.estImpressions')}</div>
                 <div className="text-xl font-bold text-slate-900">{formatNumber(campaign.estimatedImpressions)}</div>
               </div>
 
-              {/* Creatives */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Creatives ({campaign.creatives.length})</h3>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
+                  {t('admin.detail.creatives')} ({campaign.creatives.length})
+                </h3>
                 <div className="space-y-3">
                   {campaign.creatives.map(creative => (
                     <div key={creative.id} className="border border-slate-200 rounded overflow-hidden">
@@ -124,36 +116,25 @@ export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStat
                   ))}
                 </div>
               </div>
-
             </div>
 
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3">
           {campaign.status === 'pending_review' && (
             <>
-              <button 
-                onClick={handleReject}
-                className="px-6 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                Reject / Request Changes
+              <button onClick={handleReject} className="px-6 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors">
+                {t('admin.detail.reject')}
               </button>
-              <button 
-                onClick={handleApprove}
-                className="flex items-center px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-              >
-                <Check className="w-4 h-4 mr-2" /> Approve Campaign
+              <button onClick={handleApprove} className="flex items-center px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                <Check className="w-4 h-4 mr-2" /> {t('admin.detail.approve')}
               </button>
             </>
           )}
           {campaign.status !== 'pending_review' && (
-            <button 
-              onClick={onClose}
-              className="px-6 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-colors"
-            >
-              Close
+            <button onClick={onClose} className="px-6 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-colors">
+              {t('admin.detail.close')}
             </button>
           )}
         </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import { InventoryLocation } from '@/types/inventory';
 import { usePlannerStore } from '@/store/usePlannerStore';
 import { Plus, Check, MapPin, Users, Monitor, Building } from 'lucide-react';
+import { imgSrc } from '@/utils/imgSrc';
 
 interface Props {
   item: InventoryLocation;
@@ -33,8 +34,8 @@ export function InventoryCard({ item, onClick }: Props) {
     >
       <div className="h-44 overflow-hidden relative">
         <img 
-          src={item.imageUrl} 
-          alt={item.name} 
+          src={imgSrc(item.imageUrl)}
+          alt={item.name}
           className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
         />
         <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-xs font-bold text-slate-800 shadow-sm border border-slate-100">
