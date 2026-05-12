@@ -111,6 +111,83 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     // Common
     'common.langToggle': '中文',
 
+    // Review step — submitted confirmation
+    'review.submitted.title': 'Campaign Submitted!',
+    'review.submitted.body': 'Your campaign has been successfully submitted for review. Our team will verify creative compliance and confirm inventory availability before launch.',
+    'review.submitted.statusLabel': 'Status',
+    'review.submitted.pendingReview': 'Pending Review',
+    'review.submitted.totalBudget': 'Total Budget',
+    'review.submitted.locations': 'Locations',
+    'review.submitted.createNew': 'Create New Campaign',
+    'review.subtitle': 'Review your settings, creatives, and budget before submitting.',
+    'review.section.settings': 'Campaign Settings',
+    'review.settings.objective': 'Objective',
+    'review.settings.timeSlot': 'Time Slot',
+    'review.settings.dateRange': 'Date Range',
+    'review.settings.coverage': 'Coverage',
+    'review.settings.allDay': 'All Day',
+    'review.settings.next7Days': 'Next 7 Days',
+    'review.settings.taipeiMetro': 'Taipei Metro Area',
+    'review.section.performance': 'Estimated Performance & Budget',
+    'review.perf.totalImp': 'Total Est. Impressions',
+    'review.perf.totalBudget': 'Total Budget',
+    'review.perf.avgCpm': 'Average CPM',
+    'review.perf.perDay': '/ day',
+    'review.perf.highlyEfficient': 'Highly efficient',
+    'review.perf.disclaimer': 'The final pricing and delivery may depend on inventory availability at the time of launch. We will confirm your exact schedule after submission.',
+    'review.section.selectedLocations': 'Selected Locations',
+    'review.table.location': 'Location',
+    'review.table.type': 'Type',
+    'review.table.dailyImp': 'Daily Imp.',
+    'review.table.duration': 'Duration',
+    'review.table.budget': 'Budget',
+    'review.table.days': 'days',
+    'review.section.creatives': 'Creative Assets',
+    'review.creative.pending': 'Pending',
+    'review.backToUpload': 'Back to Upload',
+
+    // Creative preview card statuses
+    'creative.status.uploaded': 'Uploaded',
+    'creative.status.pendingReview': 'Pending Review',
+    'creative.status.approved': 'Approved',
+    'creative.status.rejected': 'Rejected',
+    'creative.removeAsset': 'Remove Asset',
+
+    // Creative requirements panel
+    'creative.req.title': 'Screen Requirements',
+    'creative.req.basedOn': 'Based on',
+    'creative.req.basedOnSuffix': 'locations',
+    'creative.req.multipleFormats': 'Multiple Formats Required',
+    'creative.req.multipleFormatsDesc': 'Your selected inventory includes both indoor and outdoor screens. You may need to provide both landscape (16:9) and portrait (9:16) creatives.',
+    'creative.req.selectedScreenTypes': 'Selected Screen Types',
+    'creative.req.noLocations': 'No locations selected',
+    'creative.req.supportedFormats': 'Supported Formats',
+    'creative.req.recommendedSpecs': 'Recommended Specs',
+    'creative.req.maxVideo': 'Max Video: 15s',
+    'creative.req.maxSize': 'Max Size: 100MB',
+    'creative.req.complianceNote': 'Creatives will be reviewed by our compliance team before campaign launch.',
+
+    // Inventory detail card
+    'detail.pricing': 'Pricing',
+    'detail.perDay': '/ day',
+    'detail.efficiency': 'Efficiency',
+    'detail.audienceDemographics': 'Audience Demographics',
+    'detail.locationSpecs': 'Location Specs',
+    'detail.estDailyImp': 'Estimated Daily Impressions',
+    'detail.operatingHours': 'Operating Hours',
+    'detail.minBooking': 'Minimum Booking',
+    'detail.minBookingDays': '7 Days',
+    'detail.currentAvailability': 'Current Availability',
+    'detail.addedToPlan': 'Added to Plan',
+    'detail.addToMediaPlan': 'Add to Media Plan',
+
+    // List view
+    'list.noResults': 'No inventory found',
+    'list.noResultsDesc': "We couldn't find any locations matching your search or filter criteria. Try adjusting your settings.",
+
+    // Map loading
+    'map.loading': 'Loading map...',
+
     // Filter option labels — districts
     'filter.district.Xinyi': 'Xinyi',
     'filter.district.Zhongzheng': 'Zhongzheng',
@@ -432,6 +509,83 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     // Common
     'common.langToggle': 'EN',
+
+    // Review step — submitted confirmation
+    'review.submitted.title': '廣告活動已送出！',
+    'review.submitted.body': '您的廣告活動已成功送出審查。我們的團隊將確認廣告素材合規性及版位可刊播性，並於審查通過後確認排期。',
+    'review.submitted.statusLabel': '刊播狀態',
+    'review.submitted.pendingReview': '待審查',
+    'review.submitted.totalBudget': '刊播總預算',
+    'review.submitted.locations': '刊播版位',
+    'review.submitted.createNew': '建立新廣告活動',
+    'review.subtitle': '請確認刊播版位、廣告素材及預算後再送出。',
+    'review.section.settings': '活動設定',
+    'review.settings.objective': '廣告目標',
+    'review.settings.timeSlot': '刊播時段',
+    'review.settings.dateRange': '刊播期間',
+    'review.settings.coverage': '覆蓋區域',
+    'review.settings.allDay': '全天候',
+    'review.settings.next7Days': '未來 7 天',
+    'review.settings.taipeiMetro': '大台北都會區',
+    'review.section.performance': '預估成效與預算',
+    'review.perf.totalImp': '預估觸及人次',
+    'review.perf.totalBudget': '刊播總預算',
+    'review.perf.avgCpm': '平均 CPM',
+    'review.perf.perDay': '/ 天',
+    'review.perf.highlyEfficient': '效益極佳',
+    'review.perf.disclaimer': '最終刊播費用及排期視版位可用性而定，送出後我們將確認完整刊播計畫。',
+    'review.section.selectedLocations': '已選刊播版位',
+    'review.table.location': '刊播地點',
+    'review.table.type': '版面類型',
+    'review.table.dailyImp': '每日觸及',
+    'review.table.duration': '刊播天數',
+    'review.table.budget': '刊播費用',
+    'review.table.days': '天',
+    'review.section.creatives': '廣告素材',
+    'review.creative.pending': '待審查',
+    'review.backToUpload': '返回素材上傳',
+
+    // Creative preview card statuses
+    'creative.status.uploaded': '已上傳',
+    'creative.status.pendingReview': '待審查',
+    'creative.status.approved': '已核准',
+    'creative.status.rejected': '已退回',
+    'creative.removeAsset': '移除素材',
+
+    // Creative requirements panel
+    'creative.req.title': '播出規格需求',
+    'creative.req.basedOn': '依據已選',
+    'creative.req.basedOnSuffix': '個版位',
+    'creative.req.multipleFormats': '需提供多種版面尺寸',
+    'creative.req.multipleFormatsDesc': '您所選版位同時包含室內與戶外螢幕，可能需提供橫式（16:9）及直式（9:16）兩種格式的廣告素材。',
+    'creative.req.selectedScreenTypes': '已選螢幕類型',
+    'creative.req.noLocations': '尚未選擇任何版位',
+    'creative.req.supportedFormats': '支援格式',
+    'creative.req.recommendedSpecs': '建議規格',
+    'creative.req.maxVideo': '影片最長：15 秒',
+    'creative.req.maxSize': '檔案上限：100MB',
+    'creative.req.complianceNote': '廣告素材將於刊播前由合規團隊進行審查。',
+
+    // Inventory detail card
+    'detail.pricing': '刊播費率',
+    'detail.perDay': '/ 天',
+    'detail.efficiency': '投放效益',
+    'detail.audienceDemographics': '受眾輪廓',
+    'detail.locationSpecs': '版位規格',
+    'detail.estDailyImp': '預估每日觸及人次',
+    'detail.operatingHours': '刊播時段',
+    'detail.minBooking': '最短刊播天數',
+    'detail.minBookingDays': '7 天',
+    'detail.currentAvailability': '目前檔期狀態',
+    'detail.addedToPlan': '已加入排期',
+    'detail.addToMediaPlan': '加入投放排期',
+
+    // List view
+    'list.noResults': '找不到符合的刊播版位',
+    'list.noResultsDesc': '找不到符合篩選條件的版位，請試著調整搜尋或篩選條件。',
+
+    // Map loading
+    'map.loading': '地圖載入中...',
 
     // Filter option labels — districts
     'filter.district.Xinyi': '信義區',

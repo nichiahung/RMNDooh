@@ -2,18 +2,20 @@
 
 import dynamic from 'next/dynamic';
 import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
+import { useI18n } from '@/i18n/I18nProvider';
 
-// Leaflet depends on `window`, so we must disable SSR
+function MapLoadingPlaceholder() {
+  const { t } = useI18n();
+  return (
+    <div className="flex items-center justify-center h-full w-full bg-slate-100">
+      <div className="text-sm text-slate-500 animate-pulse">{t('map.loading')}</div>
+    </div>
+  );
+}
+
 const MapView = dynamic(
   () => import('./MapView').then(mod => mod.MapView),
-  { 
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center h-full w-full bg-slate-100">
-        <div className="text-sm text-slate-500 animate-pulse">Loading map...</div>
-      </div>
-    )
-  }
+  { ssr: false, loading: () => <MapLoadingPlaceholder /> }
 );
 
 interface Props {
@@ -23,11 +25,5 @@ interface Props {
 }
 
 export function MapWrapper({ inventory, selectedItems, onViewDetails }: Props) {
-  return (
-    <MapView 
-      inventory={inventory} 
-      selectedItems={selectedItems} 
-      onViewDetails={onViewDetails} 
-    />
-  );
+  return <MapView inventory={inventory} selectedItems={selectedItems} onViewDetails={onViewDetails} />;
 }

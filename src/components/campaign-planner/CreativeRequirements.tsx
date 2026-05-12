@@ -1,6 +1,8 @@
-import React from 'react';
+'use client';
+
 import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
 import { Monitor, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   selectedItems: MediaPlanItem[];
@@ -8,11 +10,10 @@ interface Props {
 }
 
 export function CreativeRequirements({ selectedItems, allInventory }: Props) {
-  
-  // Extract unique screen types from the selected media plan
+  const { t } = useI18n();
+
   const selectedScreenTypes = new Set<string>();
-  let hasOutdoor = false;
-  let hasIndoor = false;
+  let hasOutdoor = false, hasIndoor = false;
 
   selectedItems.forEach(item => {
     const inv = allInventory.find(i => i.id === item.inventoryId);
@@ -24,71 +25,59 @@ export function CreativeRequirements({ selectedItems, allInventory }: Props) {
   });
 
   const uniqueScreens = Array.from(selectedScreenTypes);
-  const needsMultipleFormats = hasOutdoor && hasIndoor;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
         <h3 className="font-semibold text-slate-900 flex items-center">
           <Monitor className="w-4 h-4 mr-2 text-indigo-600" />
-          Screen Requirements
+          {t('creative.req.title')}
         </h3>
         <span className="text-xs font-medium text-slate-500">
-          Based on {selectedItems.length} locations
+          {t('creative.req.basedOn')} {selectedItems.length} {t('creative.req.basedOnSuffix')}
         </span>
       </div>
-      
       <div className="p-5">
-        {/* Warning if multiple formats likely needed */}
-        {needsMultipleFormats && (
+        {hasOutdoor && hasIndoor && (
           <div className="mb-5 p-3 bg-amber-50 rounded-lg border border-amber-200 flex items-start">
             <AlertCircle className="w-5 h-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-semibold text-amber-800">Multiple Formats Required</h4>
-              <p className="text-xs text-amber-700 mt-1">
-                Your selected inventory includes both indoor and outdoor screens. You may need to provide both landscape (16:9) and portrait (9:16) creatives.
-              </p>
+              <h4 className="text-sm font-semibold text-amber-800">{t('creative.req.multipleFormats')}</h4>
+              <p className="text-xs text-amber-700 mt-1">{t('creative.req.multipleFormatsDesc')}</p>
             </div>
           </div>
         )}
-
         <div className="space-y-4">
           <div>
-            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Selected Screen Types</h4>
+            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('creative.req.selectedScreenTypes')}</h4>
             <div className="flex flex-wrap gap-2">
               {uniqueScreens.map(type => (
-                <span key={type} className="bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded border border-indigo-100">
-                  {type}
-                </span>
+                <span key={type} className="bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded border border-indigo-100">{type}</span>
               ))}
-              {uniqueScreens.length === 0 && (
-                <span className="text-sm text-slate-500">No locations selected</span>
-              )}
+              {uniqueScreens.length === 0 && <span className="text-sm text-slate-500">{t('creative.req.noLocations')}</span>}
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
             <div>
-              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Supported Formats</h4>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('creative.req.supportedFormats')}</h4>
               <ul className="text-sm text-slate-600 space-y-1">
                 <li className="flex items-center"><CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> JPG / PNG</li>
                 <li className="flex items-center"><CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> MP4 (H.264)</li>
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">Recommended Specs</h4>
+              <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('creative.req.recommendedSpecs')}</h4>
               <ul className="text-sm text-slate-600 space-y-1">
-                <li className="flex items-center">1920x1080 (Landscape)</li>
-                <li className="flex items-center">1080x1920 (Portrait)</li>
-                <li className="flex items-center">Max Video: 15s</li>
-                <li className="flex items-center">Max Size: 100MB</li>
+                <li>1920x1080 (Landscape)</li>
+                <li>1080x1920 (Portrait)</li>
+                <li>{t('creative.req.maxVideo')}</li>
+                <li>{t('creative.req.maxSize')}</li>
               </ul>
             </div>
           </div>
         </div>
-        
         <div className="mt-5 p-3 bg-slate-50 rounded text-xs text-slate-500 text-center border border-slate-100">
-          Creatives will be reviewed by our compliance team before campaign launch.
+          {t('creative.req.complianceNote')}
         </div>
       </div>
     </div>

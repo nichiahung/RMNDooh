@@ -1,8 +1,10 @@
-import React from 'react';
+'use client';
+
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { X, MapPin, Users, Monitor, Building, Clock, Calendar, Check } from 'lucide-react';
+import { X, MapPin, Users, Monitor, Clock, Calendar, Check } from 'lucide-react';
 import { imgSrc } from '@/utils/imgSrc';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface Props {
   item: InventoryLocation;
@@ -12,19 +14,20 @@ interface Props {
 }
 
 export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props) {
+  const { t } = useI18n();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
-        {/* Header Image */}
+
         <div className="h-64 relative bg-slate-100 flex-shrink-0">
-          <img 
+          <img
             src={imgSrc(item.imageUrl)}
-            alt={item.name} 
+            alt={item.name}
             className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}
           />
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-4 right-4 bg-slate-900/50 hover:bg-slate-900/80 text-white p-2 rounded-full backdrop-blur transition-colors"
           >
@@ -32,7 +35,6 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
             <div>
@@ -50,72 +52,65 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
                 {item.address}, {item.district}, {item.city}
               </p>
             </div>
-            
+
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 md:w-64 flex-shrink-0">
               <div className="mb-3">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Pricing</div>
-                <div className="text-xl font-bold text-slate-900">{formatCurrency(item.pricePerDay)} <span className="text-sm font-normal text-slate-500">/ day</span></div>
+                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">{t('detail.pricing')}</div>
+                <div className="text-xl font-bold text-slate-900">{formatCurrency(item.pricePerDay)} <span className="text-sm font-normal text-slate-500">{t('detail.perDay')}</span></div>
               </div>
               <div>
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Efficiency</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">{t('detail.efficiency')}</div>
                 <div className="text-sm font-semibold text-indigo-600">NT${formatCPM(item.cpm)} CPM</div>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            {/* Left Column */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">Description</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  {item.description}
-                </p>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">{t('detail.description')}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">{item.description}</p>
               </div>
-
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">Audience Demographics</h3>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">{t('detail.audienceDemographics')}</h3>
                 <div className="flex flex-wrap gap-2">
                   {item.audienceTags.map(tag => (
-                    <span key={tag} className="bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-md border border-blue-100">
-                      {tag}
-                    </span>
+                    <span key={tag} className="bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-md border border-blue-100">{tag}</span>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Right Column */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">Location Specs</h3>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">{t('detail.locationSpecs')}</h3>
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <Users className="w-4 h-4 text-slate-400 mr-3 mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-slate-900">{formatNumber(item.dailyImpressions)}</div>
-                      <div className="text-xs text-slate-500">Estimated Daily Impressions</div>
+                      <div className="text-xs text-slate-500">{t('detail.estDailyImp')}</div>
                     </div>
                   </li>
                   <li className="flex items-start">
                     <Clock className="w-4 h-4 text-slate-400 mr-3 mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-slate-900">06:00 - 24:00</div>
-                      <div className="text-xs text-slate-500">Operating Hours</div>
+                      <div className="text-xs text-slate-500">{t('detail.operatingHours')}</div>
                     </div>
                   </li>
                   <li className="flex items-start">
                     <Calendar className="w-4 h-4 text-slate-400 mr-3 mt-0.5" />
                     <div>
-                      <div className="text-sm font-medium text-slate-900">7 Days</div>
-                      <div className="text-xs text-slate-500">Minimum Booking</div>
+                      <div className="text-sm font-medium text-slate-900">{t('detail.minBookingDays')}</div>
+                      <div className="text-xs text-slate-500">{t('detail.minBooking')}</div>
                     </div>
                   </li>
                   <li className="flex items-start">
                     <Monitor className="w-4 h-4 text-slate-400 mr-3 mt-0.5" />
                     <div>
                       <div className="text-sm font-medium text-slate-900">{(item.availability * 100).toFixed(0)}%</div>
-                      <div className="text-xs text-slate-500">Current Availability</div>
+                      <div className="text-xs text-slate-500">{t('detail.currentAvailability')}</div>
                     </div>
                   </li>
                 </ul>
@@ -124,27 +119,26 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end space-x-3 flex-shrink-0">
-          <button 
+          <button
             onClick={onClose}
             className="px-6 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
           >
-            Close
+            {t('detail.close')}
           </button>
-          <button 
+          <button
             onClick={onAdd}
             disabled={isSelected}
             className={`flex items-center px-6 py-2.5 text-sm font-semibold rounded-lg transition-colors shadow-sm ${
-              isSelected 
+              isSelected
                 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-default'
                 : 'bg-indigo-600 text-white hover:bg-indigo-700'
             }`}
           >
             {isSelected ? (
-              <><Check className="w-4 h-4 mr-2" /> Added to Plan</>
+              <><Check className="w-4 h-4 mr-2" /> {t('detail.addedToPlan')}</>
             ) : (
-              'Add to Media Plan'
+              t('detail.addToMediaPlan')
             )}
           </button>
         </div>
