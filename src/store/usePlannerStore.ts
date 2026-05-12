@@ -24,7 +24,7 @@ interface PlannerState {
 export const usePlannerStore = create<PlannerState>((set) => ({
   allInventory: mockInventory,
   
-  viewMode: 'list',
+  viewMode: 'map',
   setViewMode: (mode) => set({ viewMode: mode }),
   
   filters: {
