@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script>
+      // GitHub Pages SPA redirect hack.
+      // Encode the full path into a query param so the root page can restore it.
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 2).join('/') +
+        '/?p=' + encodeURIComponent(l.pathname.slice(l.pathname.indexOf('/', 1)) + l.search) +
+        (l.hash ? '&h=' + encodeURIComponent(l.hash) : '')
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

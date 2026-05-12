@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Filter } from 'lucide-react';
-import { FilterState, VenueType, ScreenType, AudienceTag } from '@/types/inventory';
+import { FilterState } from '@/types/inventory';
 import { mockInventory } from '@/lib/mockData';
-import { 
-  getAvailableDistricts, 
-  getAvailableVenueTypes, 
-  getAvailableScreenTypes, 
-  getAvailableAudienceTags 
-} from '@/utils/inventoryFilters';
+import { getAvailableDistricts, getAvailableVenueTypes, getAvailableScreenTypes, getAvailableAudienceTags } from '@/utils/inventoryFilters';
 import { useI18n } from '@/i18n/I18nProvider';
+import { DISTRICT_KEY, VENUE_KEY, SCREEN_KEY, AUDIENCE_KEY, CITY_KEY, AVAILABILITY_KEY } from '@/i18n/filterLabels';
 
 interface Props {
   filters: FilterState;
@@ -90,8 +86,8 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
             onChange={(e) => onFilterChange({ city: e.target.value || undefined, districts: [] })} // Reset district if city changes
           >
             <option value="">{t('filter.anyCity')}</option>
-            <option value="Taipei">Taipei</option>
-            <option value="New Taipei">New Taipei</option>
+            <option value="Taipei">{t(CITY_KEY['Taipei'])}</option>
+            <option value="New Taipei">{t(CITY_KEY['New Taipei'])}</option>
           </select>
         </div>
 
@@ -109,7 +105,7 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
                   checked={(filters.districts || []).includes(district)}
                   onChange={() => handleArrayToggle('districts', district)}
                 /> 
-                {district}
+                {t(DISTRICT_KEY[district] ?? district)}
               </label>
             ))}
           </div>
@@ -121,13 +117,13 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
           <div className="space-y-2 pl-1">
             {availableVenueTypes.map(venue => (
               <label key={venue} className="flex items-center text-sm text-slate-600 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                <input
+                  type="checkbox"
+                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   checked={(filters.venueTypes || []).includes(venue)}
                   onChange={() => handleArrayToggle('venueTypes', venue)}
-                /> 
-                {venue}
+                />
+                {t(VENUE_KEY[venue] ?? venue)}
               </label>
             ))}
           </div>
@@ -139,13 +135,13 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
           <div className="space-y-2 pl-1 max-h-40 overflow-y-auto custom-scrollbar">
             {availableScreenTypes.map(screen => (
               <label key={screen} className="flex items-center text-sm text-slate-600 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                <input
+                  type="checkbox"
+                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   checked={(filters.screenTypes || []).includes(screen)}
                   onChange={() => handleArrayToggle('screenTypes', screen)}
-                /> 
-                {screen}
+                />
+                {t(SCREEN_KEY[screen] ?? screen)}
               </label>
             ))}
           </div>
@@ -157,13 +153,13 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
           <div className="space-y-2 pl-1 max-h-40 overflow-y-auto custom-scrollbar">
             {availableAudienceTags.map(audience => (
               <label key={audience} className="flex items-center text-sm text-slate-600 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                <input
+                  type="checkbox"
+                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   checked={(filters.audienceTags || []).includes(audience)}
                   onChange={() => handleArrayToggle('audienceTags', audience)}
-                /> 
-                {audience}
+                />
+                {t(AUDIENCE_KEY[audience] ?? audience)}
               </label>
             ))}
           </div>
@@ -173,15 +169,15 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
         <div>
           <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('filter.availability')}</h3>
           <div className="space-y-2 pl-1">
-            {['Available', 'Limited', 'Unavailable'].map(status => (
+            {(['Available', 'Limited', 'Unavailable'] as const).map(status => (
               <label key={status} className="flex items-center text-sm text-slate-600 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                <input
+                  type="checkbox"
+                  className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   checked={(filters.availabilityStatus || []).includes(status)}
                   onChange={() => handleArrayToggle('availabilityStatus', status)}
-                /> 
-                {status}
+                />
+                {t(AVAILABILITY_KEY[status])}
               </label>
             ))}
           </div>

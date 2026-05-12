@@ -4,53 +4,12 @@ import { usePlannerStore } from '@/store/usePlannerStore';
 import { VenueType, ScreenType, AudienceTag } from '@/types/inventory';
 import { Filter } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { DISTRICT_KEY, VENUE_KEY, SCREEN_KEY, AUDIENCE_KEY } from '@/i18n/filterLabels';
 
 const ALL_DISTRICTS = ['Xinyi', "Zhongzheng", "Da'an", 'Wanhua', 'Nangang', 'Songshan', 'Banqiao', 'Neihu', 'Shilin'];
 const ALL_VENUE_TYPES: VenueType[] = ['Mall', 'Subway', 'Highway', 'Street', 'Airport', 'Night Market', 'Office Building', 'Station'];
 const ALL_SCREEN_TYPES: ScreenType[] = ['Billboard', 'Transit', 'Street Furniture', 'Indoor', 'Kiosk', 'Mega Screen'];
 const ALL_AUDIENCE_TAGS: AudienceTag[] = ['Professionals', 'Students', 'Shoppers', 'Tourists', 'Commuters', 'Tech Workers', 'Foodies'];
-
-const DISTRICT_KEY: Record<string, string> = {
-  'Xinyi': 'filter.district.Xinyi',
-  'Zhongzheng': 'filter.district.Zhongzheng',
-  "Da'an": 'filter.district.Daan',
-  'Wanhua': 'filter.district.Wanhua',
-  'Nangang': 'filter.district.Nangang',
-  'Songshan': 'filter.district.Songshan',
-  'Banqiao': 'filter.district.Banqiao',
-  'Neihu': 'filter.district.Neihu',
-  'Shilin': 'filter.district.Shilin',
-};
-
-const VENUE_KEY: Record<string, string> = {
-  'Mall': 'filter.venue.Mall',
-  'Subway': 'filter.venue.Subway',
-  'Highway': 'filter.venue.Highway',
-  'Street': 'filter.venue.Street',
-  'Airport': 'filter.venue.Airport',
-  'Night Market': 'filter.venue.NightMarket',
-  'Office Building': 'filter.venue.OfficeBuilding',
-  'Station': 'filter.venue.Station',
-};
-
-const SCREEN_KEY: Record<string, string> = {
-  'Billboard': 'filter.screen.Billboard',
-  'Transit': 'filter.screen.Transit',
-  'Street Furniture': 'filter.screen.StreetFurniture',
-  'Indoor': 'filter.screen.Indoor',
-  'Kiosk': 'filter.screen.Kiosk',
-  'Mega Screen': 'filter.screen.MegaScreen',
-};
-
-const AUDIENCE_KEY: Record<string, string> = {
-  'Professionals': 'filter.audience.Professionals',
-  'Students': 'filter.audience.Students',
-  'Shoppers': 'filter.audience.Shoppers',
-  'Tourists': 'filter.audience.Tourists',
-  'Commuters': 'filter.audience.Commuters',
-  'Tech Workers': 'filter.audience.TechWorkers',
-  'Foodies': 'filter.audience.Foodies',
-};
 
 export function FilterSidebar() {
   const { filters, setFilters } = usePlannerStore();

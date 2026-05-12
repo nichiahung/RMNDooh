@@ -5,8 +5,17 @@ import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
   const router = useRouter();
+
   useEffect(() => {
-    router.replace('/campaign-planner');
+    // Restore path encoded by public/404.html (GitHub Pages SPA redirect hack)
+    const params = new URLSearchParams(window.location.search);
+    const redirectPath = params.get('p');
+    const redirectHash = params.get('h') ?? '';
+    if (redirectPath) {
+      router.replace(redirectPath + redirectHash);
+    } else {
+      router.replace('/campaign-planner');
+    }
   }, [router]);
 
   return (

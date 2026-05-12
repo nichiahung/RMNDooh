@@ -39,6 +39,18 @@ export function InventoryDiscovery() {
         if (!hasMatch) return false;
       }
 
+      if (filters.minBudget !== undefined && item.pricePerDay < filters.minBudget) return false;
+      if (filters.maxBudget !== undefined && item.pricePerDay > filters.maxBudget) return false;
+      if (filters.minImpressions !== undefined && item.dailyImpressions < filters.minImpressions) return false;
+      if (filters.maxImpressions !== undefined && item.dailyImpressions > filters.maxImpressions) return false;
+
+      if ((filters.availabilityStatus?.length ?? 0) > 0) {
+        let status = 'Unavailable';
+        if (item.availability >= 0.7) status = 'Available';
+        else if (item.availability >= 0.3) status = 'Limited';
+        if (!filters.availabilityStatus!.includes(status)) return false;
+      }
+
       return true;
     });
   }, [allInventory, filters]);

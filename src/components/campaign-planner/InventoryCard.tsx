@@ -4,6 +4,7 @@ import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { MapPin, Users, Monitor, Building, Check, Plus, Info } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
+import { AUDIENCE_KEY } from '@/i18n/filterLabels';
 
 interface Props {
   item: InventoryLocation;
@@ -48,7 +49,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd }: Props)
         <div className="flex flex-wrap gap-1.5 mb-3">
           {item.audienceTags.slice(0, 3).map(tag => (
             <span key={tag} className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded">
-              {tag}
+              {t(AUDIENCE_KEY[tag] ?? tag)}
             </span>
           ))}
           {item.audienceTags.length > 3 && (

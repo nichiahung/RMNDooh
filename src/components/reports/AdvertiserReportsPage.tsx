@@ -9,8 +9,29 @@ import { CampaignDeliveryChart } from './CampaignDeliveryChart';
 import { PlaysByLocationTable } from './PlaysByLocationTable';
 import { PlaysByCreativeTable } from './PlaysByCreativeTable';
 import { ProofOfPlayReportTable } from './ProofOfPlayReportTable';
-import { BarChart3, Info } from 'lucide-react';
+import { BarChart3, Info, Download } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { ProofOfPlayLog } from '@/types/inventory';
+
+function downloadCsv(logs: ProofOfPlayLog[], campaignName: string) {
+  const header = ['Timestamp', 'Screen ID', 'Screen Name', 'Creative', 'Duration (s)', 'Status'];
+  const rows = logs.map(l => [
+    new Date(l.playedAt).toLocaleString(),
+    l.screenId,
+    l.screenName,
+    l.creativeName,
+    String(l.durationSeconds),
+    l.playbackStatus,
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pop-logs-${campaignName.replace(/\s+/g, '-')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function AdvertiserReportsPage() {
   const { t } = useI18n();
@@ -87,7 +108,11 @@ export function AdvertiserReportsPage() {
                   <h2 className="text-lg font-bold text-slate-900">{t('reports.verifiedPopLogs')}</h2>
                   <p className="text-sm text-slate-500 mt-0.5">{t('reports.popLogsDesc')}</p>
                 </div>
-                <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                <button
+                  onClick={() => activeReport && downloadCsv(activeReport.recentPoPLogs, activeReport.campaignName)}
+                  className="flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  <Download className="w-4 h-4 mr-1.5" />
                   {t('reports.exportCsv')}
                 </button>
               </div>
