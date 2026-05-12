@@ -27,7 +27,7 @@ export function FilterSidebar() {
     setFilters({ districts: [], venueTypes: [], screenTypes: [], audienceTags: [] });
   };
 
-  const activeFilterCount = filters.districts.length + filters.venueTypes.length + filters.screenTypes.length + filters.audienceTags.length;
+  const activeFilterCount = (filters.districts?.length || 0) + (filters.venueTypes?.length || 0) + (filters.screenTypes?.length || 0) + (filters.audienceTags?.length || 0);
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
@@ -52,7 +52,7 @@ export function FilterSidebar() {
                 <input
                   type="checkbox"
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.districts.includes(district)}
+                  checked={filters.districts?.includes(district) ?? false}
                   onChange={() => toggleArrayFilter('districts', district)}
                 />
                 <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{district}</span>
@@ -70,7 +70,7 @@ export function FilterSidebar() {
                 <input
                   type="checkbox"
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.venueTypes.includes(venue)}
+                  checked={filters.venueTypes?.includes(venue) ?? false}
                   onChange={() => toggleArrayFilter('venueTypes', venue)}
                 />
                 <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{venue}</span>
@@ -88,7 +88,7 @@ export function FilterSidebar() {
                 <input
                   type="checkbox"
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.screenTypes.includes(screen)}
+                  checked={filters.screenTypes?.includes(screen) ?? false}
                   onChange={() => toggleArrayFilter('screenTypes', screen)}
                 />
                 <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{screen}</span>
@@ -106,7 +106,7 @@ export function FilterSidebar() {
                 <input
                   type="checkbox"
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.audienceTags.includes(audience)}
+                  checked={filters.audienceTags?.includes(audience) ?? false}
                   onChange={() => toggleArrayFilter('audienceTags', audience)}
                 />
                 <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">{audience}</span>

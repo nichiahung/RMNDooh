@@ -1,16 +1,23 @@
 import { WebPlayerPage } from '@/components/player/WebPlayerPage';
+import { mockScreens } from '@/data/mockScreens';
 
 export const metadata = {
   title: 'DOOH Web Player',
   description: 'DOOH Screen Playback Simulator',
 };
 
-interface Props {
-  params: {
-    screenId: string;
-  };
+// Required for static export — pre-generate all known screen routes
+export function generateStaticParams() {
+  return mockScreens.map(screen => ({ screenId: screen.screenId }));
 }
 
-export default function PlayerPage({ params }: Props) {
-  return <WebPlayerPage screenId={params.screenId} />;
+interface Props {
+  params: Promise<{
+    screenId: string;
+  }>;
+}
+
+export default async function PlayerPage({ params }: Props) {
+  const { screenId } = await params;
+  return <WebPlayerPage screenId={screenId} />;
 }
