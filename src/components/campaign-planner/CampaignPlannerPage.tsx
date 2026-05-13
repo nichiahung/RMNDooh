@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FilterSidebar } from './FilterSidebar';
 import { InventoryDiscovery } from './InventoryDiscovery';
 import { MediaPlanSummary } from './MediaPlanSummary';
@@ -8,14 +8,21 @@ import { InventoryDetailCard } from './InventoryDetailCard';
 import { CreativeUploadStep } from './CreativeUploadStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 
-import { mockInventory } from '@/lib/mockData';
 import { InventoryLocation, MediaPlanItem, FilterState, CreativeAsset } from '@/types/inventory';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
 import { Check, Globe, Filter as FilterIcon, Calculator } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { usePlannerStore } from '@/store/usePlannerStore';
 
 export function CampaignPlannerPage() {
+  // --- Supabase inventory ---
+  const { allInventory, isLoadingInventory, fetchInventory } = usePlannerStore();
+
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
+
   // --- Step Flow State ---
   const [step, setStep] = useState<'inventory' | 'creative' | 'review'>('inventory');
 
@@ -24,7 +31,7 @@ export function CampaignPlannerPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('impressions_desc');
   const [currentView, setCurrentView] = useState<'list' | 'map'>('list');
-  
+
   const [selectedItems, setSelectedItems] = useState<MediaPlanItem[]>([]);
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
   const [creatives, setCreatives] = useState<CreativeAsset[]>([]);
@@ -35,11 +42,11 @@ export function CampaignPlannerPage() {
 
   // --- Derived Data ---
   const filteredAndSortedInventory = useMemo(() => {
-    let result = filterInventory(mockInventory, filters);
+    let result = filterInventory(allInventory, filters);
     result = searchInventory(result, searchQuery);
     result = sortInventory(result, sortOption);
     return result;
-  }, [filters, searchQuery, sortOption]);
+  }, [allInventory, filters, searchQuery, sortOption]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -202,7 +209,7 @@ export function CampaignPlannerPage() {
 
             <MediaPlanSummary
               selectedItems={selectedItems}
-              allInventory={mockInventory}
+              allInventory={allInventory}
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
               onContinue={handleContinueToCreative}
@@ -225,7 +232,7 @@ export function CampaignPlannerPage() {
         {step === 'creative' && (
           <CreativeUploadStep 
             selectedItems={selectedItems}
-            allInventory={mockInventory}
+            allInventory={allInventory}
             creatives={creatives}
             setCreatives={setCreatives}
             onBack={() => setStep('inventory')}
@@ -236,7 +243,7 @@ export function CampaignPlannerPage() {
         {step === 'review' && (
           <CampaignReviewStep 
             selectedItems={selectedItems}
-            allInventory={mockInventory}
+            allInventory={allInventory}
             creatives={creatives}
             onBack={() => setStep('creative')}
           />

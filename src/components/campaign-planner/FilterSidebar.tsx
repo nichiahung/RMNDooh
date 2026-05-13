@@ -3,10 +3,10 @@
 import { useState, useMemo } from 'react';
 import { Filter, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { FilterState } from '@/types/inventory';
-import { mockInventory } from '@/lib/mockData';
 import { getAvailableDistricts, getAvailableVenueTypes, getAvailableScreenTypes, getAvailableAudienceTags } from '@/utils/inventoryFilters';
 import { useI18n } from '@/i18n/I18nProvider';
 import { DISTRICT_KEY, VENUE_KEY, SCREEN_KEY, AUDIENCE_KEY, CITY_KEY, AVAILABILITY_KEY } from '@/i18n/filterLabels';
+import { usePlannerStore } from '@/store/usePlannerStore';
 
 interface Props {
   filters: FilterState;
@@ -24,11 +24,12 @@ interface Props {
 export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeFilterCount, isOpen, onClose, searchQuery, onSearchChange }: Props) {
   const { t } = useI18n();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const allInventory = usePlannerStore((s) => s.allInventory);
 
-  const availableDistricts = useMemo(() => getAvailableDistricts(mockInventory), []);
-  const availableVenueTypes = useMemo(() => getAvailableVenueTypes(mockInventory), []);
-  const availableScreenTypes = useMemo(() => getAvailableScreenTypes(mockInventory), []);
-  const availableAudienceTags = useMemo(() => getAvailableAudienceTags(mockInventory), []);
+  const availableDistricts = useMemo(() => getAvailableDistricts(allInventory), [allInventory]);
+  const availableVenueTypes = useMemo(() => getAvailableVenueTypes(allInventory), [allInventory]);
+  const availableScreenTypes = useMemo(() => getAvailableScreenTypes(allInventory), [allInventory]);
+  const availableAudienceTags = useMemo(() => getAvailableAudienceTags(allInventory), [allInventory]);
 
   const handleArrayToggle = (key: keyof FilterState, value: string) => {
     const currentArray = (filters[key] as string[]) || [];
@@ -169,7 +170,7 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
             <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('filter.district')}</h3>
             <div className="space-y-2 pl-1 max-h-36 overflow-y-auto custom-scrollbar">
               {availableDistricts
-                .filter(d => !filters.city || mockInventory.find(i => i.district === d)?.city === filters.city)
+                .filter(d => !filters.city || allInventory.find(i => i.district === d)?.city === filters.city)
                 .map(district => (
                   <label key={district} className="flex items-center text-sm text-slate-600 cursor-pointer">
                     <input type="checkbox" className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
