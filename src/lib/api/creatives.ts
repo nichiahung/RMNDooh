@@ -6,6 +6,9 @@ const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000002';
 const BUCKET = 'creative-assets';
 
 export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
+  // Use local objectURL for immediate preview — no dependency on Storage URL loading
+  const localPreviewUrl = URL.createObjectURL(file);
+
   const ext = file.name.split('.').pop() ?? 'bin';
   const storagePath = `advertisers/${DEFAULT_ADVERTISER_ID}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
@@ -41,15 +44,33 @@ export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
 
   if (dbError || !asset) throw new Error(dbError?.message ?? 'Failed to save asset');
 
-  // Return CreativeAsset shape for frontend state
   return {
     id: asset.id as string,
     name: file.name,
     type: file.type as CreativeAsset['type'],
     fileSize: file.size,
     durationSeconds: undefined,
-    previewUrl: publicUrl,
+    previewUrl: localPreviewUrl, // local blob URL for instant preview
     status: 'pending_review',
     uploadedAt: new Date().toISOString(),
   };
+}
+
+// Links uploaded media_assets to a campaign as creative_assets
+export async function linkCreativesToCampaign(
+  campaignId: string,
+  creatives: CreativeAsset[]
+): Promise<void> {
+  if (creatives.length === 0) return;
+
+  const rows = creatives.map(c => ({
+    campaign_id: campaignId,
+    media_asset_id: c.id,           // id == media_asset.id from uploadCreativeAsset
+    name: c.name,
+    source: 'platform',
+    approval_status: 'pending_review',
+  }));
+
+  const { error } = await supabase.from('creative_assets').insert(rows);
+  if (error) throw new Error(error.message);
 }

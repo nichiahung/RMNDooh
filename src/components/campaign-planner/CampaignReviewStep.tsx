@@ -92,6 +92,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, onB
                 await createAndSubmitCampaign({
                   selectedItems,
                   allInventory,
+                  creatives,
                   campaignDays: selectedItems[0]?.days ?? 7,
                   totalBudget: exactTotalBudget,
                   estimatedImpressions: exactTotalImpressions,

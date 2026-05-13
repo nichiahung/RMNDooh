@@ -1,13 +1,14 @@
 import { supabase } from '@/lib/supabase';
-import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
+import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
+import { linkCreativesToCampaign } from './creatives';
 
-// Hardcoded default advertiser/user until auth is implemented
 const DEFAULT_ADVERTISER_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
 const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000002';
 
 interface SubmitCampaignInput {
   selectedItems: MediaPlanItem[];
   allInventory: InventoryLocation[];
+  creatives: CreativeAsset[];
   campaignDays: number;
   totalBudget: number;
   estimatedImpressions: number;
@@ -16,13 +17,14 @@ interface SubmitCampaignInput {
 export async function createAndSubmitCampaign({
   selectedItems,
   allInventory,
+  creatives,
   campaignDays,
   totalBudget,
   estimatedImpressions,
 }: SubmitCampaignInput): Promise<string> {
   const campaignName = `Campaign ${new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}`;
 
-  // Step 1: Create the campaign
+  // Step 1: Create campaign
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
     .insert({
@@ -64,6 +66,9 @@ export async function createAndSubmitCampaign({
     .insert(inventoryRows);
 
   if (itemsError) throw new Error(itemsError.message);
+
+  // Step 3: Link uploaded creative assets to this campaign
+  await linkCreativesToCampaign(campaignId, creatives);
 
   return campaignId;
 }
