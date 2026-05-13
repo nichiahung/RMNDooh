@@ -6,6 +6,7 @@ import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { ArrowLeft, CheckCircle, MapPin, Image as ImageIcon, Settings, Calculator, Send, AlertTriangle, Play } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { createAndSubmitCampaign } from '@/lib/api/campaigns';
 
 interface Props {
   selectedItems: MediaPlanItem[];
@@ -17,6 +18,8 @@ interface Props {
 export function CampaignReviewStep({ selectedItems, allInventory, creatives, onBack }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const selectedDetails = selectedItems
     .map(item => ({ ...item, inventory: allInventory.find(i => i.id === item.inventoryId)! }))
@@ -80,10 +83,38 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, onB
             </div>
             <p className="text-slate-500">{t('review.subtitle')}</p>
           </div>
-          <button onClick={() => setIsSubmitted(true)} className="flex items-center px-8 py-3 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30">
-            {t('review.submit')} <Send className="w-5 h-5 ml-2" />
+          <button
+            disabled={isSubmitting}
+            onClick={async () => {
+              setIsSubmitting(true);
+              setSubmitError(null);
+              try {
+                await createAndSubmitCampaign({
+                  selectedItems,
+                  allInventory,
+                  campaignDays: selectedItems[0]?.days ?? 7,
+                  totalBudget: exactTotalBudget,
+                  estimatedImpressions: exactTotalImpressions,
+                });
+                setIsSubmitted(true);
+              } catch (err) {
+                setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
+              } finally {
+                setIsSubmitting(false);
+              }
+            }}
+            className="flex items-center px-8 py-3 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-5 h-5 ml-2" /></>}
           </button>
         </div>
+
+        {submitError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">{submitError}</p>
+          </div>
+        )}
 
         <ReviewSection title={t('review.section.settings')} icon={<Settings />}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
