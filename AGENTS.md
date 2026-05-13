@@ -3,3 +3,36 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# DOOH Platform - AI Context & Constraints
+
+Welcome to the DOOH (Digital Out-Of-Home) Platform repository. This document serves as a strict routing guide and context boundary for all AI agents working on this project.
+
+## 1. Domain Model Terminology
+Do not invent terms. Strictly adhere to the following definitions:
+* **Advertiser**: A company buying ads.
+* **Campaign**: An advertising initiative created by an Advertiser.
+* **InventoryLocation (Venue)**: A physical location (e.g., Taipei 101, Mall).
+* **Screen**: A digital billboard or display situated within an InventoryLocation.
+* **Playlist / Loop**: A cycle of content playing on a Screen.
+* **Slot**: A time segment within a Loop (e.g., 10 seconds). Can be Direct-sold or Programmatic.
+* **Proof-of-Play (POP)**: A log verifying that a creative actually played on a screen.
+
+## 2. Documentation Routing (STRICT)
+Before implementing backend features, modifying the database, or writing core UI components, you **MUST** consult the appropriate documentation. Do NOT hallucinate architectures.
+
+| Topic / Task | Required Reading (Use `view_file`) |
+| :--- | :--- |
+| **High-Level Architecture** | `ARCHITECTURE.md` (Root directory) |
+| **MVP Product Scope & UI Specs** | `DOOH_Advertiser_Marketplace_MVP_PRD_v0.1.md` |
+| **Database Schema & Models** | `docs/backend/step14-schema-design.md` |
+| **Backend API Design** | `docs/backend/step15-api-design-v2.md` |
+| **Programmatic DOOH Logic** | `docs/backend/programmatic-schema-design.md` |
+
+## 3. Technology & Architecture Rules
+* **Frontend**: Next.js App Router, TailwindCSS, React Context (for MVP state/i18n).
+* **Map**: `react-leaflet` with OpenStreetMap. No Google Maps API for MVP.
+* **Backend/DB**: Designed for Supabase / PostgreSQL. All MVP interactions are currently mocked. Do NOT add real database connections unless explicitly requested to transition out of MVP phase.
+* **Multi-Language**: Custom lightweight `I18nProvider` (Context-based). Do NOT install `next-i18next` or heavy libraries.
+
+> **CRITICAL**: If the user asks you to "implement the DB schema", you must read `docs/backend/step14-schema-design.md` and use the exact table structures defined there. Do not reinvent them.
