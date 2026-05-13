@@ -143,17 +143,17 @@ export function CampaignPlannerPage() {
         
         {step === 'inventory' && (
           <>
-            <FilterSidebar 
+            <FilterSidebar
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
               activeFilterCount={activeFilterCount}
-            />
-            
-            <InventoryDiscovery 
-              inventory={filteredAndSortedInventory}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+            />
+            
+            <InventoryDiscovery
+              inventory={filteredAndSortedInventory}
               sortOption={sortOption}
               onSortChange={setSortOption}
               currentView={currentView}
