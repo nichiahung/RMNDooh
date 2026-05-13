@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
+import { Campaign, CreativeAsset, InventoryLocation, Screen } from '@/types/inventory';
 
 // ── Campaigns ────────────────────────────────────────────────────
 
@@ -19,17 +19,25 @@ export async function fetchAllCampaigns(): Promise<Campaign[]> {
       estimated_impressions,
       submitted_at,
       approval_notes,
-      created_by_user_id,
       advertiser_id,
       advertisers ( name ),
       campaign_inventory_items (
-        id,
         inventory_location_id,
         days,
         price_per_day,
-        daily_impressions,
-        total_price,
-        total_impressions
+        daily_impressions
+      ),
+      creative_assets (
+        id,
+        name,
+        approval_status,
+        created_at,
+        media_assets (
+          public_url,
+          mime_type,
+          file_size_bytes,
+          duration_seconds
+        )
       )
     `)
     .order('submitted_at', { ascending: false, nullsFirst: false });
@@ -55,6 +63,18 @@ export async function updateCampaignStatus(
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function updateCreativeApprovalStatus(
+  creativeAssetId: string,
+  status: 'approved' | 'rejected'
+): Promise<void> {
+  const { error } = await supabase
+    .from('creative_assets')
+    .update({ approval_status: status, reviewed_at: new Date().toISOString() })
+    .eq('id', creativeAssetId);
 
   if (error) throw new Error(error.message);
 }
@@ -92,6 +112,21 @@ export async function fetchAllScreens(): Promise<Screen[]> {
 function mapCampaignRow(row: Record<string, unknown>): Campaign {
   const advertiserInfo = row.advertisers as { name: string } | null;
   const items = (row.campaign_inventory_items as Record<string, unknown>[] | null) ?? [];
+  const creativeRows = (row.creative_assets as Record<string, unknown>[] | null) ?? [];
+
+  const creatives: CreativeAsset[] = creativeRows.map((cr) => {
+    const media = cr.media_assets as Record<string, unknown> | null;
+    return {
+      id: cr.id as string,
+      name: cr.name as string,
+      type: (media?.mime_type ?? 'image/jpeg') as CreativeAsset['type'],
+      fileSize: Number(media?.file_size_bytes ?? 0),
+      durationSeconds: media?.duration_seconds ? Number(media.duration_seconds) : undefined,
+      previewUrl: (media?.public_url as string) ?? '',
+      status: (cr.approval_status as CreativeAsset['status']) ?? 'pending_review',
+      uploadedAt: (cr.created_at as string) ?? new Date().toISOString(),
+    };
+  });
 
   return {
     id: row.id as string,
@@ -109,7 +144,7 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
       inventoryId: item.inventory_location_id as string,
       days: Number(item.days),
     })),
-    creatives: [],
+    creatives,
   };
 }
 

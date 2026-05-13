@@ -11,7 +11,7 @@ import { ScreenManagementTable } from './ScreenManagementTable';
 import { OverviewPanel } from './OverviewPanel';
 
 import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
-import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus } from '@/lib/api/admin';
+import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus } from '@/lib/api/admin';
 import { fetchInventoryLocations } from '@/lib/api/inventory';
 
 export function AdminDashboardPage() {
@@ -48,7 +48,8 @@ export function AdminDashboardPage() {
     }
   };
 
-  const handleUpdateCreativeStatus = (campaignId: string, creativeId: string, newStatus: string) => {
+  const handleUpdateCreativeStatus = async (campaignId: string, creativeId: string, newStatus: string) => {
+    await updateCreativeApprovalStatus(creativeId, newStatus as 'approved' | 'rejected');
     const updateCreatives = (c: Campaign) =>
       c.id === campaignId
         ? { ...c, creatives: c.creatives.map(cr => cr.id === creativeId ? { ...cr, status: newStatus as never } : cr) }
