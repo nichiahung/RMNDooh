@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { CreativeAsset, MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { CreativePreviewCard } from './CreativePreviewCard';
 import { CreativeRequirements } from './CreativeRequirements';
-import { UploadCloud, ArrowLeft, ArrowRight } from 'lucide-react';
-import { calculateCampaignEstimate } from '@/utils/mediaPlanCalculations';
+import { UploadCloud, ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
+import { uploadCreativeAsset } from '@/lib/api/creatives';
 
 interface Props {
   selectedItems: MediaPlanItem[];
@@ -20,29 +20,30 @@ interface Props {
 
 export function CreativeUploadStep({ selectedItems, allInventory, creatives, setCreatives, onBack, onContinue }: Props) {
   const { t } = useI18n();
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   let exactTotalBudget = 0;
   selectedItems.forEach(item => {
     const inv = allInventory.find(i => i.id === item.inventoryId);
     if (inv) exactTotalBudget += inv.pricePerDay * item.days;
   });
 
-  const handleMockUpload = () => {
-    const isVideo = Math.random() > 0.5;
-    const newCreative: CreativeAsset = {
-      id: `creative-${Date.now()}`,
-      name: `campaign_asset_${creatives.length + 1}.${isVideo ? 'mp4' : 'jpg'}`,
-      type: isVideo ? 'video/mp4' : 'image/jpeg',
-      fileSize: Math.floor(Math.random() * 50000000) + 1000000,
-      durationSeconds: isVideo ? 15 : undefined,
-      previewUrl: isVideo 
-        ? 'https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop&q=80&w=300' 
-        : 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=300',
-      status: 'pending_review',
-      uploadedAt: new Date().toISOString()
-    };
-
-    setCreatives([...creatives, newCreative]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ''; // reset so same file can be re-selected
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const creative = await uploadCreativeAsset(file);
+      setCreatives(prev => [...prev, creative]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : '上傳失敗，請再試一次');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleRemoveCreative = (id: string) => {
@@ -68,20 +69,36 @@ export function CreativeUploadStep({ selectedItems, allInventory, creatives, set
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Upload Area */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border-2 border-dashed border-indigo-200 rounded-xl p-10 text-center hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group">
+            <div
+              className="bg-white border-2 border-dashed border-indigo-200 rounded-xl p-10 text-center hover:bg-indigo-50/50 hover:border-indigo-400 transition-all group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,video/mp4"
+                className="hidden"
+                onChange={handleFileChange}
+              />
               <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <UploadCloud className="w-8 h-8 text-indigo-500" />
+                <UploadCloud className={`w-8 h-8 ${isUploading ? 'text-slate-400 animate-pulse' : 'text-indigo-500'}`} />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('creative.dropzone')}</h3>
               <p className="text-slate-500 text-sm mb-6">{t('creative.dropzoneDesc')}</p>
-              
-              <button 
-                onClick={handleMockUpload}
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+              <button
+                disabled={isUploading}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {t('creative.browse')}
+                {isUploading ? '上傳中...' : t('creative.browse')}
               </button>
             </div>
+
+            {uploadError && (
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700">{uploadError}</p>
+              </div>
+            )}
 
             {/* Uploaded Assets List */}
             {creatives.length > 0 && (
