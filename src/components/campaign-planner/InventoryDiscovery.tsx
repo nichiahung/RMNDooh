@@ -27,7 +27,7 @@ export function InventoryDiscovery({
   onAdd,
 }: Props) {
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+    <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-slate-50 relative">
       <PlannerTopbar
         resultCount={inventory.length}
         sortOption={sortOption}
