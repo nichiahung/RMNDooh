@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar } from 'lucide-react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { calculateCampaignEstimate } from '@/utils/mediaPlanCalculations';
 import { formatCurrency, formatCPM } from '@/utils/formatters';
@@ -11,9 +11,11 @@ interface Props {
   onRemove: (id: string) => void;
   onUpdateDays: (id: string, days: number) => void;
   onContinue: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpdateDays, onContinue }: Props) {
+export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpdateDays, onContinue, isOpen, onClose }: Props) {
   const { t } = useI18n();
   
   // Use utility from Step 3 to calculate metrics
@@ -41,16 +43,35 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
     : 0;
 
   return (
-    <aside className="w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)]">
-      
+    <>
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={`fixed lg:static inset-y-0 right-0 w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
+      >
+
       {/* Header */}
       <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h2 className="text-base font-semibold text-slate-900 flex items-center">
           <Calculator className="w-4 h-4 mr-2 text-indigo-600" /> {t('mediaPlan.title')}
         </h2>
-        <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-semibold">
-          {selectedItems.length} {t('planner.locations')}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-semibold">
+            {selectedItems.length} {t('planner.locations')}
+          </span>
+          <button
+            onClick={onClose}
+            className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
+            aria-label="Close media plan"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Selected Items Area */}
@@ -130,7 +151,8 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
           {t('mediaPlan.continueCreative')}
         </button>
       </div>
-      
+
     </aside>
+    </>
   );
 }

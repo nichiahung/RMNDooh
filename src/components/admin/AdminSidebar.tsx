@@ -7,7 +7,8 @@ import {
   Map,
   Monitor,
   Settings,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -16,9 +17,11 @@ export type AdminTab = 'overview' | 'campaigns' | 'creative' | 'inventory' | 'sc
 interface Props {
   activeTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function AdminSidebar({ activeTab, onTabChange }: Props) {
+export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props) {
   const { t } = useI18n();
 
   const navItems = [
@@ -29,15 +32,39 @@ export function AdminSidebar({ activeTab, onTabChange }: Props) {
     { id: 'screens', labelKey: 'admin.nav.screens', icon: Monitor },
   ];
 
+  const handleTabChange = (tab: AdminTab) => {
+    onTabChange(tab);
+    onClose();
+  };
+
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full flex-shrink-0 z-20">
+    <>
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col h-full flex-shrink-0 z-40 transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+      >
 
       {/* Brand */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-800">
-        <div className="w-8 h-8 bg-indigo-500 rounded flex items-center justify-center mr-3">
-          <Monitor className="w-5 h-5 text-white" />
+      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-indigo-500 rounded flex items-center justify-center mr-3">
+            <Monitor className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-white font-bold tracking-wide">{t('admin.brand')}</span>
         </div>
-        <span className="text-white font-bold tracking-wide">{t('admin.brand')}</span>
+        <button
+          onClick={onClose}
+          className="lg:hidden text-slate-400 hover:text-white transition-colors"
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -48,7 +75,7 @@ export function AdminSidebar({ activeTab, onTabChange }: Props) {
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id as AdminTab)}
+              onClick={() => handleTabChange(item.id as AdminTab)}
               className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${
                 isActive
                   ? 'bg-indigo-500/10 text-indigo-400'
@@ -73,5 +100,6 @@ export function AdminSidebar({ activeTab, onTabChange }: Props) {
       </div>
 
     </aside>
+    </>
   );
 }
