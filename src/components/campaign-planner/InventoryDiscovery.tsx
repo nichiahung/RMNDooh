@@ -1,15 +1,12 @@
-import React from 'react';
-import { SearchAndSortBar } from './SearchAndSortBar';
-import { ListView } from './ListView';
-import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
-import { MapPin } from 'lucide-react';
+'use client';
 
+import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
+import { ListView } from './ListView';
 import { MapWrapper } from './MapWrapper';
+import { PlannerTopbar } from './PlannerTopbar';
 
 interface Props {
   inventory: InventoryLocation[];
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   sortOption: string;
   onSortChange: (option: string) => void;
   currentView: 'list' | 'map';
@@ -21,48 +18,39 @@ interface Props {
 
 export function InventoryDiscovery({
   inventory,
-  searchQuery,
-  onSearchChange,
   sortOption,
   onSortChange,
   currentView,
   onViewChange,
   selectedItems,
   onViewDetails,
-  onAdd
+  onAdd,
 }: Props) {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
-      
-      {/* Search and Sort Toolbar */}
-      <SearchAndSortBar 
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
+      <PlannerTopbar
+        resultCount={inventory.length}
         sortOption={sortOption}
         onSortChange={onSortChange}
         currentView={currentView}
         onViewChange={onViewChange}
-        resultCount={inventory.length}
       />
-      
-      {/* Content Area */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {currentView === 'list' ? (
-          <ListView 
-            inventory={inventory} 
+          <ListView
+            inventory={inventory}
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}
           />
         ) : (
-          <MapWrapper 
+          <MapWrapper
             inventory={inventory}
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
           />
         )}
       </div>
-      
     </div>
   );
 }

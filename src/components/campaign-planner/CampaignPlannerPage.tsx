@@ -185,12 +185,12 @@ export function CampaignPlannerPage() {
               activeFilterCount={activeFilterCount}
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
             />
 
             <InventoryDiscovery
               inventory={filteredAndSortedInventory}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
               sortOption={sortOption}
               onSortChange={setSortOption}
               currentView={currentView}

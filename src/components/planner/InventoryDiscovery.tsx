@@ -2,13 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { usePlannerStore } from '@/store/usePlannerStore';
-import { SearchAndSortBar } from './SearchAndSortBar';
+import { PlannerTopbar } from '../campaign-planner/PlannerTopbar';
 import { ListView } from './ListView';
 import { MapView } from './MapView';
 import { InventoryLocation } from '@/types/inventory';
 
 export function InventoryDiscovery() {
-  const { allInventory, filters, viewMode } = usePlannerStore();
+  const { allInventory, filters, viewMode, setViewMode } = usePlannerStore();
   const [sortBy, setSortBy] = useState('impressions_desc');
 
   // Filtering Logic
@@ -59,16 +59,13 @@ export function InventoryDiscovery() {
   const sortedAndFilteredInventory = useMemo(() => {
     return [...filteredInventory].sort((a, b) => {
       switch (sortBy) {
-        case 'impressions_desc':
-          return b.dailyImpressions - a.dailyImpressions;
-        case 'price_asc':
-          return a.pricePerDay - b.pricePerDay;
-        case 'price_desc':
-          return b.pricePerDay - a.pricePerDay;
-        case 'cpm_asc':
-          return a.cpm - b.cpm;
-        default:
-          return 0;
+        case 'impressions_desc': return b.dailyImpressions - a.dailyImpressions;
+        case 'impressions_asc':  return a.dailyImpressions - b.dailyImpressions;
+        case 'price_desc':       return b.pricePerDay - a.pricePerDay;
+        case 'price_asc':        return a.pricePerDay - b.pricePerDay;
+        case 'cpm_desc':         return b.cpm - a.cpm;
+        case 'cpm_asc':          return a.cpm - b.cpm;
+        default:                 return 0;
       }
     });
   }, [filteredInventory, sortBy]);
@@ -79,10 +76,12 @@ export function InventoryDiscovery() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
-      <SearchAndSortBar 
-        sortBy={sortBy} 
-        setSortBy={setSortBy} 
-        resultCount={sortedAndFilteredInventory.length} 
+      <PlannerTopbar
+        resultCount={sortedAndFilteredInventory.length}
+        sortOption={sortBy}
+        onSortChange={setSortBy}
+        currentView={viewMode}
+        onViewChange={setViewMode}
       />
       
       <div className="flex-1 overflow-y-auto relative">
