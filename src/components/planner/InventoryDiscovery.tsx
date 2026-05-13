@@ -59,16 +59,13 @@ export function InventoryDiscovery() {
   const sortedAndFilteredInventory = useMemo(() => {
     return [...filteredInventory].sort((a, b) => {
       switch (sortBy) {
-        case 'impressions_desc':
-          return b.dailyImpressions - a.dailyImpressions;
-        case 'price_asc':
-          return a.pricePerDay - b.pricePerDay;
-        case 'price_desc':
-          return b.pricePerDay - a.pricePerDay;
-        case 'cpm_asc':
-          return a.cpm - b.cpm;
-        default:
-          return 0;
+        case 'impressions_desc': return b.dailyImpressions - a.dailyImpressions;
+        case 'impressions_asc':  return a.dailyImpressions - b.dailyImpressions;
+        case 'price_desc':       return b.pricePerDay - a.pricePerDay;
+        case 'price_asc':        return a.pricePerDay - b.pricePerDay;
+        case 'cpm_desc':         return b.cpm - a.cpm;
+        case 'cpm_asc':          return a.cpm - b.cpm;
+        default:                 return 0;
       }
     });
   }, [filteredInventory, sortBy]);

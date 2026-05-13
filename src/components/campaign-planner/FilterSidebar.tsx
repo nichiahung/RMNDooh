@@ -81,7 +81,7 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
         <button
           onClick={() => setIsCollapsed(true)}
           className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 transition-colors"
-          title="收合"
+          title={t('filter.collapse')}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
