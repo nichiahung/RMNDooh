@@ -2,13 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { usePlannerStore } from '@/store/usePlannerStore';
-import { SearchAndSortBar } from './SearchAndSortBar';
+import { PlannerTopbar } from '../campaign-planner/PlannerTopbar';
 import { ListView } from './ListView';
 import { MapView } from './MapView';
 import { InventoryLocation } from '@/types/inventory';
 
 export function InventoryDiscovery() {
-  const { allInventory, filters, viewMode } = usePlannerStore();
+  const { allInventory, filters, viewMode, setViewMode } = usePlannerStore();
   const [sortBy, setSortBy] = useState('impressions_desc');
 
   // Filtering Logic
@@ -79,10 +79,12 @@ export function InventoryDiscovery() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
-      <SearchAndSortBar 
-        sortBy={sortBy} 
-        setSortBy={setSortBy} 
-        resultCount={sortedAndFilteredInventory.length} 
+      <PlannerTopbar
+        resultCount={sortedAndFilteredInventory.length}
+        sortOption={sortBy}
+        onSortChange={setSortBy}
+        currentView={viewMode}
+        onViewChange={setViewMode}
       />
       
       <div className="flex-1 overflow-y-auto relative">
