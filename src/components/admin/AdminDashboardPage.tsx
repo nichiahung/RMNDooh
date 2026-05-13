@@ -11,7 +11,7 @@ import { ScreenManagementTable } from './ScreenManagementTable';
 import { OverviewPanel } from './OverviewPanel';
 
 import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
-import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus } from '@/lib/api/admin';
+import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus, confirmBooking } from '@/lib/api/admin';
 import { fetchInventoryLocations } from '@/lib/api/inventory';
 
 export function AdminDashboardPage() {
@@ -46,6 +46,13 @@ export function AdminDashboardPage() {
     if (selectedCampaign?.id === id) {
       setSelectedCampaign(prev => prev ? { ...prev, status: newStatus, approvalNotes: notes || prev.approvalNotes } : null);
     }
+  };
+
+  const handleConfirmBooking = async (campaignId: string) => {
+    await confirmBooking(campaignId);
+    // Re-fetch to get updated booking_status and launch_readiness from DB
+    const updated = await fetchAllCampaigns();
+    setCampaigns(updated);
   };
 
   const handleUpdateCreativeStatus = async (campaignId: string, creativeId: string, newStatus: string) => {
@@ -96,7 +103,11 @@ export function AdminDashboardPage() {
 
               {activeTab === 'campaigns' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <CampaignTable campaigns={campaigns} onViewDetails={setSelectedCampaign} />
+                  <CampaignTable
+                    campaigns={campaigns}
+                    onViewDetails={setSelectedCampaign}
+                    onConfirmBooking={handleConfirmBooking}
+                  />
                 </div>
               )}
 

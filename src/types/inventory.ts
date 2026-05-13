@@ -69,6 +69,10 @@ export interface Campaign {
   name: string;
   advertiserName: string;
   status: CampaignStatus;
+  // Three-status model (Step 15)
+  bookingStatus: string;
+  creativeStatus: string;
+  launchReadiness: string;
   objective: CampaignObjective | string;
   selectedItems: MediaPlanItem[];
   creatives: CreativeAsset[];

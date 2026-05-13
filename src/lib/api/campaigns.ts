@@ -33,6 +33,8 @@ export async function createAndSubmitCampaign({
       name: campaignName,
       objective: 'awareness',
       status: 'pending_review',
+      booking_status: 'pending_review',
+      creative_status: creatives.length > 0 ? 'pending_review' : 'not_submitted',
       buying_type: 'direct',
       campaign_days: campaignDays,
       total_budget: totalBudget,

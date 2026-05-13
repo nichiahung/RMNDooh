@@ -8,27 +8,53 @@ import { useI18n } from '@/i18n/I18nProvider';
 interface Props {
   campaigns: Campaign[];
   onViewDetails: (campaign: Campaign) => void;
+  onConfirmBooking?: (campaignId: string) => void;
 }
 
-export function CampaignTable({ campaigns, onViewDetails }: Props) {
-  const { t } = useI18n();
+const BOOKING_BADGE: Record<string, string> = {
+  draft:                'bg-slate-100 text-slate-600',
+  pending_creative:     'bg-orange-100 text-orange-700 border border-orange-200',
+  pending_review:       'bg-amber-100 text-amber-700 border border-amber-200',
+  pending_confirmation: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+  confirmed:            'bg-emerald-100 text-emerald-700',
+  scheduled:            'bg-blue-100 text-blue-700',
+  live:                 'bg-indigo-100 text-indigo-700',
+  completed:            'bg-slate-200 text-slate-700',
+  cancelled:            'bg-gray-100 text-gray-500',
+  blocked:              'bg-red-100 text-red-700 border border-red-200',
+};
 
-  const getStatusBadge = (status: Campaign['status']) => {
-    const styles: Record<string, string> = {
-      draft: 'bg-slate-100 text-slate-600',
-      pending_review: 'bg-amber-100 text-amber-700 border border-amber-200',
-      approved: 'bg-emerald-100 text-emerald-700',
-      rejected: 'bg-red-100 text-red-700',
-      scheduled: 'bg-blue-100 text-blue-700',
-      live: 'bg-indigo-100 text-indigo-700',
-      completed: 'bg-slate-200 text-slate-700'
-    };
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
-        {status.replace('_', ' ')}
-      </span>
-    );
-  };
+const CREATIVE_BADGE: Record<string, string> = {
+  not_submitted:             'bg-slate-100 text-slate-500',
+  pending_review:            'bg-amber-100 text-amber-700',
+  approved:                  'bg-emerald-100 text-emerald-700',
+  approved_with_restrictions:'bg-teal-100 text-teal-700',
+  rejected:                  'bg-red-100 text-red-700',
+  expired:                   'bg-orange-100 text-orange-700',
+};
+
+const LAUNCH_BADGE: Record<string, string> = {
+  not_ready:              'bg-slate-100 text-slate-500',
+  ready_for_confirmation: 'bg-yellow-100 text-yellow-700',
+  ready_for_scheduling:   'bg-blue-100 text-blue-700',
+  ready_for_launch:       'bg-emerald-100 text-emerald-700',
+  blocked_by_creative:    'bg-red-100 text-red-700',
+  blocked_by_inventory:   'bg-orange-100 text-orange-700',
+  blocked_by_payment:     'bg-purple-100 text-purple-700',
+  blocked_by_policy:      'bg-red-200 text-red-800',
+};
+
+function StatusBadge({ value, map }: { value: string; map: Record<string, string> }) {
+  const cls = map[value] ?? 'bg-slate-100 text-slate-500';
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${cls}`}>
+      {value.replace(/_/g, ' ')}
+    </span>
+  );
+}
+
+export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Props) {
+  const { t } = useI18n();
 
   return (
     <div className="flex flex-col h-full">
@@ -42,13 +68,6 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-        <div className="flex space-x-2">
-          <select className="text-sm border-slate-300 rounded-lg py-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <option>{t('admin.campaigns.allStatuses')}</option>
-            <option>{t('admin.campaigns.pendingReview')}</option>
-            <option>{t('admin.campaigns.live')}</option>
-          </select>
-        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -57,8 +76,9 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
             <tr>
               <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.name')}</th>
               <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.advertiser')}</th>
-              <th className="px-6 py-4 font-semibold">{t('admin.campaigns.col.status')}</th>
-              <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.locations')}</th>
+              <th className="px-6 py-4 font-semibold">訂單</th>
+              <th className="px-6 py-4 font-semibold">素材</th>
+              <th className="px-6 py-4 font-semibold">上線準備</th>
               <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.budget')}</th>
               <th className="px-6 py-4 font-semibold text-right">{t('admin.campaigns.col.actions')}</th>
             </tr>
@@ -68,13 +88,35 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
               <tr key={campaign.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-semibold text-slate-900">{campaign.name}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{t('admin.campaigns.submitted')} {new Date(campaign.submittedAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {t('admin.campaigns.submitted')} {new Date(campaign.submittedAt).toLocaleDateString()}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-slate-600">{campaign.advertiserName}</td>
-                <td className="px-6 py-4">{getStatusBadge(campaign.status)}</td>
-                <td className="px-6 py-4 text-right text-slate-600">{campaign.selectedItems.length}</td>
-                <td className="px-6 py-4 text-right font-semibold text-indigo-600">{formatCurrency(campaign.estimatedBudget)}</td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-6 py-4">
+                  <StatusBadge value={campaign.bookingStatus} map={BOOKING_BADGE} />
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge value={campaign.creativeStatus} map={CREATIVE_BADGE} />
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge value={campaign.launchReadiness} map={LAUNCH_BADGE} />
+                </td>
+                <td className="px-6 py-4 text-right font-semibold text-indigo-600">
+                  {formatCurrency(campaign.estimatedBudget)}
+                </td>
+                <td className="px-6 py-4 text-right space-x-2">
+                  {/* Confirm booking button — shown when creative approved, booking pending confirmation */}
+                  {campaign.bookingStatus === 'pending_confirmation' &&
+                   campaign.creativeStatus === 'approved' &&
+                   onConfirmBooking && (
+                    <button
+                      onClick={() => onConfirmBooking(campaign.id)}
+                      className="text-emerald-600 hover:text-emerald-800 font-medium text-xs px-3 py-1.5 border border-emerald-200 rounded-md hover:bg-emerald-50 transition-colors"
+                    >
+                      確認訂單
+                    </button>
+                  )}
                   <button
                     onClick={() => onViewDetails(campaign)}
                     className="text-indigo-600 hover:text-indigo-900 font-medium text-xs px-3 py-1.5 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
@@ -86,7 +128,7 @@ export function CampaignTable({ campaigns, onViewDetails }: Props) {
             ))}
             {campaigns.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                   {t('admin.campaigns.noResults')}
                 </td>
               </tr>

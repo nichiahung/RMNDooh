@@ -19,7 +19,7 @@ export const mockCampaigns: Campaign[] = [
     id: 'camp-101',
     name: 'Summer Product Launch 2026',
     advertiserName: 'TechNova Solutions',
-    status: 'pending_review',
+    status: 'pending_review', bookingStatus: 'pending_review', creativeStatus: 'pending_review', launchReadiness: 'not_ready',
     objective: 'Product launch',
     selectedItems: [
       { inventoryId: mockInventory[0].id, days: 14 },
@@ -47,7 +47,7 @@ export const mockCampaigns: Campaign[] = [
     id: 'camp-102',
     name: 'Q3 Brand Awareness',
     advertiserName: 'Luxe Retail Group',
-    status: 'approved',
+    status: 'approved', bookingStatus: 'pending_confirmation', creativeStatus: 'approved', launchReadiness: 'ready_for_confirmation',
     objective: 'Awareness',
     selectedItems: [
       { inventoryId: mockInventory[1].id, days: 30 },
@@ -75,7 +75,7 @@ export const mockCampaigns: Campaign[] = [
     id: 'camp-103',
     name: 'Flash Sale Promo',
     advertiserName: 'Urban Outfitters Taiwan',
-    status: 'rejected',
+    status: 'rejected', bookingStatus: 'blocked', creativeStatus: 'rejected', launchReadiness: 'blocked_by_creative',
     objective: 'Store visits',
     selectedItems: [
       { inventoryId: mockInventory[3].id, days: 3 }
@@ -102,7 +102,7 @@ export const mockCampaigns: Campaign[] = [
     id: 'camp-104',
     name: 'Game Expo 2026',
     advertiserName: 'NextGen Studios',
-    status: 'live',
+    status: 'live', bookingStatus: 'live', creativeStatus: 'approved', launchReadiness: 'ready_for_launch',
     objective: 'Event promotion',
     selectedItems: [
       { inventoryId: mockInventory[4].id, days: 7 },
