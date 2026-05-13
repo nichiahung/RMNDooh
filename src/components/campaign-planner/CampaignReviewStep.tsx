@@ -39,8 +39,8 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, onB
 
   if (isSubmitted) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50 p-8">
-        <div className="bg-white p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-lg animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex-1 flex items-center justify-center bg-slate-50 p-4 sm:p-8">
+        <div className="bg-white p-6 sm:p-10 rounded-2xl shadow-lg border border-slate-200 text-center max-w-lg w-full animate-in fade-in zoom-in-95 duration-500">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-emerald-600" />
           </div>
@@ -69,18 +69,18 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, onB
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F8FAFC] p-8 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto bg-[#F8FAFC] p-4 sm:p-6 lg:p-8 custom-scrollbar">
       <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <h2 className="text-3xl font-bold text-slate-900">{t('review.title')}</h2>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{t('review.title')}</h2>
               <span className="bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider">{t('review.status')}</span>
             </div>
-            <p className="text-slate-500">{t('review.subtitle')}</p>
+            <p className="text-slate-500 text-sm sm:text-base">{t('review.subtitle')}</p>
           </div>
-          <button onClick={() => setIsSubmitted(true)} className="flex items-center px-8 py-3 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30">
+          <button onClick={() => setIsSubmitted(true)} className="flex items-center justify-center px-6 sm:px-8 py-3 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30 w-full sm:w-auto">
             {t('review.submit')} <Send className="w-5 h-5 ml-2" />
           </button>
         </div>

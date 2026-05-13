@@ -24,7 +24,7 @@ export function SearchAndSortBar({
 }: Props) {
   const { t } = useI18n();
   return (
-    <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between sticky top-0 z-20 shadow-sm gap-3">
+    <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 min-h-14 flex flex-col sm:flex-row sm:items-center sm:justify-between sticky top-0 z-20 shadow-sm gap-2 sm:gap-4">
 
       {/* Search Input */}
       <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
