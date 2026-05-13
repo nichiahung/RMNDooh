@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RMNDooh - DOOH Advertiser Marketplace MVP
 
-## Getting Started
+RMNDooh (Digital Out-Of-Home) 是一個面向廣告主的自助式投放平台 MVP (Minimum Viable Product)。
+廣告主可以在此平台上用地圖或清單的方式探索數位戶外點位、建立 Media Plan、上傳廣告素材，並送出 Campaign。
 
-First, run the development server:
+**Live Demo**: [https://nichiahung.github.io/RMNDooh/](https://nichiahung.github.io/RMNDooh/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 快速開始 (Getting Started)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+先決條件：請確保已安裝 [Node.js](https://nodejs.org/) (建議 v20+)。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. 安裝依賴套件：
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. 啟動本地開發伺服器：
+   ```bash
+   npm run dev
+   ```
 
-## Learn More
+3. 打開瀏覽器訪問：[http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+## 📁 專案架構指南 (Documentation)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+本專案將詳細的商業邏輯與技術規格分離，請參閱以下文件以了解更多：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 👉 **[ARCHITECTURE.md](./ARCHITECTURE.md)**：**強烈建議首先閱讀**。這是一份包含高階架構圖與 ER Model 關聯的 5 分鐘速成指南。
+- 👉 **[AGENTS.md](./AGENTS.md)**：未來的 AI Agent 開發守則與術語表。
+- 📖 **`docs/` 資料夾**：包含深度的技術規格，例如：
+  - `DOOH_Advertiser_Marketplace_MVP_PRD_v0.1.md`: 產品需求文件
+  - `docs/backend/step14-schema-design.md`: 完整的資料庫 Schema 設計 (Supabase / PostgreSQL)
+  - `docs/backend/step15-api-design-v2.md`: 後端 API 設計與 Programmatic DOOH (RTB) 邏輯
 
-## Deploy on Vercel
+## 🛠 技術棧 (Tech Stack)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 目前 (MVP 階段)
+* **Frontend**: Next.js 14+ (App Router), React, TypeScript
+* **Styling**: Tailwind CSS
+* **Map**: `react-leaflet` (OpenStreetMap)
+* **State & Data**: Zustand (本地狀態), Mock Data JSON
+* **Localization**: Custom Context-based i18n (`src/i18n`)
+* **Deployment**: GitHub Pages (Static Export)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 未來規劃 (Production 階段)
+* **Backend & Auth**: Supabase (PostgreSQL, Edge Functions, Storage)
+* **Real-time Bidding (RTB)**: OpenRTB Integration for Programmatic DOOH
+* **Map Services**: Mapbox or Google Maps
+* **Monitoring**: Proof-of-Play (PoP) Logging & Reporting
+
+## 🤝 貢獻指南
+
+如果你是 AI Agent，請在進行任何程式碼修改前，**務必**仔細閱讀 `AGENTS.md` 的強制路由規則。
