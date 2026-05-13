@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { FilterState } from '@/types/inventory';
 import { mockInventory } from '@/lib/mockData';
 import { getAvailableDistricts, getAvailableVenueTypes, getAvailableScreenTypes, getAvailableAudienceTags } from '@/utils/inventoryFilters';
@@ -13,9 +13,11 @@ interface Props {
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   onClearFilters: () => void;
   activeFilterCount: number;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeFilterCount }: Props) {
+export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeFilterCount, isOpen, onClose }: Props) {
   const { t } = useI18n();
   
   // Dynamically generate options from inventory
@@ -39,10 +41,20 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    <>
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 w-72 lg:w-64 bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+      >
       <div className="p-5 border-b border-slate-100 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-800 flex items-center">
-          <Filter className="w-4 h-4 mr-2 text-slate-500" /> 
+          <Filter className="w-4 h-4 mr-2 text-slate-500" />
           {t('filter.title')}
           {activeFilterCount > 0 && (
             <span className="ml-2 bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-[10px] font-bold">
@@ -50,14 +62,23 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
             </span>
           )}
         </h2>
-        {activeFilterCount > 0 && (
-          <button 
-            onClick={onClearFilters}
-            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+        <div className="flex items-center gap-3">
+          {activeFilterCount > 0 && (
+            <button
+              onClick={onClearFilters}
+              className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+            >
+              {t('filter.clearAll')}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
+            aria-label="Close filters"
           >
-            {t('filter.clearAll')}
+            <X className="w-4 h-4" />
           </button>
-        )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6 custom-scrollbar">
@@ -228,5 +249,6 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
         </div>
       </div>
     </aside>
+    </>
   );
 }

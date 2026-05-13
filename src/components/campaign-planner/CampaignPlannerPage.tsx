@@ -12,7 +12,7 @@ import { mockInventory } from '@/lib/mockData';
 import { InventoryLocation, MediaPlanItem, FilterState, CreativeAsset } from '@/types/inventory';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check, Globe } from 'lucide-react';
+import { Check, Globe, Filter as FilterIcon, Calculator } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export function CampaignPlannerPage() {
@@ -28,6 +28,10 @@ export function CampaignPlannerPage() {
   const [selectedItems, setSelectedItems] = useState<MediaPlanItem[]>([]);
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
   const [creatives, setCreatives] = useState<CreativeAsset[]>([]);
+
+  // Mobile drawer state for filter and media-plan sidebars (<lg)
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
 
   // --- Derived Data ---
   const filteredAndSortedInventory = useMemo(() => {
@@ -114,25 +118,56 @@ export function CampaignPlannerPage() {
     <main className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
       
       {/* Top Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-30 shadow-sm">
-        <div className="flex items-center space-x-6">
-          <h1 className="text-xl font-bold tracking-tight text-slate-800">{t('planner.title')}</h1>
-          <div className="h-6 w-px bg-slate-300"></div>
-          <StepProgress />
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 z-30 shadow-sm gap-3">
+        <div className="flex items-center min-w-0 space-x-3 sm:space-x-6">
+          {step === 'inventory' && (
+            <button
+              onClick={() => setIsFilterOpen(true)}
+              className="lg:hidden relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm flex-shrink-0"
+              aria-label="Open filters"
+            >
+              <FilterIcon className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          )}
+          <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-800 truncate">{t('planner.title')}</h1>
+          <div className="hidden md:block h-6 w-px bg-slate-300"></div>
+          <div className="hidden md:block">
+            <StepProgress />
+          </div>
         </div>
-        
-        <div className="flex items-center space-x-3">
-          <button 
+
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          {step === 'inventory' && (
+            <button
+              onClick={() => setIsSummaryOpen(true)}
+              className="lg:hidden relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
+              aria-label="Open media plan"
+            >
+              <Calculator className="w-4 h-4" />
+              {selectedItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                  {selectedItems.length}
+                </span>
+              )}
+            </button>
+          )}
+          <button
             onClick={toggleLocale}
-            className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+            aria-label={t('common.langToggle')}
           >
-            <Globe className="w-4 h-4 mr-1.5" />
-            {t('common.langToggle')}
+            <Globe className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">{t('common.langToggle')}</span>
           </button>
-          <button className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+          <button className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
             {t('planner.saveDraft')}
           </button>
-          <button className="px-4 py-2 text-sm font-semibold text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors shadow-sm">
+          <button className="px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors shadow-sm">
             {t('planner.exit')}
           </button>
         </div>
@@ -143,14 +178,16 @@ export function CampaignPlannerPage() {
         
         {step === 'inventory' && (
           <>
-            <FilterSidebar 
+            <FilterSidebar
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
               activeFilterCount={activeFilterCount}
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
             />
-            
-            <InventoryDiscovery 
+
+            <InventoryDiscovery
               inventory={filteredAndSortedInventory}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -162,13 +199,15 @@ export function CampaignPlannerPage() {
               onViewDetails={setSelectedInventoryForDetail}
               onAdd={handleAdd}
             />
-            
-            <MediaPlanSummary 
+
+            <MediaPlanSummary
               selectedItems={selectedItems}
               allInventory={mockInventory}
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
               onContinue={handleContinueToCreative}
+              isOpen={isSummaryOpen}
+              onClose={() => setIsSummaryOpen(false)}
             />
 
             {/* Detail Modal Overlay */}
