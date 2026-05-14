@@ -34,6 +34,16 @@ export function formatCPM(value: number): string {
 }
 
 /**
+ * Compact number: 1_200_000 → "1.2M", 450_000 → "450K", 999 → "999"
+ */
+export function formatCompact(value: number): string {
+  if (isNaN(value)) return '0';
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`;
+  return String(value);
+}
+
+/**
  * Format a date range cleanly
  * Example: ("2024-05-01", "2024-05-15") -> "May 1, 2024 - May 15, 2024"
  */

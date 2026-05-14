@@ -5,6 +5,7 @@ import { FilterSidebar } from './FilterSidebar';
 import { InventoryDiscovery } from './InventoryDiscovery';
 import { MediaPlanSummary } from './MediaPlanSummary';
 import { InventoryDetailCard } from './InventoryDetailCard';
+import { PerformanceBar } from './PerformanceBar';
 import { CreativeUploadStep } from './CreativeUploadStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 
@@ -181,7 +182,7 @@ export function CampaignPlannerPage() {
       </header>
 
       {/* Main Content Area based on Step */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className={`flex-1 flex overflow-hidden relative${step === 'inventory' ? ' pb-16 lg:pb-14' : ''}`}>
         
         {step === 'inventory' && (
           <>
@@ -219,13 +220,20 @@ export function CampaignPlannerPage() {
 
             {/* Detail Modal Overlay */}
             {selectedInventoryForDetail && (
-              <InventoryDetailCard 
+              <InventoryDetailCard
                 item={selectedInventoryForDetail}
                 isSelected={selectedItems.some(i => i.inventoryId === selectedInventoryForDetail.id)}
                 onClose={() => setSelectedInventoryForDetail(null)}
                 onAdd={() => handleAdd(selectedInventoryForDetail)}
               />
             )}
+
+            <PerformanceBar
+              selectedItems={selectedItems}
+              allInventory={allInventory}
+              objective={filters.campaignObjective}
+              onOpenSummary={() => setIsSummaryOpen(true)}
+            />
           </>
         )}
 
