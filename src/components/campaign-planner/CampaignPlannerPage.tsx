@@ -226,6 +226,7 @@ export function CampaignPlannerPage() {
                 isSelected={selectedItems.some(i => i.inventoryId === selectedInventoryForDetail.id)}
                 onClose={() => setSelectedInventoryForDetail(null)}
                 onAdd={() => handleAdd(selectedInventoryForDetail)}
+                objective={filters.campaignObjective}
               />
             )}
 

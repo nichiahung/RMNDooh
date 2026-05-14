@@ -5,15 +5,17 @@ import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { X, MapPin, Users, Monitor, Clock, Calendar, Check } from 'lucide-react';
 import { imgSrc } from '@/utils/imgSrc';
 import { useI18n } from '@/i18n/I18nProvider';
+import { computeMatchScore } from '@/utils/matchScore';
 
 interface Props {
   item: InventoryLocation;
   isSelected: boolean;
   onClose: () => void;
   onAdd: () => void;
+  objective?: string;
 }
 
-export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props) {
+export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objective }: Props) {
   const { t } = useI18n();
 
   return (
@@ -117,6 +119,146 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
               </div>
             </div>
           </div>
+
+          {/* DNA Panel */}
+          <div className="space-y-6 mt-6 pt-6 border-t border-slate-100">
+
+            {objective && (() => {
+              const score = computeMatchScore(item, objective);
+              const color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#94a3b8';
+              const label = score >= 75 ? '高度吻合' : score >= 50 ? '部分吻合' : '低度吻合';
+              return (
+                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+                    <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="3"
+                        strokeDasharray="100 100" />
+                      <circle cx="18" cy="18" r="15.9155" fill="none"
+                        stroke={color} strokeWidth="3"
+                        strokeDasharray={`${score} ${100 - score}`}
+                        strokeLinecap="round" />
+                    </svg>
+                    <span className="text-sm font-bold text-slate-800 z-10">{score}%</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">{label}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">與「{objective}」目標的受眾吻合度</div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">受眾輪廓</h3>
+
+              <div className="mb-4">
+                <div className="text-xs text-slate-500 mb-2 font-medium">年齡分布</div>
+                <div className="space-y-2">
+                  {item.dna.ageBreakdown.map(({ label, pct }) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <span className="text-xs text-slate-500 w-12 flex-shrink-0">{label}</span>
+                      <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 w-8 text-right">{pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="text-xs text-slate-500 mb-2 font-medium">性別分布</div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-500 w-12 flex-shrink-0">男 {item.dna.genderSplit.male}%</span>
+                  <div className="flex-1 flex h-2 rounded-full overflow-hidden">
+                    <div className="bg-blue-400 h-full" style={{ width: `${item.dna.genderSplit.male}%` }} />
+                    <div className="bg-pink-400 h-full flex-1" />
+                  </div>
+                  <span className="text-xs text-slate-500 w-12 text-right">女 {item.dna.genderSplit.female}%</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-slate-500 mb-2 font-medium">主要族群</div>
+              <div className="flex flex-wrap gap-2">
+                {item.dna.audienceSegments.map(({ label, pct }) => (
+                  <span key={label} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold px-2.5 py-1 rounded-full">
+                    {label} {pct}%
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">尖峰時段</h3>
+              <div className="flex items-end gap-px h-12">
+                {item.dna.peakHours.map((intensity, hour) => {
+                  const isTop3 = [...item.dna.peakHours]
+                    .map((v, i) => ({ v, i }))
+                    .sort((a, b) => b.v - a.v)
+                    .slice(0, 3)
+                    .some(entry => entry.i === hour);
+                  return (
+                    <div
+                      key={hour}
+                      className="flex-1"
+                      style={{ height: `${Math.max(4, intensity * 100)}%` }}
+                      title={`${hour}:00 — ${intensity.toFixed(1)}x`}
+                    >
+                      <div className={`w-full h-full rounded-sm ${isTop3 ? 'bg-indigo-500' : 'bg-slate-200'}`} />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 mt-1 px-0.5">
+                {[0, 6, 12, 18, 23].map(h => (
+                  <span key={h}>{h}</span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">週間 / 假日分佈</h3>
+              <div className="space-y-2">
+                {[
+                  { label: '平日', pct: item.dna.weekdayPct, color: 'bg-indigo-500' },
+                  { label: '假日', pct: 100 - item.dna.weekdayPct, color: 'bg-violet-400' },
+                ].map(({ label, pct, color }) => (
+                  <div key={label} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-500 w-8 flex-shrink-0">{label}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div className={`${color} h-full rounded-full`} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-700 w-8 text-right">{pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">周邊 POI</h3>
+              <ul className="space-y-2">
+                {item.dna.nearbyPOIs.map(({ name, distance }) => (
+                  <li key={name} className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
+                      {name}
+                    </span>
+                    <span className="text-xs text-slate-400 ml-4 flex-shrink-0">{distance}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">版位排名</h3>
+              <div className="flex flex-wrap gap-2">
+                <RankChip label="全台" rank={item.dna.rankings.cityRank} total={item.dna.rankings.cityTotal} />
+                <RankChip label={item.district} rank={item.dna.rankings.districtRank} total={item.dna.rankings.districtTotal} />
+                <RankChip label={item.screenType} rank={item.dna.rankings.typeRank} total={item.dna.rankings.typeTotal} />
+              </div>
+            </div>
+
+          </div>
         </div>
 
         <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-end space-x-3 flex-shrink-0">
@@ -145,5 +287,18 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd }: Props)
 
       </div>
     </div>
+  );
+}
+
+function RankChip({ label, rank, total }: { label: string; rank: number; total: number }) {
+  const isTop3 = rank <= 3;
+  return (
+    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+      isTop3
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-slate-50 text-slate-600 border-slate-200'
+    }`}>
+      {isTop3 && '🏆'} {label} #{rank} / {total}
+    </span>
   );
 }
