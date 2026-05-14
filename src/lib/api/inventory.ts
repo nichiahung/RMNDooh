@@ -22,7 +22,16 @@ function mapRow(row: Record<string, unknown>): InventoryLocation {
     audienceTags: ((row.audience_tags as string[]) ?? []) as AudienceTag[],
     imageUrl: (row.image_url as string) ?? '',
     description: (row.description as string) ?? '',
-    dna: dnaData,
+    dna: dnaData ?? {
+      ageBreakdown: [],
+      genderSplit: { male: 50, female: 50 },
+      audienceSegments: [],
+      peakHours: Array(24).fill(0.5) as number[],
+      weekdayPct: 60,
+      nearbyPOIs: [],
+      rankings: { cityRank: 0, cityTotal: 0, districtRank: 0, districtTotal: 0, typeRank: 0, typeTotal: 0 },
+      baseMatchScore: 50,
+    },
   };
 }
 

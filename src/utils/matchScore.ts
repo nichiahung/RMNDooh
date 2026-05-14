@@ -21,7 +21,7 @@ const BOOST_MAP: Record<string, ObjectiveBoost> = {
 };
 
 export function computeMatchScore(venue: InventoryLocation, objective?: string): number {
-  let score = venue.dna.baseMatchScore;
+  let score = venue.dna?.baseMatchScore ?? 50;
   if (!objective) return score;
 
   const boost = BOOST_MAP[objective];
