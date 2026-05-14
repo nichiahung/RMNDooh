@@ -3,6 +3,21 @@ export type VenueType = 'Mall' | 'Subway' | 'Highway' | 'Street' | 'Airport' | '
 export type ScreenType = 'Billboard' | 'Transit' | 'Street Furniture' | 'Indoor' | 'Kiosk' | 'Mega Screen';
 export type AudienceTag = 'Professionals' | 'Students' | 'Shoppers' | 'Tourists' | 'Commuters' | 'Tech Workers' | 'Foodies';
 
+export interface VenueDNA {
+  ageBreakdown: { label: string; pct: number }[];
+  genderSplit: { male: number; female: number };
+  audienceSegments: { label: string; pct: number }[];
+  peakHours: number[]; // 24 values, 0.0–1.0 relative intensity
+  weekdayPct: number;  // 0–100
+  nearbyPOIs: { name: string; distance: string }[];
+  rankings: {
+    cityRank: number; cityTotal: number;
+    districtRank: number; districtTotal: number;
+    typeRank: number; typeTotal: number;
+  };
+  baseMatchScore: number; // 0–100 static baseline
+}
+
 export interface InventoryLocation {
   id: string;
   name: string;
@@ -20,6 +35,7 @@ export interface InventoryLocation {
   audienceTags: AudienceTag[];
   imageUrl: string;
   description: string;
+  dna: VenueDNA;
 }
 
 export interface MediaPlanItem {
