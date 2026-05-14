@@ -14,6 +14,7 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
+  objective?: string;
 }
 
 export function InventoryDiscovery({
@@ -25,6 +26,7 @@ export function InventoryDiscovery({
   selectedItems,
   onViewDetails,
   onAdd,
+  objective,
 }: Props) {
   return (
     <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-slate-50 relative">
@@ -42,6 +44,7 @@ export function InventoryDiscovery({
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}
+            objective={objective}
           />
         ) : (
           <MapWrapper

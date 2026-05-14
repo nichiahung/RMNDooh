@@ -5,15 +5,17 @@ import { MapPin, Users, Monitor, Building, Check, Plus, Info } from 'lucide-reac
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
 import { AUDIENCE_KEY } from '@/i18n/filterLabels';
+import { computeMatchScore } from '@/utils/matchScore';
 
 interface Props {
   item: InventoryLocation;
   isSelected: boolean;
   onViewDetails: () => void;
   onAdd: () => void;
+  objective?: string;
 }
 
-export function InventoryCard({ item, isSelected, onViewDetails, onAdd }: Props) {
+export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objective }: Props) {
   const { t } = useI18n();
   return (
     <div className={`bg-white rounded-xl border flex flex-col overflow-hidden transition-all group ${
@@ -35,6 +37,26 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd }: Props)
             {t('card.highAvailability')}
           </div>
         )}
+        {objective && (() => {
+          const score = computeMatchScore(item, objective);
+          const color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#94a3b8';
+          const circumference = 100;
+          return (
+            <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm rounded-full p-0.5 shadow-sm">
+              <div className="relative w-9 h-9 flex items-center justify-center">
+                <svg viewBox="0 0 36 36" className="absolute inset-0 w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#e2e8f0" strokeWidth="3"
+                    strokeDasharray={`${circumference} ${circumference}`} />
+                  <circle cx="18" cy="18" r="15.9155" fill="none"
+                    stroke={color} strokeWidth="3"
+                    strokeDasharray={`${score} ${circumference - score}`}
+                    strokeLinecap="round" />
+                </svg>
+                <span className="text-[9px] font-bold text-slate-800 z-10 leading-none">{score}%</span>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Body */}

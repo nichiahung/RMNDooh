@@ -206,6 +206,7 @@ export function CampaignPlannerPage() {
               selectedItems={selectedItems}
               onViewDetails={setSelectedInventoryForDetail}
               onAdd={handleAdd}
+              objective={filters.campaignObjective}
             />
 
             <MediaPlanSummary

@@ -10,9 +10,10 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
+  objective?: string;
 }
 
-export function ListView({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
+export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objective }: Props) {
   const { t } = useI18n();
 
   if (inventory.length === 0) {
@@ -36,6 +37,7 @@ export function ListView({ inventory, selectedItems, onViewDetails, onAdd }: Pro
             isSelected={isInMediaPlan(selectedItems, item.id)}
             onViewDetails={() => onViewDetails(item)}
             onAdd={() => onAdd(item)}
+            objective={objective}
           />
         ))}
       </div>
