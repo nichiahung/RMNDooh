@@ -126,7 +126,7 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             {objective && (() => {
               const score = computeMatchScore(item, objective);
               const color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#94a3b8';
-              const label = score >= 75 ? '高度吻合' : score >= 50 ? '部分吻合' : '低度吻合';
+              const label = score >= 75 ? t('detail.dna.matchHigh') : score >= 50 ? t('detail.dna.matchPartial') : t('detail.dna.matchLow');
               return (
                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
                   <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
@@ -149,10 +149,10 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             })()}
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">受眾輪廓</h3>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('detail.dna.audienceProfile')}</h3>
 
               <div className="mb-4">
-                <div className="text-xs text-slate-500 mb-2 font-medium">年齡分布</div>
+                <div className="text-xs text-slate-500 mb-2 font-medium">{t('detail.dna.ageBreakdown')}</div>
                 <div className="space-y-2">
                   {item.dna.ageBreakdown.map(({ label, pct }) => (
                     <div key={label} className="flex items-center gap-3">
@@ -167,18 +167,18 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
               </div>
 
               <div className="mb-4">
-                <div className="text-xs text-slate-500 mb-2 font-medium">性別分布</div>
+                <div className="text-xs text-slate-500 mb-2 font-medium">{t('detail.dna.genderSplit')}</div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 w-12 flex-shrink-0">男 {item.dna.genderSplit.male}%</span>
+                  <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t('detail.dna.male')} {item.dna.genderSplit.male}%</span>
                   <div className="flex-1 flex h-2 rounded-full overflow-hidden">
                     <div className="bg-blue-400 h-full" style={{ width: `${item.dna.genderSplit.male}%` }} />
                     <div className="bg-pink-400 h-full flex-1" />
                   </div>
-                  <span className="text-xs text-slate-500 w-12 text-right">女 {item.dna.genderSplit.female}%</span>
+                  <span className="text-xs text-slate-500 w-12 text-right">{t('detail.dna.female')} {item.dna.genderSplit.female}%</span>
                 </div>
               </div>
 
-              <div className="text-xs text-slate-500 mb-2 font-medium">主要族群</div>
+              <div className="text-xs text-slate-500 mb-2 font-medium">{t('detail.dna.mainSegments')}</div>
               <div className="flex flex-wrap gap-2">
                 {item.dna.audienceSegments.map(({ label, pct }) => (
                   <span key={label} className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -189,25 +189,30 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">尖峰時段</h3>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('detail.dna.peakHours')}</h3>
               <div className="flex items-end gap-px h-12">
-                {item.dna.peakHours.map((intensity, hour) => {
-                  const isTop3 = [...item.dna.peakHours]
-                    .map((v, i) => ({ v, i }))
-                    .sort((a, b) => b.v - a.v)
-                    .slice(0, 3)
-                    .some(entry => entry.i === hour);
-                  return (
-                    <div
-                      key={hour}
-                      className="flex-1"
-                      style={{ height: `${Math.max(4, intensity * 100)}%` }}
-                      title={`${hour}:00 — ${intensity.toFixed(1)}x`}
-                    >
-                      <div className={`w-full h-full rounded-sm ${isTop3 ? 'bg-indigo-500' : 'bg-slate-200'}`} />
-                    </div>
+                {(() => {
+                  const top3Set = new Set(
+                    [...item.dna.peakHours]
+                      .map((v, i) => ({ v, i }))
+                      .sort((a, b) => b.v - a.v)
+                      .slice(0, 3)
+                      .map(entry => entry.i)
                   );
-                })}
+                  return item.dna.peakHours.map((intensity, hour) => {
+                    const isTop3 = top3Set.has(hour);
+                    return (
+                      <div
+                        key={hour}
+                        className="flex-1"
+                        style={{ height: `${Math.max(4, intensity * 100)}%` }}
+                        title={`${hour}:00 — ${intensity.toFixed(1)}x`}
+                      >
+                        <div className={`w-full h-full rounded-sm ${isTop3 ? 'bg-indigo-500' : 'bg-slate-200'}`} />
+                      </div>
+                    );
+                  });
+                })()}
               </div>
               <div className="flex justify-between text-[10px] text-slate-400 mt-1 px-0.5">
                 {[0, 6, 12, 18, 23].map(h => (
@@ -217,11 +222,11 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">週間 / 假日分佈</h3>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('detail.dna.weekdayDistribution')}</h3>
               <div className="space-y-2">
                 {[
-                  { label: '平日', pct: item.dna.weekdayPct, color: 'bg-indigo-500' },
-                  { label: '假日', pct: 100 - item.dna.weekdayPct, color: 'bg-violet-400' },
+                  { label: t('detail.dna.weekday'), pct: item.dna.weekdayPct, color: 'bg-indigo-500' },
+                  { label: t('detail.dna.weekend'), pct: 100 - item.dna.weekdayPct, color: 'bg-violet-400' },
                 ].map(({ label, pct, color }) => (
                   <div key={label} className="flex items-center gap-3">
                     <span className="text-xs text-slate-500 w-8 flex-shrink-0">{label}</span>
@@ -235,7 +240,7 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">周邊 POI</h3>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('detail.dna.nearbyPOI')}</h3>
               <ul className="space-y-2">
                 {item.dna.nearbyPOIs.map(({ name, distance }) => (
                   <li key={name} className="flex items-center justify-between text-sm">
@@ -250,9 +255,9 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">版位排名</h3>
+              <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('detail.dna.rankings')}</h3>
               <div className="flex flex-wrap gap-2">
-                <RankChip label="全台" rank={item.dna.rankings.cityRank} total={item.dna.rankings.cityTotal} />
+                <RankChip label={t('detail.dna.nationwide')} rank={item.dna.rankings.cityRank} total={item.dna.rankings.cityTotal} />
                 <RankChip label={item.district} rank={item.dna.rankings.districtRank} total={item.dna.rankings.districtTotal} />
                 <RankChip label={item.screenType} rank={item.dna.rankings.typeRank} total={item.dna.rankings.typeTotal} />
               </div>

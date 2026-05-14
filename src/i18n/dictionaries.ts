@@ -185,6 +185,24 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.addedToPlan': 'Added to Plan',
     'detail.addToMediaPlan': 'Add to Media Plan',
 
+    // Inventory detail card — DNA panel
+    'detail.dna.matchHigh': 'Strong Match',
+    'detail.dna.matchPartial': 'Partial Match',
+    'detail.dna.matchLow': 'Weak Match',
+    'detail.dna.audienceProfile': 'Audience Profile',
+    'detail.dna.ageBreakdown': 'Age Distribution',
+    'detail.dna.genderSplit': 'Gender Split',
+    'detail.dna.mainSegments': 'Main Segments',
+    'detail.dna.male': 'Male',
+    'detail.dna.female': 'Female',
+    'detail.dna.peakHours': 'Peak Hours',
+    'detail.dna.weekdayDistribution': 'Weekday / Weekend',
+    'detail.dna.weekday': 'Weekday',
+    'detail.dna.weekend': 'Weekend',
+    'detail.dna.nearbyPOI': 'Nearby POI',
+    'detail.dna.rankings': 'Rankings',
+    'detail.dna.nationwide': 'Nationwide',
+
     // List view
     'list.noResults': 'No inventory found',
     'list.noResultsDesc': "We couldn't find any locations matching your search or filter criteria. Try adjusting your settings.",
@@ -587,6 +605,24 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'detail.currentAvailability': '目前檔期狀態',
     'detail.addedToPlan': '已加入排期',
     'detail.addToMediaPlan': '加入投放排期',
+
+    // Inventory detail card — DNA panel
+    'detail.dna.matchHigh': '高度吻合',
+    'detail.dna.matchPartial': '部分吻合',
+    'detail.dna.matchLow': '低度吻合',
+    'detail.dna.audienceProfile': '受眾輪廓',
+    'detail.dna.ageBreakdown': '年齡分布',
+    'detail.dna.genderSplit': '性別分布',
+    'detail.dna.mainSegments': '主要族群',
+    'detail.dna.male': '男',
+    'detail.dna.female': '女',
+    'detail.dna.peakHours': '尖峰時段',
+    'detail.dna.weekdayDistribution': '週間 / 假日分佈',
+    'detail.dna.weekday': '平日',
+    'detail.dna.weekend': '假日',
+    'detail.dna.nearbyPOI': '周邊 POI',
+    'detail.dna.rankings': '版位排名',
+    'detail.dna.nationwide': '全台',
 
     // List view
     'list.noResults': '找不到符合的刊播版位',
