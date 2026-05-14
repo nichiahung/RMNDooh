@@ -18,6 +18,27 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Tourists', 'Shoppers', 'Professionals'],
     imageUrl: '/images/tpe_101.png',
     description: 'Iconic mega screen located at the base of Taipei 101, capturing immense foot traffic from both tourists and local shoppers.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 20 }, { label: '25-34', pct: 38 },
+        { label: '35-44', pct: 27 }, { label: '45+', pct: 15 },
+      ],
+      genderSplit: { male: 44, female: 56 },
+      audienceSegments: [
+        { label: '觀光客', pct: 40 }, { label: '購物族', pct: 35 }, { label: '上班族', pct: 25 },
+      ],
+      peakHours: [0.1,0.05,0.05,0.05,0.1,0.15,0.2,0.3,0.4,0.55,0.7,0.8,0.85,0.9,0.95,1.0,0.95,0.9,0.85,0.75,0.65,0.5,0.3,0.15],
+      weekdayPct: 58,
+      nearbyPOIs: [
+        { name: 'Taipei 101', distance: '0.0 km' },
+        { name: 'ATT 4 FUN', distance: '0.2 km' },
+        { name: 'Eslite Spectrum', distance: '0.3 km' },
+        { name: 'W Hotel Taipei', distance: '0.1 km' },
+        { name: 'Shin Kong Mitsukoshi', distance: '0.4 km' },
+      ],
+      rankings: { cityRank: 2, cityTotal: 45, districtRank: 1, districtTotal: 8, typeRank: 1, typeTotal: 12 },
+      baseMatchScore: 88,
+    },
   },
   {
     id: 'inv-tpe-main',
@@ -36,6 +57,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Commuters', 'Tourists', 'Students'],
     imageUrl: '/images/tpe_main_station.png',
     description: 'Central transport hub of Taipei. The main hall screens reach millions of daily commuters and inter-city travelers.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 28 }, { label: '25-34', pct: 32 },
+        { label: '35-44', pct: 24 }, { label: '45+', pct: 16 },
+      ],
+      genderSplit: { male: 52, female: 48 },
+      audienceSegments: [
+        { label: '通勤族', pct: 44 }, { label: '觀光客', pct: 30 }, { label: '學生族', pct: 26 },
+      ],
+      peakHours: [0.1,0.1,0.1,0.1,0.15,0.3,0.6,1.0,0.95,0.5,0.4,0.55,0.65,0.5,0.4,0.5,0.7,1.0,0.95,0.7,0.5,0.35,0.2,0.1],
+      weekdayPct: 72,
+      nearbyPOIs: [
+        { name: 'Q Square Mall', distance: '0.1 km' },
+        { name: 'Guanqian Night Market', distance: '0.3 km' },
+        { name: 'Presidential Palace', distance: '0.8 km' },
+        { name: 'Ximending', distance: '0.9 km' },
+      ],
+      rankings: { cityRank: 1, cityTotal: 45, districtRank: 1, districtTotal: 5, typeRank: 1, typeTotal: 8 },
+      baseMatchScore: 85,
+    },
   },
   {
     id: 'inv-tpe-sogo',
@@ -54,6 +95,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Shoppers', 'Professionals'],
     imageUrl: '/images/tpe_sogo.png',
     description: 'Premium intersection connecting major shopping districts, capturing high-end shoppers and young professionals.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 22 }, { label: '25-34', pct: 40 },
+        { label: '35-44', pct: 28 }, { label: '45+', pct: 10 },
+      ],
+      genderSplit: { male: 38, female: 62 },
+      audienceSegments: [
+        { label: '購物族', pct: 48 }, { label: '上班族', pct: 35 }, { label: '學生族', pct: 17 },
+      ],
+      peakHours: [0.05,0.05,0.05,0.05,0.1,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.9,0.95,1.0,0.95,0.85,0.8,0.7,0.55,0.4,0.25,0.1],
+      weekdayPct: 55,
+      nearbyPOIs: [
+        { name: 'SOGO Zhongxiao', distance: '0.0 km' },
+        { name: 'Pacific SOGO', distance: '0.1 km' },
+        { name: 'Breeze Nanjing', distance: '0.5 km' },
+        { name: 'Dunnan Cultural District', distance: '0.3 km' },
+      ],
+      rankings: { cityRank: 4, cityTotal: 45, districtRank: 2, districtTotal: 6, typeRank: 3, typeTotal: 15 },
+      baseMatchScore: 80,
+    },
   },
   {
     id: 'inv-tpe-ximen',
@@ -72,6 +133,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Students', 'Tourists', 'Shoppers'],
     imageUrl: '/images/tpe_ximen.png',
     description: 'The "Shibuya of Taipei". This screen dominates the main plaza where youth and pop culture converge.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 42 }, { label: '25-34', pct: 30 },
+        { label: '35-44', pct: 18 }, { label: '45+', pct: 10 },
+      ],
+      genderSplit: { male: 46, female: 54 },
+      audienceSegments: [
+        { label: '學生族', pct: 40 }, { label: '觀光客', pct: 32 }, { label: '購物族', pct: 28 },
+      ],
+      peakHours: [0.2,0.1,0.05,0.05,0.05,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.65,0.7,0.8,0.9,0.95,1.0,1.0,0.95,0.9,0.8,0.65,0.4],
+      weekdayPct: 45,
+      nearbyPOIs: [
+        { name: 'Ximending Pedestrian Zone', distance: '0.0 km' },
+        { name: 'Red House Theater', distance: '0.1 km' },
+        { name: 'Comix Manga Store', distance: '0.2 km' },
+        { name: 'Wanhua Night Market', distance: '0.6 km' },
+      ],
+      rankings: { cityRank: 3, cityTotal: 45, districtRank: 1, districtTotal: 4, typeRank: 2, typeTotal: 12 },
+      baseMatchScore: 78,
+    },
   },
   {
     id: 'inv-tpe-nangang',
@@ -90,6 +171,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Tech Workers', 'Professionals', 'Commuters'],
     imageUrl: '/images/tpe_nangang.png',
     description: 'Targeted placement within the heart of Taipei\'s tech hub, reaching high-income tech professionals.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 12 }, { label: '25-34', pct: 45 },
+        { label: '35-44', pct: 35 }, { label: '45+', pct: 8 },
+      ],
+      genderSplit: { male: 68, female: 32 },
+      audienceSegments: [
+        { label: '科技業', pct: 52 }, { label: '上班族', pct: 35 }, { label: '通勤族', pct: 13 },
+      ],
+      peakHours: [0.05,0.05,0.05,0.05,0.1,0.2,0.4,0.8,1.0,0.9,0.7,0.6,0.85,0.7,0.65,0.7,0.9,1.0,0.7,0.35,0.15,0.1,0.05,0.05],
+      weekdayPct: 88,
+      nearbyPOIs: [
+        { name: 'Nangang Software Park', distance: '0.0 km' },
+        { name: 'Nangang Exhibition Center', distance: '0.5 km' },
+        { name: 'Big City Mall', distance: '0.8 km' },
+        { name: 'Academia Sinica', distance: '1.2 km' },
+      ],
+      rankings: { cityRank: 8, cityTotal: 45, districtRank: 1, districtTotal: 3, typeRank: 1, typeTotal: 6 },
+      baseMatchScore: 72,
+    },
   },
   {
     id: 'inv-tpe-songshan',
@@ -108,6 +209,25 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Tourists', 'Professionals'],
     imageUrl: '/images/tpe_songshan.png',
     description: 'High CPM placement targeting international and domestic business travelers directly at the arrival gates.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 15 }, { label: '25-34', pct: 32 },
+        { label: '35-44', pct: 38 }, { label: '45+', pct: 15 },
+      ],
+      genderSplit: { male: 58, female: 42 },
+      audienceSegments: [
+        { label: '商務旅客', pct: 45 }, { label: '觀光客', pct: 38 }, { label: '高消費族', pct: 17 },
+      ],
+      peakHours: [0.3,0.25,0.2,0.2,0.3,0.5,0.75,1.0,0.95,0.8,0.65,0.55,0.5,0.5,0.55,0.6,0.75,0.95,1.0,0.85,0.65,0.45,0.35,0.3],
+      weekdayPct: 65,
+      nearbyPOIs: [
+        { name: 'Songshan Airport Terminal', distance: '0.0 km' },
+        { name: 'Eslite Songshan', distance: '0.4 km' },
+        { name: 'Zhongshan MRT Station', distance: '1.1 km' },
+      ],
+      rankings: { cityRank: 10, cityTotal: 45, districtRank: 1, districtTotal: 2, typeRank: 1, typeTotal: 2 },
+      baseMatchScore: 75,
+    },
   },
   {
     id: 'inv-ntpc-banqiao',
@@ -126,6 +246,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Commuters', 'Shoppers', 'Students'],
     imageUrl: '/images/ntpc_banqiao.png',
     description: 'Major transit hub in New Taipei connecting HSR, TRA, and MRT lines, ensuring massive daily reach.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 26 }, { label: '25-34', pct: 34 },
+        { label: '35-44', pct: 26 }, { label: '45+', pct: 14 },
+      ],
+      genderSplit: { male: 50, female: 50 },
+      audienceSegments: [
+        { label: '通勤族', pct: 46 }, { label: '購物族', pct: 30 }, { label: '學生族', pct: 24 },
+      ],
+      peakHours: [0.1,0.1,0.1,0.1,0.2,0.35,0.65,1.0,0.9,0.5,0.4,0.55,0.65,0.5,0.4,0.55,0.75,1.0,0.95,0.7,0.5,0.3,0.2,0.1],
+      weekdayPct: 70,
+      nearbyPOIs: [
+        { name: 'Banqiao Train Station', distance: '0.0 km' },
+        { name: 'Far Eastern Department Store', distance: '0.2 km' },
+        { name: 'Global Mall Banqiao', distance: '0.3 km' },
+        { name: 'Banqiao 435 Art Zone', distance: '0.6 km' },
+      ],
+      rankings: { cityRank: 5, cityTotal: 45, districtRank: 1, districtTotal: 6, typeRank: 2, typeTotal: 8 },
+      baseMatchScore: 76,
+    },
   },
   {
     id: 'inv-tpe-neihu',
@@ -144,6 +284,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Tech Workers', 'Professionals'],
     imageUrl: '/images/tpe_neihu.png',
     description: 'Roadside billboard targeting the daily commute of tech industry workers driving into Neihu Technology Park.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 10 }, { label: '25-34', pct: 48 },
+        { label: '35-44', pct: 35 }, { label: '45+', pct: 7 },
+      ],
+      genderSplit: { male: 64, female: 36 },
+      audienceSegments: [
+        { label: '科技業', pct: 55 }, { label: '上班族', pct: 35 }, { label: '高消費族', pct: 10 },
+      ],
+      peakHours: [0.05,0.05,0.05,0.05,0.1,0.2,0.35,0.6,0.8,0.75,0.65,0.7,0.85,0.75,0.7,0.75,0.9,0.95,0.7,0.35,0.15,0.1,0.05,0.05],
+      weekdayPct: 85,
+      nearbyPOIs: [
+        { name: 'Neihu Technology Park', distance: '0.1 km' },
+        { name: 'IKEA Neihu', distance: '0.4 km' },
+        { name: 'Carrefour Neihu', distance: '0.6 km' },
+        { name: 'Costco Neihu', distance: '0.8 km' },
+      ],
+      rankings: { cityRank: 7, cityTotal: 45, districtRank: 1, districtTotal: 4, typeRank: 2, typeTotal: 15 },
+      baseMatchScore: 70,
+    },
   },
   {
     id: 'inv-tpe-shilin',
@@ -162,6 +322,26 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Foodies', 'Tourists', 'Students'],
     imageUrl: '/images/tpe_shilin.png',
     description: 'High visibility screen at the entrance of Taiwan\'s most famous night market, excellent for FMCG brands.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 35 }, { label: '25-34', pct: 32 },
+        { label: '35-44', pct: 20 }, { label: '45+', pct: 13 },
+      ],
+      genderSplit: { male: 48, female: 52 },
+      audienceSegments: [
+        { label: '美食愛好者', pct: 45 }, { label: '觀光客', pct: 35 }, { label: '學生族', pct: 20 },
+      ],
+      peakHours: [0.3,0.15,0.1,0.05,0.05,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.45,0.55,0.6,0.65,0.75,0.85,0.95,1.0,1.0,0.9,0.75,0.5],
+      weekdayPct: 40,
+      nearbyPOIs: [
+        { name: 'Shilin Night Market', distance: '0.0 km' },
+        { name: 'Shilin MRT Station', distance: '0.2 km' },
+        { name: 'Tianmu Shopping District', distance: '1.0 km' },
+        { name: 'Chiang Kai-shek Shilin Residence', distance: '0.6 km' },
+      ],
+      rankings: { cityRank: 6, cityTotal: 45, districtRank: 1, districtTotal: 3, typeRank: 1, typeTotal: 3 },
+      baseMatchScore: 73,
+    },
   },
   {
     id: 'inv-tpe-gongguan',
@@ -180,5 +360,25 @@ export const mockInventory: InventoryLocation[] = [
     audienceTags: ['Students', 'Foodies'],
     imageUrl: '/images/tpe_gongguan.png',
     description: 'Located right outside National Taiwan University, the perfect location for targeting Gen Z and young adults.',
+    dna: {
+      ageBreakdown: [
+        { label: '18-24', pct: 52 }, { label: '25-34', pct: 28 },
+        { label: '35-44', pct: 14 }, { label: '45+', pct: 6 },
+      ],
+      genderSplit: { male: 45, female: 55 },
+      audienceSegments: [
+        { label: '學生族', pct: 55 }, { label: '美食愛好者', pct: 28 }, { label: '年輕上班族', pct: 17 },
+      ],
+      peakHours: [0.1,0.05,0.05,0.05,0.05,0.1,0.2,0.4,0.5,0.55,0.6,0.65,0.8,0.85,0.9,0.95,1.0,0.95,0.9,0.85,0.75,0.6,0.4,0.2],
+      weekdayPct: 50,
+      nearbyPOIs: [
+        { name: 'National Taiwan University', distance: '0.2 km' },
+        { name: 'Gongguan Night Market', distance: '0.1 km' },
+        { name: 'Shida Night Market', distance: '0.7 km' },
+        { name: 'Treasure Hill Artist Village', distance: '0.4 km' },
+      ],
+      rankings: { cityRank: 9, cityTotal: 45, districtRank: 2, districtTotal: 5, typeRank: 5, typeTotal: 15 },
+      baseMatchScore: 65,
+    },
   }
 ];

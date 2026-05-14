@@ -3,6 +3,8 @@ import { InventoryLocation, AudienceTag } from '@/types/inventory';
 
 // Maps Supabase snake_case row → frontend camelCase type
 function mapRow(row: Record<string, unknown>): InventoryLocation {
+  const dnaData = row.dna as unknown as InventoryLocation['dna'];
+
   return {
     id: row.id as string,
     name: row.name as string,
@@ -20,6 +22,7 @@ function mapRow(row: Record<string, unknown>): InventoryLocation {
     audienceTags: ((row.audience_tags as string[]) ?? []) as AudienceTag[],
     imageUrl: (row.image_url as string) ?? '',
     description: (row.description as string) ?? '',
+    dna: dnaData,
   };
 }
 
