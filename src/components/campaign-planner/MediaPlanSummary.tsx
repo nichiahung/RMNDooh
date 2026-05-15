@@ -46,13 +46,13 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
     <>
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
+          className="lg:hidden fixed inset-0 bg-slate-900/40 z-[51]"
           onClick={onClose}
           aria-hidden
         />
       )}
       <aside
-        className={`fixed lg:static inset-y-0 right-0 w-full sm:w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
+        className={`fixed lg:static inset-y-0 right-0 w-full sm:w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-[52] lg:z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
       >
 
       {/* Header */}
