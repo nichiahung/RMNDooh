@@ -171,6 +171,16 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.req.maxSize': 'Max Size: 100MB',
     'creative.req.complianceNote': 'Creatives will be reviewed by our compliance team before campaign launch.',
 
+    // Creative upload zone
+    'creative.upload.dragDrop': 'Drag & drop or click to upload',
+    'creative.upload.remove': 'Remove',
+    'creative.upload.venuesCount': 'venues use this format',
+    'creative.upload.maxSize': 'Max',
+    'creative.upload.uploading': 'Uploading…',
+    'creative.upload.formatsNeeded': 'formats required',
+    'creative.submit.button': 'Submit for Review',
+    'creative.submit.success': 'Submitted for review',
+
     // Inventory detail card
     'detail.pricing': 'Pricing',
     'detail.perDay': '/ day',
@@ -591,6 +601,16 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.req.maxVideo': '影片最長：15 秒',
     'creative.req.maxSize': '檔案上限：100MB',
     'creative.req.complianceNote': '廣告素材將於刊播前由合規團隊進行審查。',
+
+    // Creative upload zone
+    'creative.upload.dragDrop': '拖曳或點擊上傳',
+    'creative.upload.remove': '移除',
+    'creative.upload.venuesCount': '個版位使用此格式',
+    'creative.upload.maxSize': '最大',
+    'creative.upload.uploading': '上傳中…',
+    'creative.upload.formatsNeeded': '種格式',
+    'creative.submit.button': '提交審查',
+    'creative.submit.success': '素材已提交，等待審查',
 
     // Inventory detail card
     'detail.pricing': '刊播費率',
