@@ -11,6 +11,7 @@ interface Props {
   allInventory: InventoryLocation[];
   objective?: string;
   onOpenSummary: () => void;
+  onContinue: () => void;
 }
 
 function AnimatedValue({ value }: { value: string | number }) {
@@ -33,7 +34,7 @@ function AnimatedValue({ value }: { value: string | number }) {
   );
 }
 
-export function PerformanceBar({ selectedItems, allInventory, objective, onOpenSummary }: Props) {
+export function PerformanceBar({ selectedItems, allInventory, objective, onOpenSummary, onContinue }: Props) {
   const visible = selectedItems.length > 0;
 
   // Compute metrics
@@ -80,10 +81,11 @@ export function PerformanceBar({ selectedItems, allInventory, objective, onOpenS
           )}
         </div>
         <button
-          onClick={onOpenSummary}
-          className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          onClick={onContinue}
+          disabled={selectedItems.length === 0}
+          className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          查看媒體計劃 <ChevronRight className="w-4 h-4" />
+          繼續上傳素材 <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 

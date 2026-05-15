@@ -235,6 +235,7 @@ export function CampaignPlannerPage() {
               allInventory={allInventory}
               objective={filters.campaignObjective}
               onOpenSummary={() => setIsSummaryOpen(true)}
+              onContinue={handleContinueToCreative}
             />
           </>
         )}
