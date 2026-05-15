@@ -58,6 +58,7 @@ export interface LaunchReadiness {
   checks: {
     hasInventory: boolean;
     allCreativesApproved: boolean;
+    noPendingReview: boolean;
   };
 }
 

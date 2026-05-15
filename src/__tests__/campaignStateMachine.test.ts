@@ -49,24 +49,28 @@ describe('computeLaunchReadiness', () => {
     expect(result.ready).toBe(true);
     expect(result.checks.hasInventory).toBe(true);
     expect(result.checks.allCreativesApproved).toBe(true);
+    expect(result.checks.noPendingReview).toBe(true);
   });
 
   it('returns not ready when no inventory', () => {
     const result = computeLaunchReadiness(0, [approved('r1')]);
     expect(result.ready).toBe(false);
     expect(result.checks.hasInventory).toBe(false);
+    expect(result.checks.noPendingReview).toBe(true);
   });
 
   it('returns not ready when some creatives not approved', () => {
     const result = computeLaunchReadiness(2, [approved('r1'), pending('r2')]);
     expect(result.ready).toBe(false);
     expect(result.checks.allCreativesApproved).toBe(false);
+    expect(result.checks.noPendingReview).toBe(false);
   });
 
   it('returns not ready when no requirements exist', () => {
     const result = computeLaunchReadiness(2, []);
     expect(result.ready).toBe(false);
     expect(result.checks.allCreativesApproved).toBe(false);
+    expect(result.checks.noPendingReview).toBe(false);
   });
 });
 

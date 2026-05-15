@@ -16,10 +16,13 @@ export function computeLaunchReadiness(
   const allCreativesApproved =
     requirements.length > 0 &&
     requirements.every(r => r.status === 'approved');
+  const noPendingReview =
+    requirements.length > 0 &&
+    requirements.every(r => r.status === 'approved' || r.status === 'rejected');
 
   return {
     ready: hasInventory && allCreativesApproved,
-    checks: { hasInventory, allCreativesApproved },
+    checks: { hasInventory, allCreativesApproved, noPendingReview },
   };
 }
 

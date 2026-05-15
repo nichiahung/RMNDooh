@@ -52,6 +52,7 @@ export function CampaignPlannerPage() {
 
   const dbItemIdMap = useRef<Map<string, string>>(new Map()); // inventoryId → campaign_inventory_items row id
   const isCreatingDraft = useRef(false);
+  const pendingItemsRef = useRef<InventoryLocation[]>([]);
 
   // Mobile drawer state for filter and media-plan sidebars (<lg)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -89,9 +90,18 @@ export function CampaignPlannerPage() {
   };
 
   const handleAdd = async (item: InventoryLocation) => {
-    // Create draft on first add
+    // Always add to local state immediately
+    setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
+
     let cId = campaignId;
-    if (!cId && !isCreatingDraft.current) {
+
+    if (!cId) {
+      if (isCreatingDraft.current) {
+        // Draft creation in progress — queue for DB write after it finishes
+        pendingItemsRef.current.push(item);
+        return;
+      }
+
       isCreatingDraft.current = true;
       try {
         const draft = await createDraftCampaign();
@@ -99,17 +109,30 @@ export function CampaignPlannerPage() {
         setCampaignId(draft.id);
       } catch (err) {
         console.error('Failed to create campaign draft:', err);
-      } finally {
         isCreatingDraft.current = false;
+        return;
       }
+      isCreatingDraft.current = false;
+
+      // Flush all pending items that arrived during draft creation
+      for (const pending of pendingItemsRef.current) {
+        const alreadyMapped = dbItemIdMap.current.has(pending.id);
+        if (!alreadyMapped) {
+          try {
+            const dbRow = await addInventoryItem(cId, pending.id, 7, pending.pricePerDay, pending.dailyImpressions);
+            dbItemIdMap.current.set(pending.id, dbRow.id);
+          } catch (err) {
+            console.error('Failed to persist queued inventory item:', err);
+          }
+        }
+      }
+      pendingItemsRef.current = [];
     }
 
-    // Add to local state
-    setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
-
-    // Persist to DB if we have an ID (guard against duplicate writes)
+    // Persist current item (if not already mapped)
     const alreadyInPlan = selectedItems.some(i => i.inventoryId === item.id);
-    if (cId && !alreadyInPlan) {
+    const alreadyMapped = dbItemIdMap.current.has(item.id);
+    if (cId && !alreadyInPlan && !alreadyMapped) {
       try {
         const dbRow = await addInventoryItem(cId, item.id, 7, item.pricePerDay, item.dailyImpressions);
         dbItemIdMap.current.set(item.id, dbRow.id);

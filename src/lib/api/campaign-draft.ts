@@ -204,6 +204,7 @@ export async function submitCreativesForReview(
 ): Promise<CampaignCreativeRequirement[]> {
   // Validate campaign status allows submission
   const campaign = await getCampaign(campaignId);
+  if (campaign.status === 'cancelled') throw new Error('campaign_cancelled');
   if (!canSubmitCreatives(campaign.status)) {
     throw new Error(`cannot_submit: campaign status is ${campaign.status}`);
   }
@@ -297,11 +298,13 @@ export async function getLaunchReadiness(campaignId: string): Promise<LaunchRead
 // ─── Confirm Booking ──────────────────────────────────────
 
 export async function confirmBooking(campaignId: string): Promise<CampaignBooking> {
-  // Fetch items and requirements once
-  const [items, requirements] = await Promise.all([
+  // Fetch campaign, items and requirements in parallel
+  const [campaign, items, requirements] = await Promise.all([
+    getCampaign(campaignId),
     getInventoryItems(campaignId),
     getStoredCreativeRequirements(campaignId),
   ]);
+  if (campaign.status === 'cancelled') throw new Error('campaign_cancelled');
 
   // Check launch readiness
   const readiness = computeLaunchReadiness(items.length, requirements);
