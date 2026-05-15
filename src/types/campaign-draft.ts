@@ -1,4 +1,5 @@
 // src/types/campaign-draft.ts
+import type { CanonicalFormat } from './creative';
 
 export type CampaignDraftStatus =
   | 'draft'
@@ -38,7 +39,7 @@ export interface CampaignInventoryItemRow {
 export interface CampaignCreativeRequirement {
   id: string;
   campaignId: string;
-  canonicalFormat: string; // CanonicalFormat from creative.ts
+  canonicalFormat: CanonicalFormat;
   status: CreativeRequirementStatus;
   mediaAssetId: string | null;
   rejectionReason: string | null;
@@ -61,7 +62,7 @@ export interface LaunchReadiness {
 }
 
 export interface DerivedCreativeRequirement {
-  format: string;          // CanonicalFormat
+  format: CanonicalFormat;
   label: string;
   dimensions: string;
   venueCount: number;
