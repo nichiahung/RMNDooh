@@ -22,7 +22,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
       isSelected ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
     }`}>
       {/* Image Header */}
-      <div className="h-40 relative overflow-hidden bg-slate-100">
+      <div className="h-32 relative overflow-hidden bg-slate-100">
         <img 
           src={imgSrc(item.imageUrl)}
           alt={item.name}
@@ -60,15 +60,15 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
       </div>
 
       {/* Body */}
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="font-bold text-slate-900 line-clamp-1 mb-1">{item.name}</h3>
-        <p className="text-xs text-slate-500 flex items-center mb-3">
+      <div className="p-3 flex-1 flex flex-col">
+        <h3 className="font-bold text-slate-900 line-clamp-1 mb-0.5">{item.name}</h3>
+        <p className="text-xs text-slate-500 flex items-center mb-2">
           <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
           {item.district}, {item.city}
         </p>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1 mb-2">
           {item.audienceTags.slice(0, 3).map(tag => (
             <span key={tag} className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded">
               {t(AUDIENCE_KEY[tag] ?? tag)}
@@ -82,7 +82,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-y-2 gap-x-2 border-t border-slate-100 pt-3 mb-4">
+        <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 border-t border-slate-100 pt-2 mb-3">
           <div className="flex items-center text-xs font-medium text-slate-600">
             <Monitor className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
             {item.screenType}
@@ -98,7 +98,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+        <div className="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between">
           <div>
             <div className="font-bold text-slate-900">
               {formatCurrency(item.pricePerDay)}
