@@ -59,8 +59,8 @@ export function PerformanceBar({ selectedItems, allInventory, objective, onOpenS
       }`}
     >
       {/* Desktop */}
-      <div className="hidden lg:flex items-center justify-between bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-8 py-3">
-        <div className="flex items-center gap-8">
+      <div className="hidden lg:flex items-center justify-between bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-4 xl:px-8 py-3">
+        <div className="flex items-center gap-4 xl:gap-8">
           <Metric icon={<MapPin className="w-3.5 h-3.5" />} label="版位">
             <AnimatedValue value={`${selectedItems.length} 個`} />
           </Metric>

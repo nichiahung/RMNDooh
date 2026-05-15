@@ -19,10 +19,10 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
   const { t } = useI18n();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
-        <div className="h-64 relative bg-slate-100 flex-shrink-0">
+        <div className="h-44 sm:h-64 relative bg-slate-100 flex-shrink-0">
           <img
             src={imgSrc(item.imageUrl)}
             alt={item.name}
