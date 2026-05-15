@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { FilterSidebar } from './FilterSidebar';
 import { InventoryDiscovery } from './InventoryDiscovery';
 import { MediaPlanSummary } from './MediaPlanSummary';
@@ -50,6 +50,9 @@ export function CampaignPlannerPage() {
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
   const [creatives, setCreatives] = useState<CreativeAsset[]>([]);
 
+  const dbItemIdMap = useRef<Map<string, string>>(new Map()); // inventoryId → campaign_inventory_items row id
+  const isCreatingDraft = useRef(false);
+
   // Mobile drawer state for filter and media-plan sidebars (<lg)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -88,23 +91,28 @@ export function CampaignPlannerPage() {
   const handleAdd = async (item: InventoryLocation) => {
     // Create draft on first add
     let cId = campaignId;
-    if (!cId) {
+    if (!cId && !isCreatingDraft.current) {
+      isCreatingDraft.current = true;
       try {
         const draft = await createDraftCampaign();
         cId = draft.id;
         setCampaignId(draft.id);
       } catch (err) {
         console.error('Failed to create campaign draft:', err);
+      } finally {
+        isCreatingDraft.current = false;
       }
     }
 
     // Add to local state
     setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
 
-    // Persist to DB if we have an ID
-    if (cId) {
+    // Persist to DB if we have an ID (guard against duplicate writes)
+    const alreadyInPlan = selectedItems.some(i => i.inventoryId === item.id);
+    if (cId && !alreadyInPlan) {
       try {
-        await addInventoryItem(cId, item.id, 7, item.pricePerDay, item.dailyImpressions);
+        const dbRow = await addInventoryItem(cId, item.id, 7, item.pricePerDay, item.dailyImpressions);
+        dbItemIdMap.current.set(item.id, dbRow.id);
       } catch (err) {
         console.error('Failed to persist inventory item:', err);
       }
@@ -113,6 +121,13 @@ export function CampaignPlannerPage() {
 
   const handleRemove = (inventoryId: string) => {
     setSelectedItems(prev => removeFromMediaPlan(prev, inventoryId));
+    if (campaignId) {
+      const dbRowId = dbItemIdMap.current.get(inventoryId);
+      if (dbRowId) {
+        removeInventoryItem(dbRowId).catch(err => console.error('Failed to remove inventory item from DB:', err));
+        dbItemIdMap.current.delete(inventoryId);
+      }
+    }
   };
 
   const handleUpdateDays = (inventoryId: string, days: number) => {
@@ -265,7 +280,7 @@ export function CampaignPlannerPage() {
               allInventory={allInventory}
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
-              onContinue={handleContinueToCreative}
+              onContinue={isSaving ? undefined : handleContinueToCreative}
               isOpen={isSummaryOpen}
               onClose={() => setIsSummaryOpen(false)}
             />

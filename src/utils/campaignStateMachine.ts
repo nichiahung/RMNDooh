@@ -5,7 +5,7 @@ import type {
 } from '@/types/campaign-draft';
 
 export function canSubmitCreatives(status: CampaignDraftStatus): boolean {
-  return status === 'draft' || status === 'blocked_by_creative';
+  return status === 'draft' || status === 'blocked_by_creative' || status === 'pending_creative_review';
 }
 
 export function computeLaunchReadiness(

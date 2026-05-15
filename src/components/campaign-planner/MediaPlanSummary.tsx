@@ -10,7 +10,7 @@ interface Props {
   allInventory: InventoryLocation[];
   onRemove: (id: string) => void;
   onUpdateDays: (id: string, days: number) => void;
-  onContinue: () => void;
+  onContinue?: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -146,7 +146,7 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
         <button 
           onClick={onContinue}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={selectedItems.length === 0}
+          disabled={selectedItems.length === 0 || !onContinue}
         >
           {t('mediaPlan.continueCreative')}
         </button>

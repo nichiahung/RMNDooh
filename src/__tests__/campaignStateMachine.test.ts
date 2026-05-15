@@ -15,8 +15,8 @@ describe('canSubmitCreatives', () => {
     expect(canSubmitCreatives('blocked_by_creative')).toBe(true);
   });
 
-  it('rejects submit from pending_creative_review', () => {
-    expect(canSubmitCreatives('pending_creative_review')).toBe(false);
+  it('allows resubmit from pending_creative_review', () => {
+    expect(canSubmitCreatives('pending_creative_review')).toBe(true);
   });
 
   it('rejects submit from ready_to_book', () => {
