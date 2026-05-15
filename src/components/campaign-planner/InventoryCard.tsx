@@ -1,6 +1,5 @@
-import React from 'react';
 import { InventoryLocation } from '@/types/inventory';
-import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
+import { formatCurrency, formatCompact, formatCPM } from '@/utils/formatters';
 import { MapPin, Users, Monitor, Check, Plus, Info } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
@@ -33,7 +32,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
           NT${formatCPM(item.cpm)} CPM
         </div>
         {item.availability > 0.8 && (
-          <div className="absolute top-2 right-2 bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">
+          <div className="absolute bottom-2 right-2 bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">
             {t('card.highAvailability')}
           </div>
         )}
@@ -89,7 +88,7 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
           </span>
           <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">
             <Users className="w-3 h-3 text-slate-400" />
-            {formatNumber(item.dailyImpressions)}
+            {formatCompact(item.dailyImpressions)}
             <span className="font-normal text-slate-400">/day</span>
           </span>
         </div>
