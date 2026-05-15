@@ -181,6 +181,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.submit.button': 'Submit for Review',
     'creative.submit.success': 'Submitted for review',
     'creative.upload.error.generic': 'Upload failed, please try again',
+    'creative.upload.error.alreadyApproved': 'This format has already been approved and cannot be re-uploaded',
     'creative.upload.emptyState': 'No locations selected',
 
     // Inventory detail card
@@ -614,6 +615,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.submit.button': '提交審查',
     'creative.submit.success': '素材已提交，等待審查',
     'creative.upload.error.generic': '上傳失敗，請再試一次',
+    'creative.upload.error.alreadyApproved': '此格式已通過審核，無法重新上傳',
     'creative.upload.emptyState': '尚未選擇任何版位',
 
     // Inventory detail card

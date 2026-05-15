@@ -80,18 +80,28 @@ export function CreativeUploadStep({
         const req = storedRequirements.find(r => r.canonicalFormat === format);
         if (req) {
           await uploadAssetToRequirement(req.id, asset.id);
+        } else {
+          console.warn(`[CreativeUploadStep] No stored requirement found for format: ${format}`);
         }
       }
 
       setZones(prev => ({ ...prev, [format]: { status: 'valid', file, previewUrl, asset } }));
     } catch (err) {
+      let errorMessage = t('creative.upload.error.generic');
+      if (err instanceof Error) {
+        if (err.message === 'requirement_already_approved') {
+          errorMessage = t('creative.upload.error.alreadyApproved');
+        } else {
+          errorMessage = err.message;
+        }
+      }
       setZones(prev => ({
         ...prev,
         [format]: {
           status: 'invalid',
           file,
           previewUrl,
-          errorMessage: err instanceof Error ? err.message : t('creative.upload.error.generic'),
+          errorMessage,
         },
       }));
     }
