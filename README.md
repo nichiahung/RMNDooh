@@ -25,6 +25,7 @@ RMNDooh (Digital Out-Of-Home) 是一個面向廣告主的自助式投放平台 M
 
 本專案將詳細的商業邏輯與技術規格分離，請參閱以下文件以了解更多：
 
+- 🧭 **[USER_GUIDE.md](./USER_GUIDE.md)**：網站使用指南，涵蓋 Campaign Planner、Admin、Reports 與 Web Player 操作方式。
 - 👉 **[ARCHITECTURE.md](./ARCHITECTURE.md)**：**強烈建議首先閱讀**。這是一份包含高階架構圖與 ER Model 關聯的 5 分鐘速成指南。
 - 👉 **[AGENTS.md](./AGENTS.md)**：未來的 AI Agent 開發守則與術語表。
 - 📖 **`docs/` 資料夾**：包含深度的技術規格，例如：
