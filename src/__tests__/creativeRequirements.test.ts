@@ -77,7 +77,7 @@ describe('validateAsset', () => {
   it('rejects wrong MIME type', () => {
     const result = validateAsset(makeFile('image/gif', 1), landscape);
     expect(result.valid).toBe(false);
-    expect(result.errorMessage).toMatch(/type/i);
+    expect(result.errorMessage).toMatch(/類型/);
   });
 
   it('rejects oversized file', () => {

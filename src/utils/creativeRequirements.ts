@@ -66,7 +66,7 @@ export function validateAsset(
   if (!spec.acceptedMimeTypes.includes(file.type)) {
     return {
       valid: false,
-      errorMessage: `Unsupported file type (${file.type}). Please upload JPG, PNG, or MP4.`,
+      errorMessage: `不支援的檔案類型 (${file.type})。請上傳 JPG、PNG 或 MP4。`,
     };
   }
   const sizeMB = file.size / (1024 * 1024);
