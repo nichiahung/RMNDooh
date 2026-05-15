@@ -56,7 +56,7 @@ export async function createDraftCampaign(): Promise<CampaignDraft> {
       advertiser_id: DEFAULT_ADVERTISER_ID,
       created_by_user_id: DEFAULT_USER_ID,
       name,
-      objective: null,
+      objective: '',
       status: 'draft',
       buying_type: 'direct',
       campaign_days: 7,
