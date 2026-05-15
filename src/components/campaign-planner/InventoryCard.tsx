@@ -82,15 +82,15 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
         </div>
 
         {/* Stats — single compact row */}
-        <div className="flex items-center gap-3 border-t border-slate-100 pt-2 mb-3 text-xs text-slate-600">
-          <span className="flex items-center gap-1">
+        <div className="flex items-center justify-between border-t border-slate-100 pt-2 mb-3 text-xs text-slate-600">
+          <span className="flex items-center gap-1 min-w-0">
             <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
             <span className="truncate">{item.screenType}</span>
           </span>
-          <span className="flex items-center gap-1 font-semibold text-slate-900">
-            <Users className="w-3 h-3 text-slate-400 flex-shrink-0" />
+          <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">
+            <Users className="w-3 h-3 text-slate-400" />
             {formatNumber(item.dailyImpressions)}
-            <span className="font-normal text-slate-500">{t('card.impPerDay')}</span>
+            <span className="font-normal text-slate-400">/day</span>
           </span>
         </div>
 
