@@ -180,6 +180,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.upload.formatsNeeded': 'formats required',
     'creative.submit.button': 'Submit for Review',
     'creative.submit.success': 'Submitted for review',
+    'creative.upload.error.generic': 'Upload failed, please try again',
+    'creative.upload.emptyState': 'No locations selected',
 
     // Inventory detail card
     'detail.pricing': 'Pricing',
@@ -611,6 +613,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'creative.upload.formatsNeeded': '種格式',
     'creative.submit.button': '提交審查',
     'creative.submit.success': '素材已提交，等待審查',
+    'creative.upload.error.generic': '上傳失敗，請再試一次',
+    'creative.upload.emptyState': '尚未選擇任何版位',
 
     // Inventory detail card
     'detail.pricing': '刊播費率',

@@ -46,6 +46,13 @@ export function CreativeUploadStep({
   };
 
   const handleFile = useCallback(async (format: CanonicalFormat, spec: FormatSpec, file: File) => {
+    // Revoke previous blob URL for this format slot if it exists
+    setZones(prev => {
+      const old = prev[format];
+      if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
+      return prev;
+    });
+
     const previewUrl = URL.createObjectURL(file);
     const validation = validateAsset(file, spec);
 
@@ -69,7 +76,7 @@ export function CreativeUploadStep({
           status: 'invalid',
           file,
           previewUrl,
-          errorMessage: err instanceof Error ? err.message : '上傳失敗，請再試一次',
+          errorMessage: err instanceof Error ? err.message : t('creative.upload.error.generic'),
         },
       }));
     }
@@ -113,7 +120,7 @@ export function CreativeUploadStep({
         {/* Format Upload Zones */}
         {requiredFormats.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-500">
-            尚未選擇任何版位
+            {t('creative.upload.emptyState')}
           </div>
         ) : (
           <div className="space-y-4">
