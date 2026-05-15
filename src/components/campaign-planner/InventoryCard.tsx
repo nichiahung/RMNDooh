@@ -1,7 +1,7 @@
 import React from 'react';
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { MapPin, Users, Monitor, Building, Check, Plus, Info } from 'lucide-react';
+import { MapPin, Users, Monitor, Check, Plus, Info } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
 import { AUDIENCE_KEY } from '@/i18n/filterLabels';
@@ -67,68 +67,63 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
           {item.district}, {item.city}
         </p>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1 mb-2">
-          {item.audienceTags.slice(0, 3).map(tag => (
-            <span key={tag} className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded">
+        {/* Tags — single row, overflow hidden */}
+        <div className="flex gap-1 mb-2 overflow-hidden">
+          {item.audienceTags.slice(0, 2).map(tag => (
+            <span key={tag} className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded whitespace-nowrap">
               {t(AUDIENCE_KEY[tag] ?? tag)}
             </span>
           ))}
-          {item.audienceTags.length > 3 && (
-            <span className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded">
-              +{item.audienceTags.length - 3}
+          {item.audienceTags.length > 2 && (
+            <span className="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded whitespace-nowrap">
+              +{item.audienceTags.length - 2}
             </span>
           )}
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 border-t border-slate-100 pt-2 mb-3">
-          <div className="flex items-center text-xs font-medium text-slate-600">
-            <Monitor className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-            {item.screenType}
-          </div>
-          <div className="flex items-center text-xs font-medium text-slate-600">
-            <Building className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-            {item.venueType}
-          </div>
-          <div className="flex items-center text-xs font-medium text-slate-600 col-span-2">
-            <Users className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-            <span className="text-slate-900 font-semibold mr-1">{formatNumber(item.dailyImpressions)}</span> {t('card.impPerDay')}
-          </div>
+        {/* Stats — single compact row */}
+        <div className="flex items-center gap-3 border-t border-slate-100 pt-2 mb-3 text-xs text-slate-600">
+          <span className="flex items-center gap-1">
+            <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            <span className="truncate">{item.screenType}</span>
+          </span>
+          <span className="flex items-center gap-1 font-semibold text-slate-900">
+            <Users className="w-3 h-3 text-slate-400 flex-shrink-0" />
+            {formatNumber(item.dailyImpressions)}
+            <span className="font-normal text-slate-500">{t('card.impPerDay')}</span>
+          </span>
         </div>
 
-        {/* Footer Actions */}
-        <div className="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between">
-          <div>
-            <div className="font-bold text-slate-900">
-              {formatCurrency(item.pricePerDay)}
+        {/* Footer — price row + full-width action button */}
+        <div className="mt-auto pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="font-bold text-slate-900 text-sm">{formatCurrency(item.pricePerDay)}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('card.pricePerDay')}</div>
             </div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t('card.pricePerDay')}</div>
-          </div>
-          <div className="flex space-x-2">
-            <button 
+            <button
               onClick={onViewDetails}
               className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
               title="View Details"
             >
-              <Info className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={onAdd}
-              disabled={isSelected}
-              className={`flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded transition-colors ${
-                isSelected 
-                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
-                  : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300'
-              }`}
-            >
-              {isSelected ? (
-                <><Check className="w-4 h-4 mr-1" /> {t('planner.inPlan')}</>
-              ) : (
-                <><Plus className="w-4 h-4 mr-1" /> {t('planner.addToPlan')}</>
-              )}
+              <Info className="w-4 h-4" />
             </button>
           </div>
+          <button
+            onClick={onAdd}
+            disabled={isSelected}
+            className={`w-full flex items-center justify-center py-1.5 text-sm font-medium rounded transition-colors ${
+              isSelected
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
+                : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300'
+            }`}
+          >
+            {isSelected ? (
+              <><Check className="w-4 h-4 mr-1" />{t('planner.inPlan')}</>
+            ) : (
+              <><Plus className="w-4 h-4 mr-1" />{t('planner.addToPlan')}</>
+            )}
+          </button>
         </div>
       </div>
     </div>
