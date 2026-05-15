@@ -14,9 +14,9 @@ COMMENT ON COLUMN campaigns.status IS
 CREATE TABLE IF NOT EXISTS campaign_creative_requirements (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id       UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-  canonical_format  TEXT NOT NULL,
+  canonical_format  TEXT NOT NULL CHECK (canonical_format IN ('landscape_16_9','portrait_9_16','square_1_1','ultra_wide')),
   -- 'landscape_16_9' | 'portrait_9_16' | 'square_1_1' | 'ultra_wide'
-  status            TEXT NOT NULL DEFAULT 'pending_upload',
+  status            TEXT NOT NULL DEFAULT 'pending_upload' CHECK (status IN ('pending_upload','uploaded','approved','rejected')),
   -- 'pending_upload' | 'uploaded' | 'approved' | 'rejected'
   media_asset_id    UUID REFERENCES media_assets(id),
   reviewed_by       UUID REFERENCES users(id),
@@ -26,9 +26,6 @@ CREATE TABLE IF NOT EXISTS campaign_creative_requirements (
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(campaign_id, canonical_format)
 );
-
-CREATE INDEX IF NOT EXISTS idx_ccr_campaign_id
-  ON campaign_creative_requirements(campaign_id);
 
 CREATE INDEX IF NOT EXISTS idx_ccr_status
   ON campaign_creative_requirements(status);
@@ -40,11 +37,9 @@ CREATE TABLE IF NOT EXISTS campaign_bookings (
   campaign_id     UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE UNIQUE,
   confirmed_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   total_amount    NUMERIC(12, 2) NOT NULL,
-  booking_status  TEXT NOT NULL DEFAULT 'confirmed',
+  booking_status  TEXT NOT NULL DEFAULT 'confirmed' CHECK (booking_status IN ('confirmed','cancelled')),
   -- 'confirmed' | 'cancelled'
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_cb_campaign_id
-  ON campaign_bookings(campaign_id);
