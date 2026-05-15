@@ -6,6 +6,7 @@ import { CreativeAsset, MediaPlanItem, InventoryLocation } from '@/types/invento
 import { CanonicalFormat, FormatSpec, AssetStatus } from '@/types/creative';
 import { FORMAT_SPECS, deriveRequiredFormats, validateAsset } from '@/utils/creativeRequirements';
 import { uploadCreativeAsset } from '@/lib/api/creatives';
+import { uploadAssetToRequirement } from '@/lib/api/campaign-draft';
 import { ArrowLeft, UploadCloud, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -16,6 +17,9 @@ interface Props {
   setCreatives: React.Dispatch<React.SetStateAction<CreativeAsset[]>>;
   onBack: () => void;
   onContinue: () => void;
+  // New: stored requirement rows (present after submitCreativesForReview)
+  // If null/undefined, falls back to derived-only mode (no DB linking)
+  storedRequirements?: Array<{ id: string; canonicalFormat: string }> | null;
 }
 
 type ZoneState = {
@@ -32,6 +36,7 @@ export function CreativeUploadStep({
   setCreatives,
   onBack,
   onContinue,
+  storedRequirements,
 }: Props) {
   const { t } = useI18n();
   const requiredFormats = deriveRequiredFormats(selectedItems, allInventory);
@@ -68,6 +73,16 @@ export function CreativeUploadStep({
 
     try {
       const asset = await uploadCreativeAsset(file);
+
+      // If we have a stored requirement for this format, link the asset.
+      // uploadAssetToRequirement also handles the blocked_by_creative auto-transition.
+      if (storedRequirements) {
+        const req = storedRequirements.find(r => r.canonicalFormat === format);
+        if (req) {
+          await uploadAssetToRequirement(req.id, asset.id);
+        }
+      }
+
       setZones(prev => ({ ...prev, [format]: { status: 'valid', file, previewUrl, asset } }));
     } catch (err) {
       setZones(prev => ({
@@ -80,7 +95,7 @@ export function CreativeUploadStep({
         },
       }));
     }
-  }, []);
+  }, [storedRequirements]);
 
   const handleRemove = (format: CanonicalFormat) => {
     setZones(prev => {
