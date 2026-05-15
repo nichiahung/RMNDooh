@@ -216,10 +216,11 @@ export async function submitCreativesForReview(
   const formats = deriveRequiredFormats(selectedItems, allInventory);
 
   // Delete existing requirement snapshot
-  await supabase
+  const { error: deleteError } = await supabase
     .from('campaign_creative_requirements')
     .delete()
     .eq('campaign_id', campaignId);
+  if (deleteError) throw new Error(deleteError.message);
 
   // Insert fresh snapshot
   if (formats.length > 0) {
@@ -235,10 +236,11 @@ export async function submitCreativesForReview(
   }
 
   // Transition campaign to pending_creative_review
-  await supabase
+  const { error: statusError } = await supabase
     .from('campaigns')
     .update({ status: 'pending_creative_review' })
     .eq('id', campaignId);
+  if (statusError) throw new Error(statusError.message);
 
   return getStoredCreativeRequirements(campaignId);
 }
@@ -249,7 +251,17 @@ export async function uploadAssetToRequirement(
   requirementId: string,
   mediaAssetId: string,
 ): Promise<void> {
-  // Mark requirement as uploaded
+  // Read first to guard against overwriting an approved requirement
+  const { data: current, error: readError } = await supabase
+    .from('campaign_creative_requirements')
+    .select('status, campaign_id')
+    .eq('id', requirementId)
+    .single();
+
+  if (readError || !current) throw new Error(readError?.message ?? 'Requirement not found');
+  if (current.status === 'approved') throw new Error('requirement_already_approved');
+
+  // Mark as uploaded
   const { error: reqError } = await supabase
     .from('campaign_creative_requirements')
     .update({ status: 'uploaded', media_asset_id: mediaAssetId })
@@ -257,26 +269,18 @@ export async function uploadAssetToRequirement(
 
   if (reqError) throw new Error(reqError.message);
 
-  // Read requirement to get campaign_id
-  const { data: req, error: readError } = await supabase
-    .from('campaign_creative_requirements')
-    .select('campaign_id')
-    .eq('id', requirementId)
-    .single();
-
-  if (readError || !req) throw new Error(readError?.message ?? 'Requirement not found');
-
-  const campaignId = req.campaign_id as string;
+  const campaignId = current.campaign_id as string;
 
   // Auto-transition check
   const campaign = await getCampaign(campaignId);
   const allReqs = await getStoredCreativeRequirements(campaignId);
 
   if (shouldAutoTransitionToReview(campaign.status, allReqs)) {
-    await supabase
+    const { error: transitionError } = await supabase
       .from('campaigns')
       .update({ status: 'pending_creative_review' })
       .eq('id', campaignId);
+    if (transitionError) throw new Error(transitionError.message);
   }
 }
 
@@ -293,8 +297,14 @@ export async function getLaunchReadiness(campaignId: string): Promise<LaunchRead
 // ─── Confirm Booking ──────────────────────────────────────
 
 export async function confirmBooking(campaignId: string): Promise<CampaignBooking> {
+  // Fetch items and requirements once
+  const [items, requirements] = await Promise.all([
+    getInventoryItems(campaignId),
+    getStoredCreativeRequirements(campaignId),
+  ]);
+
   // Check launch readiness
-  const readiness = await getLaunchReadiness(campaignId);
+  const readiness = computeLaunchReadiness(items.length, requirements);
   if (!readiness.ready) {
     throw new Error('booking_not_ready');
   }
@@ -309,7 +319,6 @@ export async function confirmBooking(campaignId: string): Promise<CampaignBookin
   if (existing) throw new Error('booking_already_exists');
 
   // Compute total amount from inventory item snapshots
-  const items = await getInventoryItems(campaignId);
   const totalAmount = items.reduce(
     (sum, item) => sum + item.pricePerDaySnapshot * item.days,
     0,
