@@ -10,6 +10,12 @@ import { CreativeUploadStep } from './CreativeUploadStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 
 import { InventoryLocation, MediaPlanItem, FilterState, CreativeAsset } from '@/types/inventory';
+import {
+  createDraftCampaign,
+  addInventoryItem,
+  removeInventoryItem,
+  submitCreativesForReview,
+} from '@/lib/api/campaign-draft';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
 import { Check, Globe, Filter as FilterIcon, Calculator } from 'lucide-react';
@@ -26,6 +32,13 @@ export function CampaignPlannerPage() {
 
   // --- Step Flow State ---
   const [step, setStep] = useState<'inventory' | 'creative' | 'review'>('inventory');
+
+  // --- Campaign Draft State ---
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [storedRequirements, setStoredRequirements] = useState<
+    Array<{ id: string; canonicalFormat: string }> | null
+  >(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // --- Global State ---
   const [filters, setFilters] = useState<FilterState>({});
@@ -72,8 +85,30 @@ export function CampaignPlannerPage() {
     setFilters({});
   };
 
-  const handleAdd = (item: InventoryLocation) => {
+  const handleAdd = async (item: InventoryLocation) => {
+    // Create draft on first add
+    let cId = campaignId;
+    if (!cId) {
+      try {
+        const draft = await createDraftCampaign();
+        cId = draft.id;
+        setCampaignId(draft.id);
+      } catch (err) {
+        console.error('Failed to create campaign draft:', err);
+      }
+    }
+
+    // Add to local state
     setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
+
+    // Persist to DB if we have an ID
+    if (cId) {
+      try {
+        await addInventoryItem(cId, item.id, 7, item.pricePerDay, item.dailyImpressions);
+      } catch (err) {
+        console.error('Failed to persist inventory item:', err);
+      }
+    }
   };
 
   const handleRemove = (inventoryId: string) => {
@@ -86,8 +121,24 @@ export function CampaignPlannerPage() {
     );
   };
 
-  const handleContinueToCreative = () => {
-    if (selectedItems.length > 0) setStep('creative');
+  const handleContinueToCreative = async () => {
+    if (selectedItems.length === 0) return;
+    setIsSaving(true);
+    try {
+      if (campaignId) {
+        const reqs = await submitCreativesForReview(campaignId, selectedItems, allInventory);
+        setStoredRequirements(reqs.map(r => ({
+          id: r.id,
+          canonicalFormat: r.canonicalFormat,
+        })));
+      }
+      setStep('creative');
+    } catch (err) {
+      console.error('Failed to submit for review:', err);
+      setStep('creative'); // still advance even if DB fails
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleContinueToReview = () => {
@@ -240,13 +291,14 @@ export function CampaignPlannerPage() {
         )}
 
         {step === 'creative' && (
-          <CreativeUploadStep 
+          <CreativeUploadStep
             selectedItems={selectedItems}
             allInventory={allInventory}
             creatives={creatives}
             setCreatives={setCreatives}
             onBack={() => setStep('inventory')}
             onContinue={handleContinueToReview}
+            storedRequirements={storedRequirements}
           />
         )}
 
