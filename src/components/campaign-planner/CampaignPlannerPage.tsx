@@ -90,6 +90,7 @@ export function CampaignPlannerPage() {
   };
 
   const handleAdd = async (item: InventoryLocation) => {
+    console.log('[handleAdd] called with item:', item.id, 'campaignId:', campaignId);
     // Always add to local state immediately
     setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
 
