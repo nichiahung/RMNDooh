@@ -85,6 +85,24 @@ export async function listMediaAssets(): Promise<Array<{
   }));
 }
 
+export async function deleteMediaAsset(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('media_assets')
+    .delete()
+    .eq('id', id)
+    .eq('uploaded_by_user_id', DEFAULT_USER_ID);
+  if (error) throw new Error(error.message);
+}
+
+export async function renameMediaAsset(id: string, newName: string): Promise<void> {
+  const { error } = await supabase
+    .from('media_assets')
+    .update({ original_filename: newName })
+    .eq('id', id)
+    .eq('uploaded_by_user_id', DEFAULT_USER_ID);
+  if (error) throw new Error(error.message);
+}
+
 // Links uploaded media_assets to a campaign as creative_assets
 export async function linkCreativesToCampaign(
   campaignId: string,

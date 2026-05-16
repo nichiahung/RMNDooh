@@ -21,6 +21,17 @@ Do not invent terms. Strictly adhere to the following definitions:
 ## 2. Documentation Routing (STRICT)
 Before implementing backend features, modifying the database, or writing core UI components, you **MUST** consult the appropriate documentation. Do NOT hallucinate architectures.
 
+Start with the agent context pack for current runtime and task routing:
+
+| Agent Context Topic | Required Reading (Use `view_file`) |
+| :--- | :--- |
+| **Current Runtime Truth** | `docs/agents/runtime-truth.md` |
+| **Business Context & Rules** | `docs/agents/business-context.md` |
+| **Task Routing For Agents** | `docs/agents/task-routing.md` |
+| **Feature / Data Source Map** | `docs/agents/feature-map.md` |
+
+Then read the canonical product/backend documents for the target task:
+
 | Topic / Task | Required Reading (Use `view_file`) |
 | :--- | :--- |
 | **High-Level Architecture** | `ARCHITECTURE.md` (Root directory) |
@@ -32,7 +43,7 @@ Before implementing backend features, modifying the database, or writing core UI
 ## 3. Technology & Architecture Rules
 * **Frontend**: Next.js App Router, TailwindCSS, React Context (for MVP state/i18n).
 * **Map**: `react-leaflet` with OpenStreetMap. No Google Maps API for MVP.
-* **Backend/DB**: Designed for Supabase / PostgreSQL. All MVP interactions are currently mocked. Do NOT add real database connections unless explicitly requested to transition out of MVP phase.
+* **Backend/DB**: Designed for Supabase / PostgreSQL. Current runtime is hybrid: some planner/admin/campaign/creative paths are Supabase-backed, while reports/player and some workflows remain mocked. Check `docs/agents/runtime-truth.md` before changing data flow.
 * **Multi-Language**: Custom lightweight `I18nProvider` (Context-based). Do NOT install `next-i18next` or heavy libraries.
 
 > **CRITICAL**: If the user asks you to "implement the DB schema", you must read `docs/backend/step14-schema-design.md` and use the exact table structures defined there. Do not reinvent them.

@@ -73,7 +73,7 @@ The system supports a hybrid playback model for every screen loop (e.g., a 5-min
 
 ## 5. Technical Decisions (ADR)
 
-*   **MVP Scope (Current)**: The app runs purely on the client-side using `mockData` to validate the UI/UX flows (Planner, Review, Mock Player).
-*   **Database (Future)**: The application is designed to integrate with **Supabase (PostgreSQL)**. Strict schema designs are already formalized in `docs/backend/`.
+*   **MVP Scope (Current)**: The app is a hybrid prototype. Planner/admin/campaign/creative paths have partial Supabase integration, while reports/player and some workflow surfaces still use mock data for simulation.
+*   **Database**: The application is designed around **Supabase (PostgreSQL)**. Strict schema designs are already formalized in `docs/backend/`; check `docs/agents/runtime-truth.md` before assuming whether a specific flow is live or mocked.
 *   **Maps**: Using `react-leaflet` to avoid early dependencies on Google Maps APIs.
 *   **Static Export**: The app is configured for `output: "export"` to deploy on GitHub Pages seamlessly. Server-side rendering (SSR) is intentionally bypassed for the MVP.

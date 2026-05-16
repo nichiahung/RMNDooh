@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CreativeAsset, MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload, Pencil, Check } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { confirmBooking } from '@/lib/api/campaign-draft';
+import { confirmBooking, getCampaign, getStoredCreativeRequirements, updateDraftCampaign } from '@/lib/api/campaign-draft';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { CanonicalFormat } from '@/types/creative';
 import { CreativeUploadModal } from './CreativeUploadModal';
@@ -35,6 +35,48 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
+
+  // Campaign name editing
+  const [campaignName, setCampaignName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
+
+  // On mount: fetch campaign name + pre-populate upload status from DB
+  useEffect(() => {
+    if (!campaignId) return;
+
+    getCampaign(campaignId).then(c => {
+      setCampaignName(c.name);
+      setNameInput(c.name);
+    }).catch(console.error);
+
+    getStoredCreativeRequirements(campaignId).then(reqs => {
+      if (reqs.length === 0) return;
+      const uploaded = new Set<CanonicalFormat>(
+        reqs
+          .filter(r => r.status === 'uploaded' || r.status === 'approved')
+          .map(r => r.canonicalFormat as CanonicalFormat)
+      );
+      setUploadedFormats(uploaded);
+      onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat })));
+    }).catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaignId]);
+
+  const handleSaveName = async () => {
+    if (!campaignId || !nameInput.trim()) return;
+    setIsSavingName(true);
+    try {
+      await updateDraftCampaign(campaignId, { name: nameInput.trim() });
+      setCampaignName(nameInput.trim());
+      setIsEditingName(false);
+    } catch (err) {
+      console.error('Failed to save campaign name:', err);
+    } finally {
+      setIsSavingName(false);
+    }
+  };
 
   const selectedDetails = selectedItems
     .map(item => ({ ...item, inventory: allInventory.find(i => i.id === item.inventoryId)! }))
@@ -124,11 +166,48 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
 
         <div className="flex items-center justify-between mb-8">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <h2 className="text-3xl font-bold text-slate-900">{t('review.title')}</h2>
-              <span className="bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider">{t('review.status')}</span>
+            {/* Editable campaign name */}
+            <div className="flex items-center gap-2 mb-2">
+              {isEditingName ? (
+                <>
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setIsEditingName(false); }}
+                    className="text-2xl font-bold text-slate-900 border-b-2 border-indigo-400 bg-transparent outline-none py-0.5 min-w-0 max-w-xs"
+                    autoFocus
+                  />
+                  <button onClick={handleSaveName} disabled={isSavingName} className="p-1 text-emerald-600 hover:text-emerald-700 disabled:opacity-50">
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setIsEditingName(false)} className="p-1 text-slate-400 hover:text-slate-600">
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-900">{campaignName || t('review.title')}</h2>
+                  <button
+                    onClick={() => { setNameInput(campaignName); setIsEditingName(true); }}
+                    className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    title="編輯活動名稱"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <span className="bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider">{t('review.status')}</span>
+                </>
+              )}
             </div>
-            <p className="text-slate-500">{t('review.subtitle')}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-slate-500 text-sm">{t('review.subtitle')}</p>
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-3 h-3" /> 調整版位
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -300,7 +379,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
 
         <div className="mt-8 pt-6 border-t border-slate-200">
           <button onClick={onBack} className="flex items-center px-6 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" /> 返回選點位
+            <ArrowLeft className="w-4 h-4 mr-2" /> 返回調整版位
           </button>
         </div>
 

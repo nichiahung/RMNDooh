@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { FilterSidebar } from './FilterSidebar';
 import { InventoryDiscovery } from './InventoryDiscovery';
 import { MediaPlanSummary } from './MediaPlanSummary';
@@ -16,10 +16,10 @@ import {
   submitCreativesForReview,
   listCampaignSummaries,
 } from '@/lib/api/campaign-draft';
-import { listMediaAssets } from '@/lib/api/creatives';
+import { listMediaAssets, deleteMediaAsset, renameMediaAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check, Globe, ImageIcon, Film, CheckCircle2, FileText, Plus, ChevronRight, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { Check, Globe, ImageIcon, Film, CheckCircle2, FileText, Plus, ChevronRight, Loader2, AlertCircle, Clock, Pencil, Trash2, X as XIcon } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { usePlannerStore } from '@/store/usePlannerStore';
 
@@ -39,6 +39,10 @@ function LibraryTabContent() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = (id: string) => setAssets(prev => prev.filter(a => a.id !== id));
+  const handleRename = (id: string, newName: string) =>
+    setAssets(prev => prev.map(a => a.id === id ? { ...a, originalFilename: newName } : a));
 
   const images = assets.filter(a => a.fileType === 'image');
   const videos = assets.filter(a => a.fileType === 'video');
@@ -83,7 +87,7 @@ function LibraryTabContent() {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {images.map(asset => (
-                    <LibraryAssetCard key={asset.id} asset={asset} />
+                    <LibraryAssetCard key={asset.id} asset={asset} onDelete={handleDelete} onRename={handleRename} />
                   ))}
                 </div>
               </section>
@@ -95,7 +99,7 @@ function LibraryTabContent() {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {videos.map(asset => (
-                    <LibraryAssetCard key={asset.id} asset={asset} />
+                    <LibraryAssetCard key={asset.id} asset={asset} onDelete={handleDelete} onRename={handleRename} />
                   ))}
                 </div>
               </section>
@@ -107,9 +111,48 @@ function LibraryTabContent() {
   );
 }
 
-function LibraryAssetCard({ asset }: { asset: MediaAsset }) {
+function LibraryAssetCard({
+  asset,
+  onDelete,
+  onRename,
+}: {
+  asset: MediaAsset;
+  onDelete: (id: string) => void;
+  onRename: (id: string, newName: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [nameInput, setNameInput] = useState(asset.originalFilename);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === asset.originalFilename) { setIsEditing(false); return; }
+    setIsSaving(true);
+    try {
+      await renameMediaAsset(asset.id, trimmed);
+      onRename(asset.id, trimmed);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Rename failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteMediaAsset(asset.id);
+      onDelete(asset.id);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-indigo-200 hover:shadow-sm transition-all">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-indigo-200 hover:shadow-sm transition-all group">
       <div className="h-32 bg-slate-100 relative">
         {asset.fileType === 'image' ? (
           <img src={asset.publicUrl} alt={asset.originalFilename} className="w-full h-full object-cover" />
@@ -119,13 +162,50 @@ function LibraryAssetCard({ asset }: { asset: MediaAsset }) {
           </div>
         )}
         {asset.status === 'ready' && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2 left-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 bg-white rounded-full" />
           </div>
         )}
+        {/* Action buttons, visible on hover */}
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => { setNameInput(asset.originalFilename); setIsEditing(true); }}
+            className="p-1 bg-white rounded-md shadow text-slate-500 hover:text-indigo-600 transition-colors"
+            title="重新命名"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="p-1 bg-white rounded-md shadow text-slate-500 hover:text-red-600 transition-colors disabled:opacity-50"
+            title="刪除"
+          >
+            {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+          </button>
+        </div>
       </div>
       <div className="p-3">
-        <p className="text-xs font-semibold text-slate-800 truncate mb-1">{asset.originalFilename}</p>
+        {isEditing ? (
+          <div className="flex items-center gap-1 mb-1">
+            <input
+              type="text"
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') setIsEditing(false); }}
+              className="flex-1 text-xs border-b border-indigo-400 bg-transparent outline-none py-0.5 min-w-0"
+              autoFocus
+            />
+            <button onClick={handleSaveName} disabled={isSaving} className="text-emerald-600 hover:text-emerald-700 flex-shrink-0">
+              {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+            </button>
+            <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-600 flex-shrink-0">
+              <XIcon className="w-3 h-3" />
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs font-semibold text-slate-800 truncate mb-1">{asset.originalFilename}</p>
+        )}
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-slate-400">{(asset.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
           <span className="text-[10px] text-slate-400">{new Date(asset.createdAt).toLocaleDateString('zh-TW')}</span>
@@ -241,7 +321,7 @@ function CampaignsTabContent({ setActiveTab }: { setActiveTab: (tab: 'planner' |
 // --- Main CampaignPlannerPage ---
 export function CampaignPlannerPage() {
   // --- Supabase inventory ---
-  const { allInventory, isLoadingInventory, fetchInventory } = usePlannerStore();
+  const { allInventory, fetchInventory } = usePlannerStore();
 
   useEffect(() => {
     fetchInventory();

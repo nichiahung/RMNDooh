@@ -28,6 +28,7 @@ RMNDooh (Digital Out-Of-Home) 是一個面向廣告主的自助式投放平台 M
 - 🧭 **[USER_GUIDE.md](./USER_GUIDE.md)**：網站使用指南，涵蓋 Campaign Planner、Admin、Reports 與 Web Player 操作方式。
 - 👉 **[ARCHITECTURE.md](./ARCHITECTURE.md)**：**強烈建議首先閱讀**。這是一份包含高階架構圖與 ER Model 關聯的 5 分鐘速成指南。
 - 👉 **[AGENTS.md](./AGENTS.md)**：未來的 AI Agent 開發守則與術語表。
+- 🤖 **[docs/agents/README.md](./docs/agents/README.md)**：給 Codex / Claude Code 使用的執行脈絡，包含業務規則、現況資料流、任務路由、測試與部署檢查。
 - 📖 **`docs/` 資料夾**：包含深度的技術規格，例如：
   - `DOOH_Advertiser_Marketplace_MVP_PRD_v0.1.md`: 產品需求文件
   - `docs/backend/step14-schema-design.md`: 完整的資料庫 Schema 設計 (Supabase / PostgreSQL)
@@ -36,10 +37,10 @@ RMNDooh (Digital Out-Of-Home) 是一個面向廣告主的自助式投放平台 M
 ## 🛠 技術棧 (Tech Stack)
 
 ### 目前 (MVP 階段)
-* **Frontend**: Next.js 14+ (App Router), React, TypeScript
+* **Frontend**: Next.js 16 (App Router), React, TypeScript
 * **Styling**: Tailwind CSS
 * **Map**: `react-leaflet` (OpenStreetMap)
-* **State & Data**: Zustand (本地狀態), Mock Data JSON
+* **State & Data**: Zustand (本地狀態), Supabase-backed planner/admin flows, Mock Data JSON for reports/player simulation
 * **Localization**: Custom Context-based i18n (`src/i18n`)
 * **Deployment**: GitHub Pages (Static Export)
 

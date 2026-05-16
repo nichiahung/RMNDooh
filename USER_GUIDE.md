@@ -21,7 +21,7 @@ The prototype supports English and Traditional Chinese. Use the globe button in 
 
 ## Campaign Planner
 
-Use Campaign Planner to create an advertiser campaign.
+Use Campaign Planner to create an advertiser campaign. The current planner is a two-step flow: choose InventoryLocations, then review and submit. Creative upload is handled through format-specific upload controls in the Media Plan and Review surfaces.
 
 ### 1. Find Inventory
 
@@ -35,37 +35,30 @@ Use Campaign Planner to create an advertiser campaign.
 
 On mobile, use the filter icon to open Search & Filter and the calculator icon to open the Media Plan.
 
-### 2. Build The Media Plan
+### 2. Build The Media Plan And Upload Required Creatives
 
 The Media Plan panel shows all selected locations.
 
 1. Adjust the number of booking days for each selected location.
 2. Review estimated impressions, average CPM, and total budget.
 3. Remove locations that should not be included.
-4. Select Continue to Creative Upload when the plan is ready.
+4. Review the required creative formats generated from the selected screen types.
+5. Upload one asset for each required format.
+6. Select the continue action when the plan and required assets are ready.
 
 Each location defaults to 7 days when first added.
 
-### 3. Upload Creative
+Current file guidance in the format upload modal: JPG, PNG, and MP4 are supported, with a maximum file size of 50 MB per required format.
 
-The Creative step collects the campaign assets.
-
-1. Review the Screen Requirements panel. It summarizes required formats based on the selected screen types.
-2. Upload JPG, PNG, or MP4 assets.
-3. Confirm uploaded assets in the preview list.
-4. Remove any incorrect asset.
-5. Select Continue to Review.
-
-Current file guidance in the UI: JPG, PNG, and MP4 are supported, with a maximum file size of 100 MB. Videos should be 15 seconds or shorter.
-
-### 4. Review And Submit
+### 3. Review And Submit
 
 The Review step summarizes campaign settings, selected InventoryLocations, creatives, estimated impressions, average CPM, and total budget.
 
 1. Check the selected locations and booking days.
-2. Check uploaded creatives.
-3. Review the estimated performance and budget disclaimer.
-4. Select Submit Campaign.
+2. Check the required creative format list.
+3. Upload any missing required creative formats.
+4. Review the estimated performance and budget disclaimer.
+5. Select Submit Campaign after all required creative formats are uploaded.
 
 After submission, the campaign status becomes Pending Review. The admin team is expected to verify creative compliance and inventory availability before launch.
 
@@ -129,7 +122,7 @@ If the screen ID does not exist, the player shows Screen Not Found.
 - Reports currently use local mock report data.
 - Web Player currently uses local mock screen and playlist data.
 - There is no login, advertiser account switcher, or production access-control flow in the UI.
-- Save Draft, Settings, and Sign Out are UI placeholders.
+- The planner header Save Draft, Admin Settings, and Admin Sign Out are UI placeholders. The Review step has a simulated save-draft confirmation.
 - Final pricing and delivery are not guaranteed at planning time; the UI states that inventory availability must be confirmed after submission.
 
 ## Running Locally
