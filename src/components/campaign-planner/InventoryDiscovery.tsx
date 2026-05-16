@@ -51,6 +51,7 @@ export function InventoryDiscovery({
             inventory={inventory}
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
+            onAdd={onAdd}
           />
         )}
       </div>

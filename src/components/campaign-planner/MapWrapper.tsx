@@ -22,8 +22,9 @@ interface Props {
   inventory: InventoryLocation[];
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
+  onAdd: (item: InventoryLocation) => void;
 }
 
-export function MapWrapper({ inventory, selectedItems, onViewDetails }: Props) {
-  return <MapView inventory={inventory} selectedItems={selectedItems} onViewDetails={onViewDetails} />;
+export function MapWrapper({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
+  return <MapView inventory={inventory} selectedItems={selectedItems} onViewDetails={onViewDetails} onAdd={onAdd} />;
 }

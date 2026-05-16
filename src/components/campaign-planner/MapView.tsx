@@ -1,22 +1,21 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
 import { isInMediaPlan } from '@/utils/mediaPlanCalculations';
-import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
-import { imgSrc } from '@/utils/imgSrc';
+import { MapPopupCard } from './MapPopupCard';
 
 interface Props {
   inventory: InventoryLocation[];
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
+  onAdd: (item: InventoryLocation) => void;
 }
 
-// Custom marker — large drop-pin style, no label
 const createIcon = (color: string, isSelected: boolean) => {
   const w = 40;
   const h = 52;
@@ -41,12 +40,11 @@ const createIcon = (color: string, isSelected: boolean) => {
   });
 };
 
-// Sub-component to auto-fit map bounds when inventory changes
 function FitBounds({ inventory }: { inventory: InventoryLocation[] }) {
   const map = useMap();
-  const fitted = useRef(false);
+  const fitted = React.useRef(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (inventory.length === 0 || fitted.current) return;
     const bounds = L.latLngBounds(inventory.map(i => [i.latitude, i.longitude]));
     map.fitBounds(bounds.pad(0.15), { maxZoom: 15 });
@@ -56,9 +54,8 @@ function FitBounds({ inventory }: { inventory: InventoryLocation[] }) {
   return null;
 }
 
-export function MapView({ inventory, selectedItems, onViewDetails }: Props) {
+export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
   const { t } = useI18n();
-  // Taipei center fallback
   const center: [number, number] = [25.042, 121.565];
 
   if (inventory.length === 0) {
@@ -92,52 +89,37 @@ export function MapView({ inventory, selectedItems, onViewDetails }: Props) {
 
         {inventory.map(item => {
           const isSelected = isInMediaPlan(selectedItems, item.id);
-          let color = '#6366f1'; // indigo - available
-          if (isSelected) {
-            color = '#10b981'; // emerald - selected
-          } else if (item.availability < 0.3) {
-            color = '#94a3b8'; // slate - low
-          } else if (item.availability < 0.7) {
-            color = '#f59e0b'; // amber - limited
-          }
+          let color = '#6366f1';
+          if (isSelected) color = '#10b981';
+          else if (item.availability < 0.3) color = '#94a3b8';
+          else if (item.availability < 0.7) color = '#f59e0b';
 
           return (
             <Marker
               key={item.id}
               position={[item.latitude, item.longitude]}
               icon={createIcon(color, isSelected)}
-              eventHandlers={{ click: () => onViewDetails(item) }}
             >
-              <Popup>
-                <div className="w-56 font-sans">
-                  <div className="h-24 w-full rounded overflow-hidden mb-2 bg-slate-100">
-                    <img src={imgSrc(item.imageUrl)} alt={item.name} className="w-full h-full object-cover" />
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm mb-0.5">{item.name}</h4>
-                  <p className="text-xs text-slate-500 mb-2">{item.venueType} · {item.screenType}</p>
-                  <div className="flex justify-between text-xs border-t border-slate-100 pt-2">
-                    <div>
-                      <div className="text-slate-400 uppercase text-[10px]">Daily Imp.</div>
-                      <div className="font-semibold text-slate-700">{formatNumber(item.dailyImpressions)}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-slate-400 uppercase text-[10px]">Price/Day</div>
-                      <div className="font-bold text-indigo-600">{formatCurrency(item.pricePerDay)}</div>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <div className="mt-2 text-center text-[10px] font-bold text-emerald-600 bg-emerald-50 py-1 rounded">
-                      ✓ In Media Plan
-                    </div>
-                  )}
-                </div>
+              <Popup
+                closeButton={false}
+                className="map-popup-clean"
+                minWidth={240}
+                maxWidth={240}
+              >
+                <MapPopupCard
+                  item={item}
+                  isSelected={isSelected}
+                  onAdd={() => onAdd(item)}
+                  onViewDetail={() => onViewDetails(item)}
+                  onClose={() => {/* Popup closes when user clicks away or the X button calls onClose */}}
+                />
               </Popup>
             </Marker>
           );
         })}
       </MapContainer>
 
-      {/* Legend Overlay */}
+      {/* Legend */}
       <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-slate-200 z-[1000]">
         <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">Availability</h4>
         <div className="space-y-2">
@@ -156,7 +138,7 @@ export function MapView({ inventory, selectedItems, onViewDetails }: Props) {
         </div>
       </div>
 
-      {/* Count Overlay */}
+      {/* Count */}
       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm border border-slate-200 font-semibold text-slate-800 text-sm z-[1000]">
         {t('planner.showing')} {inventory.length} {t('planner.locations')}
       </div>
