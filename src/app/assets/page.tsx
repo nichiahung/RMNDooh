@@ -1,5 +1,11 @@
+'use client';
+import { AuthGuard } from '@/components/AuthGuard';
 import { AssetsPage } from '@/components/AssetsPage';
 
 export default function AssetsRoute() {
-  return <AssetsPage />;
+  return (
+    <AuthGuard>
+      <AssetsPage />
+    </AuthGuard>
+  );
 }

@@ -1,10 +1,11 @@
+'use client';
+import { AuthGuard } from '@/components/AuthGuard';
 import { AdminDashboardPage } from '@/components/admin/AdminDashboardPage';
 
-export const metadata = {
-  title: 'DOOH Admin Dashboard',
-  description: 'Internal CMS and Campaign Management',
-};
-
 export default function AdminPage() {
-  return <AdminDashboardPage />;
+  return (
+    <AuthGuard requiredRole="admin">
+      <AdminDashboardPage />
+    </AuthGuard>
+  );
 }
