@@ -65,6 +65,7 @@ export async function listMediaAssets(): Promise<Array<{
   fileSizeBytes: number;
   status: string;
   createdAt: string;
+  isApproved: boolean;
 }>> {
   const { data, error } = await supabase
     .from('media_assets')
@@ -73,7 +74,20 @@ export async function listMediaAssets(): Promise<Array<{
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map(row => ({
+  const assets = data ?? [];
+  if (assets.length === 0) return [];
+
+  // Check which assets have been approved in any campaign
+  const assetIds = assets.map(r => r.id as string);
+  const { data: approvedRows } = await supabase
+    .from('creative_assets')
+    .select('media_asset_id')
+    .in('media_asset_id', assetIds)
+    .eq('approval_status', 'approved');
+
+  const approvedSet = new Set((approvedRows ?? []).map(r => r.media_asset_id as string));
+
+  return assets.map(row => ({
     id: row.id as string,
     originalFilename: row.original_filename as string,
     publicUrl: row.public_url as string,
@@ -82,6 +96,7 @@ export async function listMediaAssets(): Promise<Array<{
     fileSizeBytes: row.file_size_bytes as number,
     status: row.status as string,
     createdAt: row.created_at as string,
+    isApproved: approvedSet.has(row.id as string),
   }));
 }
 

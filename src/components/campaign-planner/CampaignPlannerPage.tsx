@@ -163,9 +163,11 @@ function LibraryAssetCard({
             <Film className="w-8 h-8 text-slate-300" />
           </div>
         )}
-        {asset.status === 'ready' && (
+        {asset.isApproved && (
           <div className="absolute top-2 left-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 bg-white rounded-full" />
+            <span className="flex items-center gap-0.5 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+              <CheckCircle2 className="w-2.5 h-2.5" /> 已審核
+            </span>
           </div>
         )}
         {/* Action buttons, visible on hover */}
