@@ -290,6 +290,26 @@ export async function uploadAssetToRequirement(
   }
 }
 
+// ─── Unlink Asset from Requirement ────────────────────────
+
+export async function unlinkAssetFromRequirement(requirementId: string): Promise<void> {
+  const { data: current, error: readError } = await supabase
+    .from('campaign_creative_requirements')
+    .select('status')
+    .eq('id', requirementId)
+    .single();
+
+  if (readError || !current) throw new Error(readError?.message ?? 'Requirement not found');
+  if (current.status === 'approved') throw new Error('requirement_already_approved');
+
+  const { error } = await supabase
+    .from('campaign_creative_requirements')
+    .update({ status: 'pending_upload', media_asset_id: null })
+    .eq('id', requirementId);
+
+  if (error) throw new Error(error.message);
+}
+
 // ─── Launch Readiness ──────────────────────────────────────
 
 export async function getLaunchReadiness(campaignId: string): Promise<LaunchReadiness> {

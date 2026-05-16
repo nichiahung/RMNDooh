@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
 import { CanonicalFormat, FormatSpec } from '@/types/creative';
-import { ensureCreativeRequirements } from '@/lib/api/campaign-draft';
+import { ensureCreativeRequirements, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
 import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
@@ -105,6 +105,17 @@ export function MediaPlanSummary({
     setUploadedFormats(prev => new Set([...prev, format]));
     onCreativeUploaded(asset, format);
   }, [onCreativeUploaded]);
+
+  const handleUnlink = useCallback(async (format: CanonicalFormat) => {
+    const req = storedRequirements?.find(r => r.canonicalFormat === format);
+    if (!req) return;
+    try {
+      await unlinkAssetFromRequirement(req.id);
+      setUploadedFormats(prev => { const next = new Set(prev); next.delete(format); return next; });
+    } catch (err) {
+      console.error('Failed to unlink asset:', err);
+    }
+  }, [storedRequirements]);
 
   const footerButtonLabel = isSaving
     ? '儲存中...'
@@ -204,6 +215,7 @@ export function MediaPlanSummary({
                 groups={groups}
                 uploadedFormats={uploadedFormats}
                 onFormatClick={handleFormatClick}
+                onUnlink={handleUnlink}
                 isEnsuring={isEnsuring}
                 hasActiveCampaign={!!campaignId}
               />
@@ -258,12 +270,14 @@ function CreativeRequirementsPanel({
   groups,
   uploadedFormats,
   onFormatClick,
+  onUnlink,
   isEnsuring,
   hasActiveCampaign,
 }: {
   groups: ReturnType<typeof deriveGroupedRequirements>;
   uploadedFormats: Set<CanonicalFormat>;
   onFormatClick: (format: CanonicalFormat, venueCount: number) => void;
+  onUnlink: (format: CanonicalFormat) => Promise<void>;
   isEnsuring: boolean;
   hasActiveCampaign: boolean;
 }) {
@@ -286,42 +300,52 @@ function CreativeRequirementsPanel({
         {groups.map(group => {
           const isUploaded = uploadedFormats.has(group.format);
           return (
-            <button
-              key={group.format}
-              onClick={() => !isUploaded && hasActiveCampaign && onFormatClick(group.format, group.locationCount)}
-              disabled={isUploaded || !hasActiveCampaign || isEnsuring}
-              className={`w-full flex items-start gap-2.5 p-2 rounded-lg text-left transition-colors ${
-                isUploaded
-                  ? 'bg-emerald-50 border border-emerald-100 cursor-default'
-                  : hasActiveCampaign
-                  ? 'hover:bg-slate-50 border border-transparent hover:border-slate-200 cursor-pointer'
-                  : 'border border-transparent cursor-default opacity-60'
-              }`}
-            >
-              <OrientationMark format={group.format} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-1">
-                  <span className={`text-xs font-semibold truncate ${isUploaded ? 'text-emerald-700' : 'text-slate-800'}`}>
-                    {group.label}
-                  </span>
-                  {isUploaded ? (
-                    <span className="flex items-center gap-0.5 flex-shrink-0 text-[10px] font-semibold text-emerald-600">
-                      <CheckCircle2 className="w-3 h-3" /> 已上傳
+            <div key={group.format} className={`w-full flex items-start gap-2.5 p-2 rounded-lg transition-colors ${
+              isUploaded
+                ? 'bg-emerald-50 border border-emerald-100'
+                : hasActiveCampaign
+                ? 'border border-transparent'
+                : 'border border-transparent opacity-60'
+            }`}>
+              <button
+                onClick={() => !isUploaded && hasActiveCampaign && onFormatClick(group.format, group.locationCount)}
+                disabled={isUploaded || !hasActiveCampaign || isEnsuring}
+                className="flex items-start gap-2.5 flex-1 min-w-0 text-left"
+              >
+                <OrientationMark format={group.format} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className={`text-xs font-semibold truncate ${isUploaded ? 'text-emerald-700' : 'text-slate-800'}`}>
+                      {group.label}
                     </span>
-                  ) : (
-                    <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">
-                      {isEnsuring ? '...' : '待上傳'}
-                    </span>
-                  )}
+                    {isUploaded ? (
+                      <span className="flex items-center gap-0.5 flex-shrink-0 text-[10px] font-semibold text-emerald-600">
+                        <CheckCircle2 className="w-3 h-3" /> 已上傳
+                      </span>
+                    ) : (
+                      <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">
+                        {isEnsuring ? '...' : '待上傳'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono leading-snug">
+                    {group.dimensions.replace(' px', '')}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">
+                    {group.locationCount} 個版位需要此格式
+                  </div>
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono leading-snug">
-                  {group.dimensions.replace(' px', '')}
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">
-                  {group.locationCount} 個版位需要此格式
-                </div>
-              </div>
-            </button>
+              </button>
+              {isUploaded && (
+                <button
+                  onClick={() => onUnlink(group.format)}
+                  className="flex-shrink-0 p-0.5 text-emerald-400 hover:text-red-500 transition-colors"
+                  title="移除素材"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>

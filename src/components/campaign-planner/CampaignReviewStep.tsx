@@ -4,9 +4,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { CreativeAsset, MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload, Pencil, Check } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload, Pencil, Check, X as XIcon } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { confirmBooking, getCampaign, getStoredCreativeRequirements, updateDraftCampaign } from '@/lib/api/campaign-draft';
+import { confirmBooking, getCampaign, getStoredCreativeRequirements, updateDraftCampaign, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { CanonicalFormat } from '@/types/creative';
 import { CreativeUploadModal } from './CreativeUploadModal';
@@ -110,6 +110,17 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   const handleUploadSuccess = useCallback((_asset: CreativeAsset, format: CanonicalFormat) => {
     setUploadedFormats(prev => new Set([...prev, format]));
   }, []);
+
+  const handleUnlink = useCallback(async (format: CanonicalFormat) => {
+    const req = storedRequirements?.find(r => r.canonicalFormat === format);
+    if (!req) return;
+    try {
+      await unlinkAssetFromRequirement(req.id);
+      setUploadedFormats(prev => { const next = new Set(prev); next.delete(format); return next; });
+    } catch (err) {
+      console.error('Failed to unlink asset:', err);
+    }
+  }, [storedRequirements]);
 
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
@@ -360,7 +371,16 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                       </div>
                     </div>
                     {isUploaded ? (
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full">已上傳</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full">已上傳</span>
+                        <button
+                          onClick={() => handleUnlink(group.format)}
+                          className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                          title="移除並重新上傳"
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={() => handleFormatUploadClick(group.format, group.locationCount)}
