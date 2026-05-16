@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ImageIcon, Eye, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +19,7 @@ export function AppNav() {
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-30">
       <div className="flex items-center gap-8">
-        <span className="text-base font-bold text-slate-900 tracking-tight">DOOH Platform</span>
+        <Image src="/drmn-logo.png" alt="DRMN" height={28} width={100} className="object-contain" />
         <nav className="flex items-center gap-1">
           <Link
             href="/"

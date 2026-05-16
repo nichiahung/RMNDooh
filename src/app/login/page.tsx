@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">DOOH Platform</h1>
+        <Image src="/drmn-logo.png" alt="DRMN" height={36} width={130} className="object-contain mb-2" />
         <p className="text-sm text-slate-500 mb-8">請登入以繼續</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
