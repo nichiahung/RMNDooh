@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import 'leaflet/dist/leaflet.css';
 import type { InventoryLocation } from '@/types/inventory';
 
 interface InventoryMapPreviewProps {
@@ -34,12 +35,14 @@ export function InventoryMapPreview({ inventory, onStartPlanning }: InventoryMap
       });
 
       const map = L.map(mapRef.current!, {
-        center: [25.02, 121.45],
+        center: [24.98, 121.38],
         zoom: 10,
         zoomControl: true,
         scrollWheelZoom: false,
         attributionControl: false,
       });
+
+      setTimeout(() => map.invalidateSize(), 100);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
