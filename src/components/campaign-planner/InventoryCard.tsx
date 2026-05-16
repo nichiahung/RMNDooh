@@ -87,7 +87,9 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
             <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
             <span className="truncate">{item.screenType}</span>
             {getSpecChip(item.screenType) && (
-              <span className="text-[10px] text-slate-400 font-mono">· {getSpecChip(item.screenType)}</span>
+              <span className="text-[10px] text-slate-400 bg-slate-100 border border-slate-200 px-1 rounded font-mono leading-tight flex-shrink-0">
+                {getSpecChip(item.screenType)}
+              </span>
             )}
           </span>
           <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">

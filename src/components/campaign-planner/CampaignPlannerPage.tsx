@@ -303,7 +303,8 @@ export function CampaignPlannerPage() {
               allInventory={allInventory}
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
-              onContinue={isSaving ? undefined : handleContinueToCreative}
+              onContinue={handleContinueToCreative}
+              isSaving={isSaving}
               isOpen={isSummaryOpen}
               onClose={() => setIsSummaryOpen(false)}
             />

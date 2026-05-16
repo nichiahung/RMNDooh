@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, Image, AlertTriangle } from 'lucide-react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { calculateCampaignEstimate } from '@/utils/mediaPlanCalculations';
 import { deriveGroupedRequirements } from '@/utils/creativeRequirements';
@@ -14,9 +14,10 @@ interface Props {
   onContinue?: () => void;
   isOpen: boolean;
   onClose: () => void;
+  isSaving?: boolean;
 }
 
-export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpdateDays, onContinue, isOpen, onClose }: Props) {
+export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpdateDays, onContinue, isOpen, onClose, isSaving }: Props) {
   const { t } = useI18n();
   
   // Use utility from Step 3 to calculate metrics
@@ -146,18 +147,26 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
           </div>
         </div>
 
-        <button 
+        <button
           onClick={onContinue}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={selectedItems.length === 0 || !onContinue}
+          disabled={selectedItems.length === 0 || !onContinue || isSaving}
         >
-          {t('mediaPlan.continueCreative')}
+          {isSaving ? '儲存中...' : '前往上傳廣告素材 →'}
         </button>
       </div>
 
     </aside>
     </>
   );
+}
+
+function OrientationMark({ format }: { format: string }) {
+  const cls = 'rounded-sm bg-slate-300 flex-shrink-0';
+  if (format === 'landscape_16_9') return <div className={`${cls} w-7 h-[18px] mt-0.5`} />;
+  if (format === 'portrait_9_16') return <div className={`${cls} w-[14px] h-6 mt-0.5`} />;
+  if (format === 'square_1_1')    return <div className={`${cls} w-5 h-5 mt-0.5`} />;
+  return <div className={`${cls} w-8 h-2.5 mt-1`} />;
 }
 
 function CreativeRequirementsPanel({
@@ -170,53 +179,40 @@ function CreativeRequirementsPanel({
   const groups = deriveGroupedRequirements(selectedItems, allInventory);
   if (groups.length === 0) return null;
 
-  const mimeLabel = (mimes: string[]) =>
-    mimes.includes('video/mp4') && mimes.includes('image/jpeg')
-      ? 'JPG / PNG / MP4'
-      : mimes.includes('video/mp4')
-      ? 'MP4'
-      : 'JPG / PNG';
-
   return (
-    <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Image className="w-3.5 h-3.5 text-amber-600" />
-        <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">素材需求</span>
-        <span className="ml-auto bg-amber-200 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-          {groups.length} 種格式
+    <div className="mt-1 pt-3 border-t border-slate-100">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+          <ImageIcon className="w-3 h-3" /> 素材需求
         </span>
+        <span className="text-[10px] text-slate-400">{groups.length} 種格式</span>
       </div>
 
-      <div className="space-y-2 mb-3">
+      {/* Format rows */}
+      <div className="space-y-3">
         {groups.map(group => (
-          <div key={group.format} className="bg-white rounded border border-amber-100 px-2.5 py-2">
-            <div className="flex items-start justify-between gap-1">
-              <div className="min-w-0">
-                <div className="text-xs font-semibold text-slate-800 truncate">{group.label}</div>
-                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                  {group.dimensions.replace(' px', '')} · {mimeLabel(group.acceptedMimeTypes)}
-                </div>
+          <div key={group.format} className="flex items-start gap-2.5">
+            <OrientationMark format={group.format} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-semibold text-slate-800 truncate">{group.label}</span>
+                <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">待上傳</span>
               </div>
-              <span className="flex-shrink-0 text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
-                未上傳
-              </span>
-            </div>
-            <div className="mt-1.5 text-[10px] text-slate-400">
-              {group.locationNames.slice(0, 2).join('、')}
-              {group.locationNames.length > 2
-                ? ` 等 ${group.locationNames.length} 個版位`
-                : ` (${group.locationCount} 個版位)`}
+              <div className="text-[10px] text-slate-400 font-mono leading-snug">
+                {group.dimensions.replace(' px', '')}
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">
+                {group.locationCount} 個版位需要此格式
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-1.5 items-start">
-        <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
-        <p className="text-[10px] text-amber-700 leading-relaxed">
-          可繼續選點位，所有素材需在上線前完成上傳與審核。
-        </p>
-      </div>
+      <p className="mt-3 text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 pt-2.5">
+        可繼續選點位。確認後點擊下方按鈕，前往上傳所有格式的廣告素材。
+      </p>
     </div>
   );
 }
