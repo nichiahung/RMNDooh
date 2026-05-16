@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Campaign, CreativeAsset, Screen } from '@/types/inventory';
 import {
+  deriveCampaignFinancials,
   deriveCampaignCreativeStatus,
   deriveLaunchReadinessStatus,
 } from '@/utils/adminCampaignStatus';
@@ -231,6 +232,11 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
   const advertiserInfo = row.advertisers as { name: string } | null;
   const items = (row.campaign_inventory_items as Record<string, unknown>[] | null) ?? [];
   const creativeRows = (row.creative_assets as Record<string, unknown>[] | null) ?? [];
+  const financials = deriveCampaignFinancials(
+    items,
+    row.total_budget as number | string | null,
+    row.estimated_impressions as number | string | null,
+  );
   const bookingStatus = (row.booking_status as string) ?? 'draft';
   const creativeStatus = deriveCampaignCreativeStatus(
     creativeRows.map(creative => creative.approval_status as string),
@@ -269,8 +275,8 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
     endDate: (row.end_date as string) ?? '',
     submittedAt: (row.submitted_at as string) ?? new Date().toISOString(),
     approvalNotes: (row.approval_notes as string) ?? '',
-    estimatedBudget: Number(row.total_budget ?? 0),
-    estimatedImpressions: Number(row.estimated_impressions ?? 0),
+    estimatedBudget: financials.estimatedBudget,
+    estimatedImpressions: financials.estimatedImpressions,
     selectedItems: items.map((item) => ({
       inventoryId: item.inventory_location_id as string,
       days: Number(item.days),

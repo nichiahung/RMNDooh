@@ -33,3 +33,32 @@ export function deriveLaunchReadinessStatus(
   if (bookingStatus === 'confirmed' && creativeStatus === 'approved') return 'ready_for_scheduling';
   return storedStatus ?? 'not_ready';
 }
+
+export interface CampaignFinancialItemSnapshot {
+  days?: number | string | null;
+  price_per_day?: number | string | null;
+  daily_impressions?: number | string | null;
+}
+
+export function deriveCampaignFinancials(
+  items: CampaignFinancialItemSnapshot[],
+  storedBudget: number | string | null | undefined,
+  storedImpressions: number | string | null | undefined,
+): { estimatedBudget: number; estimatedImpressions: number } {
+  const itemBudget = items.reduce(
+    (sum, item) => sum + Number(item.price_per_day ?? 0) * Number(item.days ?? 0),
+    0,
+  );
+  const itemImpressions = items.reduce(
+    (sum, item) => sum + Number(item.daily_impressions ?? 0) * Number(item.days ?? 0),
+    0,
+  );
+
+  const campaignBudget = Number(storedBudget ?? 0);
+  const campaignImpressions = Number(storedImpressions ?? 0);
+
+  return {
+    estimatedBudget: campaignBudget > 0 ? campaignBudget : itemBudget,
+    estimatedImpressions: campaignImpressions > 0 ? campaignImpressions : itemImpressions,
+  };
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  deriveCampaignFinancials,
   deriveCampaignCreativeStatus,
   deriveLaunchReadinessStatus,
 } from '@/utils/adminCampaignStatus';
@@ -33,5 +34,26 @@ describe('deriveLaunchReadinessStatus', () => {
 
   it('blocks launch readiness when creative is rejected', () => {
     expect(deriveLaunchReadinessStatus('confirmed', 'rejected', 'ready_for_scheduling')).toBe('blocked_by_creative');
+  });
+});
+
+describe('deriveCampaignFinancials', () => {
+  const items = [
+    { days: 7, price_per_day: 9000, daily_impressions: 700000 },
+    { days: 7, price_per_day: 15000, daily_impressions: 850000 },
+  ];
+
+  it('falls back to inventory item snapshots when campaign totals are zero', () => {
+    expect(deriveCampaignFinancials(items, 0, 0)).toEqual({
+      estimatedBudget: 168000,
+      estimatedImpressions: 10850000,
+    });
+  });
+
+  it('preserves non-zero campaign totals for legacy or manually adjusted rows', () => {
+    expect(deriveCampaignFinancials(items, 300000, 3000000)).toEqual({
+      estimatedBudget: 300000,
+      estimatedImpressions: 3000000,
+    });
   });
 });
