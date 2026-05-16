@@ -759,6 +759,7 @@ export function CampaignPlannerPage() {
                 onBack={() => setStep('inventory')}
                 flightStart={flightStart}
                 flightEnd={flightEnd}
+                onFlightDateChange={handleFlightDateChange}
               />
             )}
           </>

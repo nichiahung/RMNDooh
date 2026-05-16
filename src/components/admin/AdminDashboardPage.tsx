@@ -11,7 +11,7 @@ import { ScreenManagementTable } from './ScreenManagementTable';
 import { OverviewPanel } from './OverviewPanel';
 
 import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
-import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus, confirmBooking } from '@/lib/api/admin';
+import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus, confirmBooking, fetchStandaloneCreatives, StandaloneCreative } from '@/lib/api/admin';
 import { fetchInventoryLocations } from '@/lib/api/inventory';
 
 export function AdminDashboardPage() {
@@ -22,6 +22,7 @@ export function AdminDashboardPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [inventory, setInventory] = useState<InventoryLocation[]>([]);
   const [screens, setScreens] = useState<Screen[]>([]);
+  const [standaloneCreatives, setStandaloneCreatives] = useState<StandaloneCreative[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
@@ -30,10 +31,12 @@ export function AdminDashboardPage() {
       fetchAllCampaigns(),
       fetchInventoryLocations(),
       fetchAllScreens(),
-    ]).then(([c, i, s]) => {
+      fetchStandaloneCreatives(),
+    ]).then(([c, i, s, sc]) => {
       setCampaigns(c);
       setInventory(i);
       setScreens(s);
+      setStandaloneCreatives(sc);
       setIsLoading(false);
     });
   }, []);
@@ -55,14 +58,19 @@ export function AdminDashboardPage() {
     setCampaigns(updated);
   };
 
-  const handleUpdateCreativeStatus = async (campaignId: string, creativeId: string, newStatus: string) => {
+  const handleUpdateCreativeStatus = async (campaignId: string | null, creativeId: string, newStatus: string) => {
     await updateCreativeApprovalStatus(creativeId, newStatus as 'approved' | 'rejected');
-    const updateCreatives = (c: Campaign) =>
-      c.id === campaignId
-        ? { ...c, creatives: c.creatives.map(cr => cr.id === creativeId ? { ...cr, status: newStatus as never } : cr) }
-        : c;
-    setCampaigns(prev => prev.map(updateCreatives));
-    setSelectedCampaign(prev => prev ? updateCreatives(prev) : null);
+    if (campaignId) {
+      const updateCreatives = (c: Campaign) =>
+        c.id === campaignId
+          ? { ...c, creatives: c.creatives.map(cr => cr.id === creativeId ? { ...cr, status: newStatus as never } : cr) }
+          : c;
+      setCampaigns(prev => prev.map(updateCreatives));
+      setSelectedCampaign(prev => prev ? updateCreatives(prev) : null);
+    } else {
+      // Standalone creative — remove from queue
+      setStandaloneCreatives(prev => prev.filter(sc => sc.id !== creativeId));
+    }
   };
 
   return (
@@ -113,7 +121,7 @@ export function AdminDashboardPage() {
 
               {activeTab === 'creative' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <CreativeReviewQueue campaigns={campaigns} onUpdateStatus={handleUpdateCreativeStatus} />
+                  <CreativeReviewQueue campaigns={campaigns} standaloneCreatives={standaloneCreatives} onUpdateStatus={handleUpdateCreativeStatus} />
                 </div>
               )}
 

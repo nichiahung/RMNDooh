@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { X, UploadCloud, CheckCircle2, AlertCircle, Loader2, ImageIcon, Film } from 'lucide-react';
+import { X, UploadCloud, CheckCircle2, AlertCircle, Loader2, ImageIcon, Film, ShieldCheck } from 'lucide-react';
 import { FormatSpec, CanonicalFormat, AssetStatus } from '@/types/creative';
 import { validateAsset } from '@/utils/creativeRequirements';
 import { uploadCreativeAsset, listMediaAssets } from '@/lib/api/creatives';
@@ -261,6 +261,11 @@ export function CreativeUploadModal({ spec, venueCount, requirementId, onSuccess
                       {selectedAssetId === asset.id && (
                         <div className="absolute inset-0 bg-indigo-600/20 flex items-center justify-center">
                           <CheckCircle2 className="w-7 h-7 text-indigo-600 drop-shadow" />
+                        </div>
+                      )}
+                      {asset.isApproved && (
+                        <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm" title="已核准">
+                          <ShieldCheck className="w-3.5 h-3.5" />
                         </div>
                       )}
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-1.5 py-1">

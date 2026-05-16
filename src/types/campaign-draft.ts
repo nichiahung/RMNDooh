@@ -3,6 +3,11 @@ import type { CanonicalFormat } from './creative';
 
 export type CampaignDraftStatus =
   | 'draft'
+  | 'in_progress'
+  | 'submitted_for_review'
+  | 'pending_review'
+  | 'ready_to_confirm'
+  | 'confirmed'
   | 'pending_creative_review'
   | 'blocked_by_creative'
   | 'ready_to_book'
@@ -10,11 +15,25 @@ export type CampaignDraftStatus =
 
 export type CreativeRequirementStatus =
   | 'pending_upload'
+  | 'partially_uploaded'
   | 'uploaded'
+  | 'validating'
+  | 'invalid'
   | 'approved'
+  | 'pending_review'
   | 'rejected';
 
-export type BookingStatus = 'confirmed' | 'cancelled';
+export type BookingStatus =
+  | 'not_confirmed'
+  | 'pending_sales_confirmation'
+  | 'pending_advertiser_confirmation'
+  | 'confirmed'
+  | 'inventory_reserved'
+  | 'scheduled'
+  | 'live'
+  | 'completed'
+  | 'cancelled'
+  | 'blocked';
 
 export interface CampaignDraft {
   id: string;
