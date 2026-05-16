@@ -267,7 +267,9 @@ export async function uploadAssetToRequirement(
   if (readError || !current) throw new Error(readError?.message ?? 'Requirement not found');
   if (current.status === 'approved') throw new Error('requirement_already_approved');
 
-  // Mark as uploaded
+  const campaignId = current.campaign_id as string;
+
+  // Mark requirement as uploaded
   const { error: reqError } = await supabase
     .from('campaign_creative_requirements')
     .update({ status: 'uploaded', media_asset_id: mediaAssetId })
@@ -275,7 +277,35 @@ export async function uploadAssetToRequirement(
 
   if (reqError) throw new Error(reqError.message);
 
-  const campaignId = current.campaign_id as string;
+  // Bridge to creative_assets so admin review queue can see it
+  // Fetch asset name for the record
+  const { data: assetRow } = await supabase
+    .from('media_assets')
+    .select('original_filename')
+    .eq('id', mediaAssetId)
+    .single();
+
+  const assetName = (assetRow?.original_filename as string | null) ?? 'Creative';
+
+  // Upsert: one creative_assets row per (campaign_id, media_asset_id)
+  await supabase
+    .from('creative_assets')
+    .upsert(
+      {
+        campaign_id: campaignId,
+        media_asset_id: mediaAssetId,
+        name: assetName,
+        source: 'platform',
+        approval_status: 'pending_review',
+      },
+      { onConflict: 'campaign_id,media_asset_id', ignoreDuplicates: true }
+    );
+
+  // Update campaign creative_status so admin table badge updates
+  await supabase
+    .from('campaigns')
+    .update({ creative_status: 'pending_review' })
+    .eq('id', campaignId);
 
   // Auto-transition check
   const campaign = await getCampaign(campaignId);
@@ -295,7 +325,7 @@ export async function uploadAssetToRequirement(
 export async function unlinkAssetFromRequirement(requirementId: string): Promise<void> {
   const { data: current, error: readError } = await supabase
     .from('campaign_creative_requirements')
-    .select('status')
+    .select('status, media_asset_id, campaign_id')
     .eq('id', requirementId)
     .single();
 
@@ -308,6 +338,15 @@ export async function unlinkAssetFromRequirement(requirementId: string): Promise
     .eq('id', requirementId);
 
   if (error) throw new Error(error.message);
+
+  // Remove the corresponding creative_assets record if it exists
+  if (current.media_asset_id && current.campaign_id) {
+    await supabase
+      .from('creative_assets')
+      .delete()
+      .eq('campaign_id', current.campaign_id as string)
+      .eq('media_asset_id', current.media_asset_id as string);
+  }
 }
 
 // ─── Launch Readiness ──────────────────────────────────────
@@ -352,18 +391,29 @@ export async function confirmBooking(campaignId: string): Promise<CampaignBookin
     0,
   );
 
-  // Create booking
+  // Create booking record
   const { data: booking, error } = await supabase
     .from('campaign_bookings')
     .insert({
       campaign_id: campaignId,
       total_amount: totalAmount,
-      booking_status: 'confirmed',
+      booking_status: 'pending_confirmation',
     })
     .select()
     .single();
 
   if (error || !booking) throw new Error(error?.message ?? 'Failed to create booking');
+
+  // Stamp campaigns so admin panel sees this campaign as awaiting confirmation
+  const now = new Date().toISOString();
+  await supabase
+    .from('campaigns')
+    .update({
+      booking_status: 'pending_confirmation',
+      status: 'pending_review',
+      submitted_at: now,
+    })
+    .eq('id', campaignId);
 
   return {
     id: booking.id as string,
