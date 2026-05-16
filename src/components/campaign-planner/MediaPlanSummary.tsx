@@ -283,30 +283,26 @@ export function MediaPlanSummary({
                     <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
                   </div>
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <div className="flex items-center space-x-1 text-slate-500">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {flightStart && flightEnd ? (
-                        <span className="text-xs font-medium text-indigo-600">{days} {t('mediaPlan.days')}</span>
-                      ) : (
-                        <>
-                          <input
-                            type="number"
-                            min="1"
-                            className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
-                            value={days}
-                            onChange={(e) => {
-                              const d = parseInt(e.target.value) || 1;
-                              onUpdateDays(inventoryId, d);
-                              if (flightStart) {
-                                onFlightDateChange(flightStart, addDays(flightStart, d - 1));
-                              }
-                            }}
-                          />
-                          <span className="text-xs">{t('mediaPlan.days')}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    {!(flightStart && flightEnd) && (
+                      <div className="flex items-center space-x-1 text-slate-500">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
+                          value={days}
+                          onChange={(e) => {
+                            const d = parseInt(e.target.value) || 1;
+                            onUpdateDays(inventoryId, d);
+                            if (flightStart) {
+                              onFlightDateChange(flightStart, addDays(flightStart, d - 1));
+                            }
+                          }}
+                        />
+                        <span className="text-xs">{t('mediaPlan.days')}</span>
+                      </div>
+                    )}
+                    <div className={`text-sm font-semibold text-slate-900 ${flightStart && flightEnd ? 'ml-auto' : ''}`}>
                       {formatCurrency((inventory?.pricePerDay || 0) * days)}
                     </div>
                   </div>
