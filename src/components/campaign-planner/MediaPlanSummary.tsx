@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2, Loader2, AlertTriangle, Save } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
@@ -21,8 +21,8 @@ interface Props {
   onClose: () => void;
   isSaving?: boolean;
   campaignId: string | null;
-  storedRequirements: Array<{ id: string; canonicalFormat: string }> | null;
-  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string }>) => void;
+  storedRequirements: Array<{ id: string; canonicalFormat: string; status?: string }> | null;
+  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string; status?: string }>) => void;
   onCreativeUploaded: (asset: CreativeAsset, format: CanonicalFormat) => void;
 }
 
@@ -50,6 +50,17 @@ export function MediaPlanSummary({
   const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
+
+  // Seed uploadedFormats from stored requirements (handles resume + draft reload)
+  useEffect(() => {
+    if (!storedRequirements) return;
+    const seeded = new Set<CanonicalFormat>(
+      storedRequirements
+        .filter(r => r.status === 'uploaded' || r.status === 'approved')
+        .map(r => r.canonicalFormat as CanonicalFormat)
+    );
+    setUploadedFormats(seeded);
+  }, [storedRequirements]);
   const [isEnsuring, setIsEnsuring] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
@@ -101,7 +112,7 @@ export function MediaPlanSummary({
       setIsEnsuring(true);
       try {
         const created = await ensureCreativeRequirements(campaignId, selectedItems, allInventory);
-        reqs = created.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat }));
+        reqs = created.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status }));
         onStoredRequirementsChange(reqs);
       } catch (err) {
         console.error('Failed to ensure requirements:', err);

@@ -338,7 +338,7 @@ export function CampaignPlannerPage() {
   // --- Campaign Draft State ---
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [storedRequirements, setStoredRequirements] = useState<
-    Array<{ id: string; canonicalFormat: string }> | null
+    Array<{ id: string; canonicalFormat: string; status?: string }> | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -499,7 +499,7 @@ export function CampaignPlannerPage() {
 
       // Restore campaign and requirements
       setCampaignId(resumeId);
-      setStoredRequirements(reqs.length > 0 ? reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat })) : null);
+      setStoredRequirements(reqs.length > 0 ? reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })) : null);
 
       // Reset to inventory step
       setStep('inventory');

@@ -15,8 +15,8 @@ interface Props {
   selectedItems: MediaPlanItem[];
   allInventory: InventoryLocation[];
   campaignId: string | null;
-  storedRequirements: Array<{ id: string; canonicalFormat: string }> | null;
-  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string }>) => void;
+  storedRequirements: Array<{ id: string; canonicalFormat: string; status?: string }> | null;
+  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string; status?: string }>) => void;
   onBack: () => void;
 }
 
@@ -34,6 +34,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   const [draftSaved, setDraftSaved] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
+  const [approvedFormats, setApprovedFormats] = useState<Set<CanonicalFormat>>(new Set());
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
 
   // Campaign name editing
@@ -58,8 +59,14 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
           .filter(r => r.status === 'uploaded' || r.status === 'approved')
           .map(r => r.canonicalFormat as CanonicalFormat)
       );
+      const approved = new Set<CanonicalFormat>(
+        reqs
+          .filter(r => r.status === 'approved')
+          .map(r => r.canonicalFormat as CanonicalFormat)
+      );
       setUploadedFormats(uploaded);
-      onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat })));
+      setApprovedFormats(approved);
+      onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })));
     }).catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);
@@ -177,8 +184,12 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
     },
     {
       label: '素材審核',
-      status: allFormatsReady ? 'pending' : 'waiting',
-      detail: allFormatsReady ? '送審後由平台審核' : '請先完成上傳',
+      status: (groups.length > 0 && groups.every(g => approvedFormats.has(g.format))) ? 'pass'
+            : allFormatsReady ? 'pending'
+            : 'waiting',
+      detail: (groups.length > 0 && groups.every(g => approvedFormats.has(g.format))) ? '平台已審核通過'
+            : allFormatsReady ? '送審後由平台審核'
+            : '請先完成上傳',
     },
     {
       label: '庫存確認',
