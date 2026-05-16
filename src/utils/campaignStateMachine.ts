@@ -16,12 +16,16 @@ export function computeLaunchReadiness(
   const allCreativesApproved =
     requirements.length > 0 &&
     requirements.every(r => r.status === 'approved');
+  // MVP: treat 'uploaded' as sufficient for booking (no admin panel yet)
+  const allCreativesReady =
+    requirements.length > 0 &&
+    requirements.every(r => r.status === 'approved' || r.status === 'uploaded');
   const noPendingReview =
     requirements.length > 0 &&
     requirements.every(r => r.status === 'approved' || r.status === 'rejected');
 
   return {
-    ready: hasInventory && allCreativesApproved,
+    ready: hasInventory && allCreativesReady,
     checks: { hasInventory, allCreativesApproved, noPendingReview },
   };
 }

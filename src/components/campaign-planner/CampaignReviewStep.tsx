@@ -6,16 +6,17 @@ import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { ArrowLeft, CheckCircle, MapPin, Image as ImageIcon, Settings, Calculator, Send, AlertTriangle, Play } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { createAndSubmitCampaign } from '@/lib/api/campaigns';
+import { confirmBooking } from '@/lib/api/campaign-draft';
 
 interface Props {
   selectedItems: MediaPlanItem[];
   allInventory: InventoryLocation[];
   creatives: CreativeAsset[];
+  campaignId: string | null;
   onBack: () => void;
 }
 
-export function CampaignReviewStep({ selectedItems, allInventory, creatives, onBack }: Props) {
+export function CampaignReviewStep({ selectedItems, allInventory, creatives, campaignId, onBack }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,14 +90,8 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, onB
               setIsSubmitting(true);
               setSubmitError(null);
               try {
-                await createAndSubmitCampaign({
-                  selectedItems,
-                  allInventory,
-                  creatives,
-                  campaignDays: selectedItems[0]?.days ?? 7,
-                  totalBudget: exactTotalBudget,
-                  estimatedImpressions: exactTotalImpressions,
-                });
+                if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
+                await confirmBooking(campaignId);
                 setIsSubmitted(true);
               } catch (err) {
                 setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
