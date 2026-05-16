@@ -154,7 +154,7 @@ export function MediaPlanSummary({
     ? '儲存中...'
     : allFormatsUploaded
     ? '確認並送審 →'
-    : '前往確認送審 →';
+    : '繼續編輯 →';
 
   const footerButtonAction = allFormatsUploaded && onAllUploaded ? onAllUploaded : onContinue;
 
