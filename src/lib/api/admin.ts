@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase';
 import { Campaign, CreativeAsset, Screen } from '@/types/inventory';
+import {
+  deriveCampaignCreativeStatus,
+  deriveLaunchReadinessStatus,
+} from '@/utils/adminCampaignStatus';
 
 // ── Campaigns ────────────────────────────────────────────────────
 
@@ -70,6 +74,7 @@ export async function confirmBooking(campaignId: string, notes?: string): Promis
   if (existingError) throw new Error(existingError.message);
 
   const now = new Date().toISOString();
+  const creativeStatus = await getDerivedCreativeStatus(campaignId);
   const bookingPayload = {
     total_amount: totalAmount,
     booking_status: 'confirmed',
@@ -100,6 +105,8 @@ export async function confirmBooking(campaignId: string, notes?: string): Promis
     .update({
       booking_status: 'confirmed',
       status: 'approved',
+      creative_status: creativeStatus,
+      launch_readiness: deriveLaunchReadinessStatus('confirmed', creativeStatus, 'not_ready'),
       approval_notes: notes ?? null,
       booking_confirmed_at: now,
       reviewed_at: now,
@@ -139,37 +146,60 @@ export async function updateCreativeApprovalStatus(
   // Recompute creative_status on the parent campaign
   const { data: asset } = await supabase
     .from('creative_assets')
-    .select('campaign_id')
+    .select('campaign_id, media_asset_id')
     .eq('id', creativeAssetId)
     .single();
 
   if (asset?.campaign_id) {
-    await recomputeCampaignCreativeStatus(asset.campaign_id as string);
+    if (asset.media_asset_id) {
+      await supabase
+        .from('campaign_creative_requirements')
+        .update({ status, media_asset_id: asset.media_asset_id, reviewed_at: new Date().toISOString() })
+        .eq('campaign_id', asset.campaign_id as string)
+        .eq('media_asset_id', asset.media_asset_id as string);
+    }
+
+    await recomputeCampaignStatuses(asset.campaign_id as string);
   }
 }
 
-async function recomputeCampaignCreativeStatus(campaignId: string): Promise<void> {
+async function getDerivedCreativeStatus(campaignId: string): Promise<string> {
+  const { data: campaign } = await supabase
+    .from('campaigns')
+    .select('creative_status')
+    .eq('id', campaignId)
+    .single();
+
   const { data: assets } = await supabase
     .from('creative_assets')
     .select('approval_status')
     .eq('campaign_id', campaignId);
 
-  if (!assets || assets.length === 0) return;
+  return deriveCampaignCreativeStatus(
+    (assets ?? []).map(asset => asset.approval_status as string),
+    campaign?.creative_status as string | null,
+  );
+}
 
-  const statuses = assets.map(a => a.approval_status as string);
-  let newStatus = 'not_submitted';
+async function recomputeCampaignStatuses(campaignId: string): Promise<void> {
+  const { data: campaign, error } = await supabase
+    .from('campaigns')
+    .select('booking_status, creative_status, launch_readiness')
+    .eq('id', campaignId)
+    .single();
 
-  if (statuses.some(s => s === 'approved' || s === 'approved_with_restrictions')) {
-    newStatus = 'approved';
-  } else if (statuses.some(s => s === 'pending_media_owner_review' || s === 'pending_review')) {
-    newStatus = 'pending_review';
-  } else if (statuses.every(s => s === 'rejected')) {
-    newStatus = 'rejected';
-  }
+  if (error || !campaign) throw new Error(error?.message ?? 'Campaign not found');
+
+  const creativeStatus = await getDerivedCreativeStatus(campaignId);
+  const launchReadiness = deriveLaunchReadinessStatus(
+    campaign.booking_status as string,
+    creativeStatus,
+    campaign.launch_readiness as string,
+  );
 
   await supabase
     .from('campaigns')
-    .update({ creative_status: newStatus })
+    .update({ creative_status: creativeStatus, launch_readiness: launchReadiness })
     .eq('id', campaignId);
 }
 
@@ -201,6 +231,16 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
   const advertiserInfo = row.advertisers as { name: string } | null;
   const items = (row.campaign_inventory_items as Record<string, unknown>[] | null) ?? [];
   const creativeRows = (row.creative_assets as Record<string, unknown>[] | null) ?? [];
+  const bookingStatus = (row.booking_status as string) ?? 'draft';
+  const creativeStatus = deriveCampaignCreativeStatus(
+    creativeRows.map(creative => creative.approval_status as string),
+    row.creative_status as string | null,
+  );
+  const launchReadiness = deriveLaunchReadinessStatus(
+    bookingStatus,
+    creativeStatus,
+    row.launch_readiness as string | null,
+  );
 
   const creatives: CreativeAsset[] = creativeRows.map((cr) => {
     const media = cr.media_assets as Record<string, unknown> | null;
@@ -222,9 +262,9 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
     advertiserName: advertiserInfo?.name ?? '',
     objective: row.objective as string,
     status: row.status as Campaign['status'],
-    bookingStatus: (row.booking_status as string) ?? 'draft',
-    creativeStatus: (row.creative_status as string) ?? 'not_submitted',
-    launchReadiness: (row.launch_readiness as string) ?? 'not_ready',
+    bookingStatus,
+    creativeStatus,
+    launchReadiness,
     startDate: (row.start_date as string) ?? '',
     endDate: (row.end_date as string) ?? '',
     submittedAt: (row.submitted_at as string) ?? new Date().toISOString(),
