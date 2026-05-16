@@ -56,6 +56,35 @@ export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
   };
 }
 
+export async function listMediaAssets(): Promise<Array<{
+  id: string;
+  originalFilename: string;
+  publicUrl: string;
+  fileType: 'image' | 'video';
+  mimeType: string;
+  fileSizeBytes: number;
+  status: string;
+  createdAt: string;
+}>> {
+  const { data, error } = await supabase
+    .from('media_assets')
+    .select('*')
+    .eq('uploaded_by_user_id', DEFAULT_USER_ID)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(row => ({
+    id: row.id as string,
+    originalFilename: row.original_filename as string,
+    publicUrl: row.public_url as string,
+    fileType: row.file_type as 'image' | 'video',
+    mimeType: row.mime_type as string,
+    fileSizeBytes: row.file_size_bytes as number,
+    status: row.status as string,
+    createdAt: row.created_at as string,
+  }));
+}
+
 // Links uploaded media_assets to a campaign as creative_assets
 export async function linkCreativesToCampaign(
   campaignId: string,

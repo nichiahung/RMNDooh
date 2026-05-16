@@ -110,7 +110,7 @@ export function MediaPlanSummary({
     ? '儲存中...'
     : allFormatsUploaded
     ? '確認並送審 →'
-    : '前往上傳廣告素材 →';
+    : '前往確認送審 →';
 
   const footerButtonAction = allFormatsUploaded && onAllUploaded ? onAllUploaded : onContinue;
 

@@ -365,3 +365,36 @@ export async function ensureCreativeRequirements(
   if (existing.length > 0) return existing;
   return submitCreativesForReview(campaignId, selectedItems, allInventory);
 }
+
+// ─── Dashboard Queries ─────────────────────────────────────
+
+export async function listCampaigns(): Promise<CampaignDraft[]> {
+  const { data, error } = await supabase
+    .from('campaigns')
+    .select('*')
+    .eq('created_by_user_id', DEFAULT_USER_ID)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapCampaignRow);
+}
+
+export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { inventoryCount: number; uploadedCount: number; totalCount: number }>> {
+  const campaigns = await listCampaigns();
+
+  const summaries = await Promise.all(campaigns.map(async (c) => {
+    const [items, reqs] = await Promise.all([
+      getInventoryItems(c.id),
+      getStoredCreativeRequirements(c.id),
+    ]);
+    const uploadedCount = reqs.filter(r => r.status === 'uploaded' || r.status === 'approved').length;
+    return {
+      ...c,
+      inventoryCount: items.length,
+      uploadedCount,
+      totalCount: reqs.length,
+    };
+  }));
+
+  return summaries;
+}
