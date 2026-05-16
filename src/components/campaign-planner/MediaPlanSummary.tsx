@@ -166,9 +166,7 @@ export function MediaPlanSummary({
 
   const footerButtonLabel = isSaving
     ? '儲存中...'
-    : allFormatsUploaded
-    ? '確認並送審 →'
-    : '繼續編輯 →';
+    : '繼續 →';
 
   const footerButtonAction = allFormatsUploaded && onAllUploaded ? onAllUploaded : onContinue;
 
