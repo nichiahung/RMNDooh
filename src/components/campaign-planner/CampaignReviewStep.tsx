@@ -42,6 +42,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
+  const [campaignStatus, setCampaignStatus] = useState<string>('draft');
 
   // On mount: fetch campaign name + pre-populate upload status from DB
   useEffect(() => {
@@ -50,6 +51,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
     getCampaign(campaignId).then(c => {
       setCampaignName(c.name);
       setNameInput(c.name);
+      setCampaignStatus(c.status);
     }).catch(console.error);
 
     getStoredCreativeRequirements(campaignId).then(reqs => {
@@ -405,37 +407,41 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
               )}
             </div>
 
-            <button
-              disabled={isSubmitting || !allFormatsReady}
-              onClick={async () => {
-                setIsSubmitting(true);
-                setSubmitError(null);
-                try {
-                  if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
-                  await submitCampaignForConfirmation(campaignId);
-                  setIsSubmitted(true);
-                } catch (err) {
-                  setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
-                } finally {
-                  setIsSubmitting(false);
+            {campaignStatus === 'draft' || campaignStatus === 'pending_creative_review' ? (
+              <button
+                disabled={isSubmitting || !allFormatsReady}
+                onClick={async () => {
+                  setIsSubmitting(true);
+                  setSubmitError(null);
+                  try {
+                    if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
+                    await submitCampaignForConfirmation(campaignId);
+                    setCampaignStatus('pending_review');
+                    setIsSubmitted(true);
+                  } catch (err) {
+                    setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+                className="w-full py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-4 h-4" /></>}
+              </button>
+            ) : (
+              <button
+                disabled={isSavingDraft}
+                onClick={handleSaveDraft}
+                className="w-full py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {draftSaved
+                  ? <><CheckCircle2 className="w-4 h-4 text-emerald-500" /> 已儲存</>
+                  : isSavingDraft ? '儲存中...'
+                  : '更新資訊'
                 }
-              }}
-              className="w-full py-2.5 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-4 h-4" /></>}
-            </button>
+              </button>
+            )}
 
-            <button
-              onClick={handleSaveDraft}
-              disabled={isSavingDraft}
-              className="w-full py-2 text-xs font-medium text-slate-500 hover:text-slate-700 bg-white border border-slate-200 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-            >
-              {draftSaved
-                ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> 草稿已儲存</>
-                : isSavingDraft ? '儲存中...'
-                : '儲存草稿'
-              }
-            </button>
           </div>
 
         </div>
