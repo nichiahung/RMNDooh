@@ -375,7 +375,7 @@ export async function listCampaigns(): Promise<CampaignDraft[]> {
   return (data ?? []).map(mapCampaignRow);
 }
 
-export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { inventoryCount: number; uploadedCount: number; totalCount: number }>> {
+export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { inventoryIds: string[]; inventoryCount: number; uploadedCount: number; totalCount: number }>> {
   const campaigns = await listCampaigns();
 
   const summaries = await Promise.all(campaigns.map(async c => {
