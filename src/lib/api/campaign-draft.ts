@@ -386,6 +386,7 @@ export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { i
     const uploadedCount = reqs.filter(r => r.status === 'uploaded' || r.status === 'approved').length;
     return {
       ...c,
+      inventoryIds: items.map(item => item.inventoryLocationId),
       inventoryCount: items.length,
       uploadedCount,
       totalCount: reqs.length,
