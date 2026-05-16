@@ -94,10 +94,18 @@ cancelled
 
 Business meaning:
 
-- Booking status answers whether inventory has been commercially confirmed.
+- `campaigns.booking_status` answers where the campaign is in the booking workflow.
+- `campaign_bookings.booking_status` answers whether a formal commercial booking record is confirmed or cancelled.
 - Creative status answers whether creative assets are acceptable.
 - Launch readiness is computed from prerequisites.
 - Draft lifecycle is the self-service workflow state.
+
+Booking boundary:
+
+- Advertiser submit writes `campaigns.booking_status = pending_confirmation`.
+- Advertiser submit must not insert into `campaign_bookings`.
+- Admin confirm writes `campaign_bookings.booking_status = confirmed` and `campaigns.booking_status = confirmed`.
+- `campaign_bookings.booking_status` currently allows only `confirmed | cancelled`.
 
 Before changing statuses, update tests and docs together.
 

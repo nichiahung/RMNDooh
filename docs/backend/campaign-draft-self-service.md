@@ -11,7 +11,7 @@ Self-service advertisers can build a campaign incrementally:
 4. Return later to continue editing
 5. Upload creatives against required formats
 6. Submit creatives for review
-7. Confirm booking only after all checks pass
+7. Submit the campaign for media-owner booking confirmation
 
 ---
 
@@ -19,7 +19,8 @@ Self-service advertisers can build a campaign incrementally:
 
 - **Campaign Draft is not a confirmed booking.** It does not reserve inventory.
 - **Availability and pricing may change** between draft creation and booking confirmation.
-- **Confirm Booking is disabled** until all required creatives are uploaded, valid, and approved.
+- **Submit for Confirmation is disabled** until all required creatives are uploaded and valid.
+- **`campaign_bookings` is not a pending queue.** It is created only after Admin confirms the booking.
 - **Blocked state:** If a creative is rejected, campaign becomes `blocked_by_creative` until a replacement is approved.
 - **Draft lifecycle:** Can be cancelled or abandoned at any time.
 - **Future feature (optional):** Soft inventory hold with expiration timer.
@@ -32,8 +33,9 @@ Self-service advertisers can build a campaign incrementally:
 draft
   → pending_creative_review   (after submit-creatives-for-review)
   → blocked_by_creative       (if any creative is rejected)
-  → ready_to_book             (all creatives approved)
-  → confirmed                 (after confirm-booking)
+  → ready_to_book             (all required creative formats uploaded)
+  → pending_review            (after advertiser submit-for-confirmation)
+  → approved                  (after admin confirm-booking)
   → cancelled
 ```
 
@@ -76,7 +78,8 @@ draft
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/campaigns/:id/launch-readiness` | Check all conditions before booking confirmation |
-| `POST` | `/campaigns/:id/confirm-booking` | Confirm booking (requires launch-readiness pass) |
+| `POST` | `/campaigns/:id/submit-for-confirmation` | Advertiser submits a ready campaign for Admin confirmation |
+| `POST` | `/admin/campaigns/:id/confirm-booking` | Admin confirms booking and creates the `campaign_bookings` record |
 
 ---
 
@@ -96,7 +99,23 @@ Response should indicate pass/fail for each condition:
 }
 ```
 
-`confirm-booking` should return 422 if `ready: false`.
+`submit-for-confirmation` should return 422 if `ready: false`.
+
+## Booking Record Boundary
+
+`campaigns.booking_status` is the workflow state:
+
+```text
+draft → pending_confirmation → confirmed → scheduled → live → completed
+```
+
+`campaign_bookings.booking_status` is the formal commercial booking record:
+
+```text
+confirmed | cancelled
+```
+
+Do not insert `pending_confirmation` into `campaign_bookings`. The pending state belongs on `campaigns.booking_status` only.
 
 ---
 

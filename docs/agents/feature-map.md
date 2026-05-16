@@ -28,7 +28,7 @@ Main subsystems:
 | Detail card | `InventoryDetailCard` | Selected InventoryLocation object |
 | Media Plan | `MediaPlanSummary`, `mediaPlanCalculations.ts` | React local selected items + draft campaign inventory rows |
 | Creative upload | `CreativeUploadModal`, `lib/api/creatives.ts`, `lib/api/campaign-draft.ts` | Supabase Storage + `media_assets` + `campaign_creative_requirements` |
-| Review submit | `CampaignReviewStep`, `lib/api/campaign-draft.ts` | `confirmBooking(campaignId)` after required formats are uploaded |
+| Review submit | `CampaignReviewStep`, `lib/api/campaign-draft.ts` | `submitCampaignForConfirmation(campaignId)` after required formats are uploaded |
 | Creative requirements | `creativeRequirements.ts`, `MediaPlanSummary`, `CampaignReviewStep` | Derived from selected screen types, stored per draft campaign |
 
 Business behavior:
@@ -42,7 +42,7 @@ Business behavior:
 - Estimated impressions are `dailyImpressions * days` per InventoryLocation.
 - Required creative formats are grouped by selected screen types.
 - The current planner worktree removes the separate `CreativeUploadStep` from the main step flow and embeds upload actions in Media Plan / Review.
-- Review submission currently targets draft booking confirmation, not the older `createAndSubmitCampaign()` path.
+- Review submission updates `campaigns.booking_status` to `pending_confirmation`; it does not create `campaign_bookings`.
 
 ## Admin Dashboard
 
@@ -63,7 +63,7 @@ Tabs:
 Business behavior:
 
 - Campaign status is reviewed separately from creative status and booking status in the Step 15 model.
-- `confirmBooking()` in admin updates campaign booking status to confirmed and campaign status to approved.
+- `confirmBooking()` in admin creates or updates the formal `campaign_bookings` record, then updates campaign booking status to confirmed and campaign status to approved.
 - Creative approval updates `creative_assets.approval_status` and recomputes parent campaign creative status.
 
 ## Reports

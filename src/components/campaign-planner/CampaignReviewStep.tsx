@@ -6,7 +6,7 @@ import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
 import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload, Pencil, Check, X as XIcon } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { confirmBooking, getCampaign, getStoredCreativeRequirements, updateDraftCampaign, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
+import { getCampaign, getStoredCreativeRequirements, submitCampaignForConfirmation, updateDraftCampaign, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { CanonicalFormat } from '@/types/creative';
 import { CreativeUploadModal } from './CreativeUploadModal';
@@ -401,7 +401,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                 setSubmitError(null);
                 try {
                   if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
-                  await confirmBooking(campaignId);
+                  await submitCampaignForConfirmation(campaignId);
                   setIsSubmitted(true);
                 } catch (err) {
                   setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');

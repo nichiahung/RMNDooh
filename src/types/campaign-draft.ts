@@ -53,6 +53,12 @@ export interface CampaignBooking {
   bookingStatus: BookingStatus;
 }
 
+export interface CampaignSubmission {
+  campaignId: string;
+  bookingStatus: 'pending_confirmation';
+  submittedAt: string;
+}
+
 export interface LaunchReadiness {
   ready: boolean;
   checks: {

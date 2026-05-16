@@ -9,7 +9,7 @@ This file describes what the app actually does today. Treat it as higher priorit
 | Campaign Planner | `/campaign-planner` | Supabase inventory via `fetchInventoryLocations()` | The planner fetches real inventory rows when env vars and tables exist. |
 | Media Plan | `/campaign-planner` | Client state + Supabase draft helpers | Selected items live in React state and are persisted as draft inventory items when a draft Campaign exists. |
 | Creative Upload | `/campaign-planner` | Supabase Storage + `media_assets` + requirement link | `CreativeUploadModal` validates against format specs, uploads the file, then links it to a campaign creative requirement. |
-| Campaign Submit / Booking | `/campaign-planner` | Supabase campaign draft helpers | Current worktree is moving toward `confirmBooking(campaignId)` after required creative formats are uploaded. |
+| Campaign Submit / Booking | `/campaign-planner` | Supabase campaign draft helpers | `submitCampaignForConfirmation(campaignId)` marks the campaign as `pending_confirmation`; formal booking rows are created only by Admin confirmation. |
 | Campaign Draft API Helpers | `/campaign-planner` draft flow | Supabase | `src/lib/api/campaign-draft.ts` is now wired into planner add/remove/requirements/confirm paths in the current worktree. |
 | Admin Dashboard | `/admin` | Supabase campaigns, inventory, screens | Falls back to empty lists on fetch errors in some helpers. |
 | Reports | `/reports` | `src/data/mockReportData.ts` | No live Supabase reporting integration yet. |

@@ -3,7 +3,7 @@ import type {
   CampaignDraft,
   CampaignInventoryItemRow,
   CampaignCreativeRequirement,
-  CampaignBooking,
+  CampaignSubmission,
   LaunchReadiness,
   DerivedCreativeRequirement,
 } from '@/types/campaign-draft';
@@ -359,9 +359,9 @@ export async function getLaunchReadiness(campaignId: string): Promise<LaunchRead
   return computeLaunchReadiness(items.length, requirements);
 }
 
-// ─── Confirm Booking ──────────────────────────────────────
+// ─── Submit Campaign For Confirmation ─────────────────────
 
-export async function confirmBooking(campaignId: string): Promise<CampaignBooking> {
+export async function submitCampaignForConfirmation(campaignId: string): Promise<CampaignSubmission> {
   // Fetch campaign, items and requirements in parallel
   const [campaign, items, requirements] = await Promise.all([
     getCampaign(campaignId),
@@ -376,37 +376,10 @@ export async function confirmBooking(campaignId: string): Promise<CampaignBookin
     throw new Error('booking_not_ready');
   }
 
-  // Check no existing booking
-  const { data: existing } = await supabase
-    .from('campaign_bookings')
-    .select('id')
-    .eq('campaign_id', campaignId)
-    .maybeSingle();
-
-  if (existing) throw new Error('booking_already_exists');
-
-  // Compute total amount from inventory item snapshots
-  const totalAmount = items.reduce(
-    (sum, item) => sum + item.pricePerDaySnapshot * item.days,
-    0,
-  );
-
-  // Create booking record
-  const { data: booking, error } = await supabase
-    .from('campaign_bookings')
-    .insert({
-      campaign_id: campaignId,
-      total_amount: totalAmount,
-      booking_status: 'pending_confirmation',
-    })
-    .select()
-    .single();
-
-  if (error || !booking) throw new Error(error?.message ?? 'Failed to create booking');
-
-  // Stamp campaigns so admin panel sees this campaign as awaiting confirmation
+  // Stamp campaigns so admin panel sees this campaign as awaiting confirmation.
+  // campaign_bookings is reserved for confirmed commercial booking records.
   const now = new Date().toISOString();
-  await supabase
+  const { error } = await supabase
     .from('campaigns')
     .update({
       booking_status: 'pending_confirmation',
@@ -415,12 +388,12 @@ export async function confirmBooking(campaignId: string): Promise<CampaignBookin
     })
     .eq('id', campaignId);
 
+  if (error) throw new Error(error.message);
+
   return {
-    id: booking.id as string,
-    campaignId: booking.campaign_id as string,
-    confirmedAt: booking.confirmed_at as string,
-    totalAmount: booking.total_amount as number,
-    bookingStatus: booking.booking_status as CampaignBooking['bookingStatus'],
+    campaignId,
+    bookingStatus: 'pending_confirmation',
+    submittedAt: now,
   };
 }
 

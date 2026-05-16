@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Campaign, CreativeAsset, InventoryLocation, Screen } from '@/types/inventory';
+import { Campaign, CreativeAsset, Screen } from '@/types/inventory';
 
 // ── Campaigns ────────────────────────────────────────────────────
 
@@ -49,14 +49,60 @@ export async function updateCampaignStatus(
 }
 
 export async function confirmBooking(campaignId: string, notes?: string): Promise<void> {
+  const { data: items, error: itemsError } = await supabase
+    .from('campaign_inventory_items')
+    .select('days, price_per_day')
+    .eq('campaign_id', campaignId);
+
+  if (itemsError) throw new Error(itemsError.message);
+
+  const totalAmount = (items ?? []).reduce(
+    (sum, item) => sum + Number(item.price_per_day ?? 0) * Number(item.days ?? 0),
+    0,
+  );
+
+  const { data: existingBooking, error: existingError } = await supabase
+    .from('campaign_bookings')
+    .select('id')
+    .eq('campaign_id', campaignId)
+    .maybeSingle();
+
+  if (existingError) throw new Error(existingError.message);
+
+  const now = new Date().toISOString();
+  const bookingPayload = {
+    total_amount: totalAmount,
+    booking_status: 'confirmed',
+    confirmed_at: now,
+    updated_at: now,
+  };
+
+  if (existingBooking?.id) {
+    const { error: bookingError } = await supabase
+      .from('campaign_bookings')
+      .update(bookingPayload)
+      .eq('id', existingBooking.id as string);
+
+    if (bookingError) throw new Error(bookingError.message);
+  } else {
+    const { error: bookingError } = await supabase
+      .from('campaign_bookings')
+      .insert({
+        campaign_id: campaignId,
+        ...bookingPayload,
+      });
+
+    if (bookingError) throw new Error(bookingError.message);
+  }
+
   const { error } = await supabase
     .from('campaigns')
     .update({
       booking_status: 'confirmed',
       status: 'approved',
       approval_notes: notes ?? null,
-      booking_confirmed_at: new Date().toISOString(),
-      reviewed_at: new Date().toISOString(),
+      booking_confirmed_at: now,
+      reviewed_at: now,
     })
     .eq('id', campaignId);
 
