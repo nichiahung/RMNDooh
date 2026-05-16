@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2, Loader2, AlertTriangle, Save } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
 import { CanonicalFormat, FormatSpec } from '@/types/creative';
-import { ensureCreativeRequirements, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
+import { ensureCreativeRequirements, unlinkAssetFromRequirement, saveDraftCampaign } from '@/lib/api/campaign-draft';
 import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
@@ -51,6 +51,22 @@ export function MediaPlanSummary({
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
   const [isEnsuring, setIsEnsuring] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  const handleSaveDraft = async () => {
+    if (!campaignId || isSavingDraft) return;
+    setIsSavingDraft(true);
+    try {
+      await saveDraftCampaign(campaignId, {});
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2500);
+    } catch (err) {
+      console.error('Save draft failed:', err);
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
 
   // Compute totals
   let exactTotalImpressions = 0;
@@ -167,6 +183,20 @@ export function MediaPlanSummary({
           </div>
         </div>
 
+        {/* Creative status banner — only when items are selected */}
+        {selectedItems.length > 0 && groups.length > 0 && (
+          <div className={`px-4 py-2 flex items-center gap-2 text-xs font-semibold border-b ${
+            allFormatsUploaded
+              ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+              : 'bg-amber-50 border-amber-100 text-amber-700'
+          }`}>
+            {allFormatsUploaded
+              ? <><CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> 素材齊備，可送審</>
+              : <><AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> 尚缺 {groups.filter(g => !uploadedFormats.has(g.format)).length} 種素材格式</>
+            }
+          </div>
+        )}
+
         {/* Selected Items Area */}
         <div className="flex-1 overflow-y-auto p-5 custom-scrollbar bg-slate-50/30">
           {selectedDetails.length === 0 ? (
@@ -252,6 +282,21 @@ export function MediaPlanSummary({
           >
             {footerButtonLabel}
           </button>
+
+          {campaignId && (
+            <button
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft}
+              className="w-full mt-2 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              {draftSaved
+                ? <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> 草稿已儲存</>
+                : isSavingDraft
+                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> 儲存中...</>
+                : <><Save className="w-3.5 h-3.5" /> 儲存草稿</>
+              }
+            </button>
+          )}
         </div>
       </aside>
     </>
