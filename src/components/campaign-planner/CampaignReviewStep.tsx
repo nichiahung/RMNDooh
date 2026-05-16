@@ -18,6 +18,8 @@ interface Props {
   storedRequirements: Array<{ id: string; canonicalFormat: string; status?: string }> | null;
   onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string; status?: string }>) => void;
   onBack: () => void;
+  flightStart: string | null;
+  flightEnd: string | null;
 }
 
 type ActiveModal = {
@@ -26,7 +28,7 @@ type ActiveModal = {
   venueCount: number;
 };
 
-export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack }: Props) {
+export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack, flightStart, flightEnd }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,6 +111,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   // Creative requirement groups
   const groups = deriveGroupedRequirements(selectedItems, allInventory);
   const allFormatsReady = groups.length > 0 && groups.every(g => uploadedFormats.has(g.format));
+  const flightDatesSet = !!(flightStart && flightEnd);
 
   const handleFormatUploadClick = (format: CanonicalFormat, venueCount: number) => {
     const req = storedRequirements?.find(r => r.canonicalFormat === format);
@@ -174,6 +177,11 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
 
   // Eligibility checklist items
   const checks = [
+    {
+      label: '走期設定',
+      status: (flightStart && flightEnd) ? 'pass' : 'blocked',
+      detail: (flightStart && flightEnd) ? `${flightStart} – ${flightEnd}` : '尚未設定走期',
+    },
     {
       label: '版位已選',
       status: selectedItems.length > 0 ? 'pass' : 'blocked',
@@ -273,7 +281,22 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
             )}
 
             <ReviewSection title={t('review.section.performance')} icon={<Calculator />}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 col-span-2 md:col-span-1">
+                  <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">走期</div>
+                  {flightStart && flightEnd ? (
+                    <>
+                      <div className="text-lg font-bold text-slate-900">
+                        {Math.max(1, Math.round((new Date(flightEnd).getTime() - new Date(flightStart).getTime()) / 86400000) + 1)} 天
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {flightStart} – {flightEnd}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-amber-500 font-medium mt-1">尚未設定走期</div>
+                  )}
+                </div>
                 <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                   <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">{t('review.perf.totalImp')}</div>
                   <div className="text-2xl font-bold text-slate-900">{formatNumber(exactTotalImpressions)}</div>
@@ -399,17 +422,19 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                 })}
               </div>
 
-              {!allFormatsReady && groups.length > 0 && (
+              {(!flightDatesSet || (!allFormatsReady && groups.length > 0)) && (
                 <div className="mt-3 pt-3 border-t border-slate-100 flex items-start gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-red-600 font-medium">送審被鎖定：請完成所有素材上傳</p>
+                  <p className="text-[10px] text-red-600 font-medium">
+                    {!flightDatesSet ? '請先在側欄設定走期' : '請完成所有素材上傳'}
+                  </p>
                 </div>
               )}
             </div>
 
             {campaignStatus === 'draft' || campaignStatus === 'pending_creative_review' ? (
               <button
-                disabled={isSubmitting || !allFormatsReady}
+                disabled={isSubmitting || !allFormatsReady || !flightDatesSet}
                 onClick={async () => {
                   setIsSubmitting(true);
                   setSubmitError(null);

@@ -17,6 +17,8 @@ import {
   listCampaignSummaries,
   getInventoryItems,
   getStoredCreativeRequirements,
+  getCampaign,
+  updateDraftCampaign,
 } from '@/lib/api/campaign-draft';
 import { listMediaAssets, deleteMediaAsset, renameMediaAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
@@ -343,6 +345,8 @@ export function CampaignPlannerPage() {
     Array<{ id: string; canonicalFormat: string; status?: string }> | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [flightStart, setFlightStart] = useState<string | null>(null);
+  const [flightEnd, setFlightEnd] = useState<string | null>(null);
 
   // --- Global State ---
   const [filters, setFilters] = useState<FilterState>({});
@@ -462,6 +466,22 @@ export function CampaignPlannerPage() {
     );
   };
 
+  const handleFlightDateChange = async (start: string | null, end: string | null) => {
+    setFlightStart(start);
+    setFlightEnd(end);
+    if (start && end) {
+      const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1);
+      setSelectedItems(prev => prev.map(item => ({ ...item, days })));
+    }
+    if (campaignId) {
+      try {
+        await updateDraftCampaign(campaignId, { startDate: start ?? undefined, endDate: end ?? undefined });
+      } catch (err) {
+        console.error('Failed to save flight dates:', err);
+      }
+    }
+  };
+
   const handleContinueToReview = async () => {
     if (selectedItems.length === 0) return;
     setIsSaving(true);
@@ -502,6 +522,11 @@ export function CampaignPlannerPage() {
       // Restore campaign and requirements
       setCampaignId(resumeId);
       setStoredRequirements(reqs.length > 0 ? reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })) : null);
+
+      // Restore flight dates
+      const campaign = await getCampaign(resumeId);
+      setFlightStart(campaign.startDate ?? null);
+      setFlightEnd(campaign.endDate ?? null);
 
       // Reset to inventory step
       setStep('inventory');
@@ -641,6 +666,9 @@ export function CampaignPlannerPage() {
                   storedRequirements={storedRequirements}
                   onStoredRequirementsChange={setStoredRequirements}
                   onCreativeUploaded={() => {}}
+                  flightStart={flightStart}
+                  flightEnd={flightEnd}
+                  onFlightDateChange={handleFlightDateChange}
                 />
 
                 {/* Detail Modal Overlay */}
@@ -671,6 +699,8 @@ export function CampaignPlannerPage() {
                 storedRequirements={storedRequirements}
                 onStoredRequirementsChange={setStoredRequirements}
                 onBack={() => setStep('inventory')}
+                flightStart={flightStart}
+                flightEnd={flightEnd}
               />
             )}
           </>

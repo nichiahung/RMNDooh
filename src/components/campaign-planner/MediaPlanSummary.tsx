@@ -24,6 +24,9 @@ interface Props {
   storedRequirements: Array<{ id: string; canonicalFormat: string; status?: string }> | null;
   onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string; status?: string }>) => void;
   onCreativeUploaded: (asset: CreativeAsset, format: CanonicalFormat) => void;
+  flightStart: string | null;
+  flightEnd: string | null;
+  onFlightDateChange: (start: string | null, end: string | null) => void;
 }
 
 type ActiveModal = {
@@ -46,6 +49,9 @@ export function MediaPlanSummary({
   storedRequirements,
   onStoredRequirementsChange,
   onCreativeUploaded,
+  flightStart,
+  flightEnd,
+  onFlightDateChange,
 }: Props) {
   const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
@@ -194,6 +200,35 @@ export function MediaPlanSummary({
           </div>
         </div>
 
+        {/* Flight date picker */}
+        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/30">
+          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+            <Calendar className="w-3 h-3" /> 走期設定
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={flightStart ?? ''}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={e => onFlightDateChange(e.target.value || null, flightEnd)}
+              className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+            />
+            <span className="text-[10px] text-slate-400 flex-shrink-0">至</span>
+            <input
+              type="date"
+              value={flightEnd ?? ''}
+              min={flightStart ?? new Date().toISOString().slice(0, 10)}
+              onChange={e => onFlightDateChange(flightStart, e.target.value || null)}
+              className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          {flightStart && flightEnd && (
+            <p className="text-[10px] text-indigo-600 font-medium mt-1.5">
+              {Math.max(1, Math.round((new Date(flightEnd).getTime() - new Date(flightStart).getTime()) / 86400000) + 1)} 天
+            </p>
+          )}
+        </div>
+
         {/* Creative status banner — only when items are selected */}
         {selectedItems.length > 0 && groups.length > 0 && (
           <div className={`px-4 py-2 flex items-center gap-2 text-xs font-semibold border-b ${
@@ -234,16 +269,22 @@ export function MediaPlanSummary({
                     <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
                   </div>
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <input
-                        type="number"
-                        min="1"
-                        className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
-                        value={days}
-                        onChange={(e) => onUpdateDays(inventoryId, parseInt(e.target.value) || 1)}
-                      />
-                      <span className="text-xs text-slate-500">{t('mediaPlan.days')}</span>
+                    <div className="flex items-center space-x-1 text-slate-500">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {flightStart && flightEnd ? (
+                        <span className="text-xs font-medium text-indigo-600">{days} {t('mediaPlan.days')}</span>
+                      ) : (
+                        <>
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
+                            value={days}
+                            onChange={(e) => onUpdateDays(inventoryId, parseInt(e.target.value) || 1)}
+                          />
+                          <span className="text-xs">{t('mediaPlan.days')}</span>
+                        </>
+                      )}
                     </div>
                     <div className="text-sm font-semibold text-slate-900">
                       {formatCurrency((inventory?.pricePerDay || 0) * days)}
