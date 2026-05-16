@@ -4,10 +4,12 @@ export function queryInventory(query: string, inventory: InventoryLocation[]): I
   const q = query.toLowerCase();
   let filtered = [...inventory];
 
-  // City filter — 新北 checked before 台北 to avoid substring collision
-  if (q.includes('新北')) filtered = filtered.filter(i => i.city === '新北市');
-  else if (q.includes('桃園')) filtered = filtered.filter(i => i.city === '桃園市');
-  else if (q.includes('台北')) filtered = filtered.filter(i => i.city === '台北市');
+  // City filter — 新北 checked before 台北 because '新北' contains '北',
+  // so a 新北 query must not fall through to the 台北 branch.
+  // Each branch matches both Chinese and English city strings stored in mockData.
+  if (q.includes('新北')) filtered = filtered.filter(i => i.city === '新北市' || i.city === 'New Taipei');
+  else if (q.includes('桃園')) filtered = filtered.filter(i => i.city === '桃園市' || i.city === 'Taoyuan');
+  else if (q.includes('台北')) filtered = filtered.filter(i => i.city === '台北市' || i.city === 'Taipei');
 
   // Audience filters
   if (q.includes('通勤')) filtered = filtered.filter(i => i.audienceTags.includes('Commuters'));
@@ -45,13 +47,14 @@ export function queryInventory(query: string, inventory: InventoryLocation[]): I
 }
 
 export function buildResponseText(venues: InventoryLocation[], _query: string): string {
-  if (venues.length === 0) {
+  const capped = venues.slice(0, 3); // defensive cap — markers array only has 3 entries
+  if (capped.length === 0) {
     return '找不到符合條件的版位，試試調整預算或地區範圍。';
   }
   const markers = ['①', '②', '③'];
-  const lines = venues.map((v, i) => {
+  const lines = capped.map((v, i) => {
     const tags = v.audienceTags.slice(0, 2).join(' ');
     return `${markers[i]} ${v.name}\n   NT$${v.pricePerDay.toLocaleString()}/天 · ${v.dailyImpressions.toLocaleString()} 日曝光 · ${tags}`;
   });
-  return `根據你的目標，我找到 ${venues.length} 個適合的版位：\n\n${lines.join('\n\n')}`;
+  return `根據你的目標，我找到 ${capped.length} 個適合的版位：\n\n${lines.join('\n\n')}`;
 }
