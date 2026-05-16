@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { FilterSidebar } from './FilterSidebar';
 import { InventoryDiscovery } from './InventoryDiscovery';
+import type { ViewMode } from './ViewToggle';
 import { MediaPlanSummary } from './MediaPlanSummary';
 import { InventoryDetailCard } from './InventoryDetailCard';
 import { PerformanceBar } from './PerformanceBar';
@@ -372,8 +374,19 @@ function CampaignsTabContent({ setActiveTab, onResume }: { setActiveTab: (tab: '
   );
 }
 
-// --- Main CampaignPlannerPage ---
+// --- Main CampaignPlannerPage Wrapper ---
 export function CampaignPlannerPage() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center bg-[#F8FAFC]">Loading planner...</div>}>
+      <CampaignPlannerPageContent />
+    </Suspense>
+  );
+}
+
+function CampaignPlannerPageContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryId = searchParams.get('id');
   // --- Supabase inventory ---
   const { allInventory, fetchInventory } = usePlannerStore();
 
@@ -401,7 +414,7 @@ export function CampaignPlannerPage() {
   const [filters, setFilters] = useState<FilterState>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('impressions_desc');
-  const [currentView, setCurrentView] = useState<'list' | 'map'>('list');
+  const [currentView, setCurrentView] = useState<ViewMode>('list');
 
   const [selectedItems, setSelectedItems] = useState<MediaPlanItem[]>([]);
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
@@ -463,6 +476,8 @@ export function CampaignPlannerPage() {
         const draft = await createDraftCampaign();
         cId = draft.id;
         setCampaignId(draft.id);
+        // Update the URL to reflect the new draft
+        router.replace(`/campaign-planner?id=${draft.id}`, { scroll: false });
       } catch (err) {
         console.error('Failed to create campaign draft:', err);
         isCreatingDraft.current = false;
@@ -592,6 +607,13 @@ export function CampaignPlannerPage() {
     }
   };
 
+  // Mount logic: check query params
+  useEffect(() => {
+    if (queryId && queryId !== campaignId && !isCreatingDraft.current) {
+      handleResumeCampaign(queryId);
+    }
+  }, [queryId, campaignId]);
+
   const { t, toggleLocale } = useI18n();
 
   // Render Step Progress
@@ -699,6 +721,7 @@ export function CampaignPlannerPage() {
 
                 <InventoryDiscovery
                   inventory={filteredAndSortedInventory}
+                  allInventory={allInventory}
                   sortOption={sortOption}
                   onSortChange={setSortOption}
                   currentView={currentView}

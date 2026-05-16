@@ -9,8 +9,8 @@ interface PlannerState {
   fetchInventory: () => Promise<void>;
 
   // UI State
-  viewMode: 'list' | 'map';
-  setViewMode: (mode: 'list' | 'map') => void;
+  viewMode: 'list' | 'map' | 'ai';
+  setViewMode: (mode: 'list' | 'map' | 'ai') => void;
 
   // Filter State
   filters: FilterState;

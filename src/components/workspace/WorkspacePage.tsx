@@ -18,11 +18,6 @@ const InventoryExplorer = dynamic(
   { ssr: false, loading: () => <div className="rounded-2xl bg-slate-100 animate-pulse" style={{ height: 500 }} /> },
 );
 
-const AIAssistant = dynamic(
-  () => import('./AIAssistant').then(m => m.AIAssistant),
-  { ssr: false },
-);
-
 export function WorkspacePage() {
   const router = useRouter();
   const { currentUser, logout } = useAuth();
@@ -211,7 +206,6 @@ export function WorkspacePage() {
         )}
       </main>
 
-      <AIAssistant inventory={mockInventory} />
     </div>
   );
 }
