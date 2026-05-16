@@ -346,6 +346,7 @@ export function CampaignPlannerPage() {
     Array<{ id: string; canonicalFormat: string; status?: string }> | null
   >(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [campaignStatus, setCampaignStatus] = useState<string>('draft');
   const [flightStart, setFlightStart] = useState<string | null>(null);
   const [flightEnd, setFlightEnd] = useState<string | null>(null);
 
@@ -531,10 +532,11 @@ export function CampaignPlannerPage() {
       setCampaignId(resumeId);
       setStoredRequirements(reqs.length > 0 ? reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })) : null);
 
-      // Restore flight dates
+      // Restore flight dates and status
       const campaign = await getCampaign(resumeId);
       setFlightStart(campaign.startDate ?? null);
       setFlightEnd(campaign.endDate ?? null);
+      setCampaignStatus(campaign.status);
 
       // Reset to inventory step
       setStep('inventory');
@@ -677,6 +679,7 @@ export function CampaignPlannerPage() {
                   flightStart={flightStart}
                   flightEnd={flightEnd}
                   onFlightDateChange={handleFlightDateChange}
+                  campaignStatus={campaignStatus}
                 />
 
                 {/* Detail Modal Overlay */}

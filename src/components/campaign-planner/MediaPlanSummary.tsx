@@ -28,6 +28,7 @@ interface Props {
   flightStart: string | null;
   flightEnd: string | null;
   onFlightDateChange: (start: string | null, end: string | null) => void;
+  campaignStatus: string;
 }
 
 type ActiveModal = {
@@ -53,6 +54,7 @@ export function MediaPlanSummary({
   flightStart,
   flightEnd,
   onFlightDateChange,
+  campaignStatus,
 }: Props) {
   const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
@@ -353,7 +355,7 @@ export function MediaPlanSummary({
             {footerButtonLabel}
           </button>
 
-          {campaignId && (
+          {campaignId && (campaignStatus === 'draft' || campaignStatus === 'pending_creative_review') && (
             <button
               onClick={handleSaveDraft}
               disabled={isSavingDraft}
