@@ -269,25 +269,28 @@ export async function uploadAssetToRequirement(
 
   const campaignId = current.campaign_id as string;
 
-  // Mark requirement as uploaded
-  const { error: reqError } = await supabase
-    .from('campaign_creative_requirements')
-    .update({ status: 'uploaded', media_asset_id: mediaAssetId })
-    .eq('id', requirementId);
-
-  if (reqError) throw new Error(reqError.message);
-
-  // Bridge to creative_assets so admin review queue can see it
-  // Fetch asset name for the record
+  // Check if this asset has already been approved at the library level
   const { data: assetRow } = await supabase
     .from('media_assets')
-    .select('original_filename')
+    .select('original_filename, approval_status')
     .eq('id', mediaAssetId)
     .single();
 
   const assetName = (assetRow?.original_filename as string | null) ?? 'Creative';
+  const alreadyApproved = (assetRow?.approval_status as string | null) === 'approved';
 
-  // Upsert: one creative_assets row per (campaign_id, media_asset_id)
+  // Mark requirement — skip review if asset is already approved
+  const { error: reqError } = await supabase
+    .from('campaign_creative_requirements')
+    .update({
+      status: alreadyApproved ? 'approved' : 'uploaded',
+      media_asset_id: mediaAssetId,
+    })
+    .eq('id', requirementId);
+
+  if (reqError) throw new Error(reqError.message);
+
+  // Upsert into creative_assets so admin review queue can see it
   await supabase
     .from('creative_assets')
     .upsert(
@@ -296,16 +299,18 @@ export async function uploadAssetToRequirement(
         media_asset_id: mediaAssetId,
         name: assetName,
         source: 'platform',
-        approval_status: 'pending_review',
+        approval_status: alreadyApproved ? 'approved' : 'pending_review',
       },
       { onConflict: 'campaign_id,media_asset_id', ignoreDuplicates: true }
     );
 
-  // Update campaign creative_status so admin table badge updates
+  // Update campaign creative_status
   await supabase
     .from('campaigns')
-    .update({ creative_status: 'pending_review' })
+    .update({ creative_status: alreadyApproved ? 'approved' : 'pending_review' })
     .eq('id', campaignId);
+
+  if (alreadyApproved) return; // no further review needed
 
   // Auto-transition check
   const campaign = await getCampaign(campaignId);

@@ -151,16 +151,22 @@ export async function updateCreativeApprovalStatus(
     .eq('id', creativeAssetId)
     .single();
 
-  if (asset?.campaign_id) {
-    if (asset.media_asset_id) {
+  if (asset?.media_asset_id) {
+    // Sync approval back to media_assets so future campaign links can skip review
+    await supabase
+      .from('media_assets')
+      .update({ approval_status: status })
+      .eq('id', asset.media_asset_id as string);
+
+    if (asset.campaign_id) {
       await supabase
         .from('campaign_creative_requirements')
-        .update({ status, media_asset_id: asset.media_asset_id, reviewed_at: new Date().toISOString() })
+        .update({ status, reviewed_at: new Date().toISOString() })
         .eq('campaign_id', asset.campaign_id as string)
         .eq('media_asset_id', asset.media_asset_id as string);
-    }
 
-    await recomputeCampaignStatuses(asset.campaign_id as string);
+      await recomputeCampaignStatuses(asset.campaign_id as string);
+    }
   }
 }
 
