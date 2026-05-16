@@ -15,6 +15,8 @@ import {
   removeInventoryItem,
   submitCreativesForReview,
   listCampaignSummaries,
+  getInventoryItems,
+  getStoredCreativeRequirements,
 } from '@/lib/api/campaign-draft';
 import { listMediaAssets, deleteMediaAsset, renameMediaAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
@@ -224,7 +226,7 @@ function campaignStatusBadge(status: string, uploadedCount: number, totalCount: 
   return { label: status, color: 'bg-slate-100 text-slate-600' };
 }
 
-function CampaignsTabContent({ setActiveTab }: { setActiveTab: (tab: 'planner' | 'library' | 'campaigns') => void }) {
+function CampaignsTabContent({ setActiveTab, onResume }: { setActiveTab: (tab: 'planner' | 'library' | 'campaigns') => void; onResume: (campaignId: string) => Promise<void> }) {
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -303,7 +305,7 @@ function CampaignsTabContent({ setActiveTab }: { setActiveTab: (tab: 'planner' |
                     </div>
                   </div>
                   <button
-                    onClick={() => setActiveTab('planner')}
+                    onClick={() => onResume(c.id).then(() => setActiveTab('planner'))}
                     className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 flex-shrink-0"
                   >
                     繼續規劃 <ChevronRight className="w-3.5 h-3.5" />
@@ -478,6 +480,34 @@ export function CampaignPlannerPage() {
     }
   };
 
+  const handleResumeCampaign = async (resumeId: string) => {
+    try {
+      const [items, reqs] = await Promise.all([
+        getInventoryItems(resumeId),
+        getStoredCreativeRequirements(resumeId),
+      ]);
+
+      // Rebuild selectedItems from DB rows
+      const restored = items.map(row => ({
+        inventoryId: row.inventoryLocationId,
+        days: row.days,
+      }));
+      setSelectedItems(restored);
+
+      // Rebuild dbItemIdMap
+      dbItemIdMap.current = new Map(items.map(row => [row.inventoryLocationId, row.id]));
+
+      // Restore campaign and requirements
+      setCampaignId(resumeId);
+      setStoredRequirements(reqs.length > 0 ? reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat })) : null);
+
+      // Reset to inventory step
+      setStep('inventory');
+    } catch (err) {
+      console.error('Failed to resume campaign:', err);
+    }
+  };
+
   const { t, toggleLocale } = useI18n();
 
   // Render Step Progress
@@ -649,7 +679,7 @@ export function CampaignPlannerPage() {
         )}
 
         {activeTab === 'campaigns' && (
-          <CampaignsTabContent setActiveTab={setActiveTab} />
+          <CampaignsTabContent setActiveTab={setActiveTab} onResume={handleResumeCampaign} />
         )}
 
       </div>
