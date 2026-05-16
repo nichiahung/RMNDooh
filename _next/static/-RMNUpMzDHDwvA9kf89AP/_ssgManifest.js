@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fplayer\u002F[screenId]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
