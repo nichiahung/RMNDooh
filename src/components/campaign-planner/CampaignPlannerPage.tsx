@@ -414,7 +414,10 @@ function CampaignPlannerPageContent() {
   const [filters, setFilters] = useState<FilterState>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('impressions_desc');
-  const [currentView, setCurrentView] = useState<ViewMode>('list');
+  const queryView = searchParams.get('view');
+  const [currentView, setCurrentView] = useState<ViewMode>(
+    queryView === 'map' ? 'map' : queryView === 'ai' ? 'ai' : 'list'
+  );
 
   const [selectedItems, setSelectedItems] = useState<MediaPlanItem[]>([]);
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
