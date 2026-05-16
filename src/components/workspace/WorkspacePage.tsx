@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FileText, Plus, ShoppingCart, Loader2, ChevronRight, CheckCircle2, Clock, LogOut, MapPin } from 'lucide-react';
+import { FileText, Plus, ShoppingCart, Loader2, ChevronRight, CheckCircle2, Clock, LogOut } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { listCampaignSummaries } from '@/lib/api/campaign-draft';
@@ -13,9 +13,14 @@ import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
 import { mockInventory } from '@/lib/mockData';
 import type { Proposal } from '@/types/trading-models';
 
-const InventoryMapPreview = dynamic(
-  () => import('./InventoryMapPreview').then(m => m.InventoryMapPreview),
-  { ssr: false, loading: () => <div className="rounded-2xl bg-slate-100 animate-pulse" style={{ height: 360 }} /> },
+const InventoryExplorer = dynamic(
+  () => import('./InventoryExplorer').then(m => m.InventoryExplorer),
+  { ssr: false, loading: () => <div className="rounded-2xl bg-slate-100 animate-pulse" style={{ height: 500 }} /> },
+);
+
+const AIAssistant = dynamic(
+  () => import('./AIAssistant').then(m => m.AIAssistant),
+  { ssr: false },
 );
 
 export function WorkspacePage() {
@@ -30,6 +35,12 @@ export function WorkspacePage() {
   const [drafts, setDrafts] = useState<Awaited<ReturnType<typeof listCampaignSummaries>>>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const usedInventoryIds = useMemo(() => {
+    const ids = new Set<string>();
+    drafts.forEach(draft => draft.inventoryIds?.forEach(id => ids.add(id)));
+    return ids;
+  }, [drafts]);
 
   useEffect(() => {
     Promise.all([
@@ -68,21 +79,12 @@ export function WorkspacePage() {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8 space-y-12">
-        {/* Map preview — advertiser only */}
+        {/* Inventory Explorer — advertiser + admin */}
         {(role === 'advertiser' || role === 'admin') && (
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-indigo-500" />
-                  探索版位
-                </h2>
-                <p className="text-sm text-slate-500 mt-0.5">台北・新北・桃園 共 {mockInventory.length} 個點位</p>
-              </div>
-            </div>
-            <InventoryMapPreview
+            <InventoryExplorer
               inventory={mockInventory}
-              onStartPlanning={() => router.push('/campaign-planner')}
+              usedInventoryIds={usedInventoryIds}
             />
           </section>
         )}
@@ -103,7 +105,7 @@ export function WorkspacePage() {
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">規劃、選點、上傳素材並直接下單</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => router.push('/campaign-planner')}
                     className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
                   >
@@ -160,7 +162,7 @@ export function WorkspacePage() {
                     </h2>
                     <p className="text-sm text-slate-500 mt-1">為客戶量身打造的報價與版位提案</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => router.push('/proposal-builder')}
                     className="flex items-center gap-1.5 px-4 py-2 border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 text-sm font-semibold rounded-lg transition-colors"
                   >
@@ -208,6 +210,8 @@ export function WorkspacePage() {
           </>
         )}
       </main>
+
+      <AIAssistant inventory={mockInventory} />
     </div>
   );
 }
