@@ -488,10 +488,17 @@ export function CampaignPlannerPage() {
     setIsSaving(true);
     try {
       if (campaignId) {
+        // If requirements already exist (campaign was previously submitted),
+        // skip submitCreativesForReview to avoid status-gate errors.
+        if (storedRequirements && storedRequirements.length > 0) {
+          setStep('review');
+          return;
+        }
         const reqs = await submitCreativesForReview(campaignId, selectedItems, allInventory);
         setStoredRequirements(reqs.map(r => ({
           id: r.id,
           canonicalFormat: r.canonicalFormat,
+          status: r.status,
         })));
       }
       setStep('review');
