@@ -280,7 +280,15 @@ export function MediaPlanSummary({
                             min="1"
                             className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
                             value={days}
-                            onChange={(e) => onUpdateDays(inventoryId, parseInt(e.target.value) || 1)}
+                            onChange={(e) => {
+                              const d = parseInt(e.target.value) || 1;
+                              onUpdateDays(inventoryId, d);
+                              if (flightStart) {
+                                const end = new Date(flightStart);
+                                end.setDate(end.getDate() + d - 1);
+                                onFlightDateChange(flightStart, end.toISOString().slice(0, 10));
+                              }
+                            }}
                           />
                           <span className="text-xs">{t('mediaPlan.days')}</span>
                         </>
