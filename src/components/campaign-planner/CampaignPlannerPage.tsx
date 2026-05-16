@@ -14,13 +14,231 @@ import {
   addInventoryItem,
   removeInventoryItem,
   submitCreativesForReview,
+  listCampaignSummaries,
 } from '@/lib/api/campaign-draft';
+import { listMediaAssets } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check, Globe, Filter as FilterIcon, Calculator } from 'lucide-react';
+import { Check, Globe, ImageIcon, Film, CheckCircle2, FileText, Plus, ChevronRight, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { usePlannerStore } from '@/store/usePlannerStore';
 
+// --- Types ---
+type MediaAsset = Awaited<ReturnType<typeof listMediaAssets>>[number];
+type CampaignSummary = Awaited<ReturnType<typeof listCampaignSummaries>>[number];
+
+// --- LibraryTabContent ---
+function LibraryTabContent() {
+  const [assets, setAssets] = useState<MediaAsset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listMediaAssets()
+      .then(setAssets)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const images = assets.filter(a => a.fileType === 'image');
+  const videos = assets.filter(a => a.fileType === 'video');
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-50">
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">素材庫</h2>
+            <p className="text-sm text-slate-500 mt-0.5">所有上傳過的廣告素材</p>
+          </div>
+          <span className="text-sm text-slate-400">{assets.length} 個素材</span>
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+          </div>
+        )}
+
+        {!loading && !error && assets.length === 0 && (
+          <div className="bg-white border border-dashed border-slate-300 rounded-xl p-16 text-center">
+            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-sm font-medium text-slate-700 mb-1">素材庫是空的</p>
+            <p className="text-xs text-slate-400">在活動規劃中上傳素材後，會自動收錄在這裡。</p>
+          </div>
+        )}
+
+        {!loading && !error && assets.length > 0 && (
+          <div className="space-y-8">
+            {images.length > 0 && (
+              <section>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4" /> 圖片（{images.length}）
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {images.map(asset => (
+                    <LibraryAssetCard key={asset.id} asset={asset} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {videos.length > 0 && (
+              <section>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <Film className="w-4 h-4" /> 影片（{videos.length}）
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {videos.map(asset => (
+                    <LibraryAssetCard key={asset.id} asset={asset} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LibraryAssetCard({ asset }: { asset: MediaAsset }) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-indigo-200 hover:shadow-sm transition-all">
+      <div className="h-32 bg-slate-100 relative">
+        {asset.fileType === 'image' ? (
+          <img src={asset.publicUrl} alt={asset.originalFilename} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Film className="w-8 h-8 text-slate-300" />
+          </div>
+        )}
+        {asset.status === 'ready' && (
+          <div className="absolute top-2 right-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 bg-white rounded-full" />
+          </div>
+        )}
+      </div>
+      <div className="p-3">
+        <p className="text-xs font-semibold text-slate-800 truncate mb-1">{asset.originalFilename}</p>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-slate-400">{(asset.fileSizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
+          <span className="text-[10px] text-slate-400">{new Date(asset.createdAt).toLocaleDateString('zh-TW')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- CampaignsTabContent ---
+function campaignStatusBadge(status: string, uploadedCount: number, totalCount: number) {
+  if (status === 'draft' && totalCount === 0) return { label: '草稿', color: 'bg-slate-100 text-slate-600' };
+  if (uploadedCount < totalCount) return { label: '素材未完整', color: 'bg-amber-100 text-amber-700' };
+  if (status === 'pending_creative_review' || status === 'pending_review') return { label: '審核中', color: 'bg-blue-100 text-blue-700' };
+  if (status === 'ready_to_book') return { label: '可下單', color: 'bg-emerald-100 text-emerald-700' };
+  return { label: status, color: 'bg-slate-100 text-slate-600' };
+}
+
+function CampaignsTabContent({ setActiveTab }: { setActiveTab: (tab: 'planner' | 'library' | 'campaigns') => void }) {
+  const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listCampaignSummaries()
+      .then(setCampaigns)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-50">
+      <div className="max-w-5xl mx-auto w-full px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold text-slate-900">我的活動</h2>
+          <button
+            onClick={() => setActiveTab('planner')}
+            className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          >
+            <Plus className="w-4 h-4" /> 新增活動
+          </button>
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
+          </div>
+        )}
+
+        {!loading && !error && campaigns.length === 0 && (
+          <div className="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
+            <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-slate-700 mb-1">還沒有活動</p>
+            <p className="text-xs text-slate-400 mb-4">點擊新增活動開始規劃你的第一個 DOOH 廣告活動</p>
+            <button
+              onClick={() => setActiveTab('planner')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> 新增活動
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && campaigns.length > 0 && (
+          <div className="space-y-3">
+            {campaigns.map(c => {
+              const badge = campaignStatusBadge(c.status, c.uploadedCount, c.totalCount);
+              return (
+                <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 hover:border-indigo-200 hover:shadow-sm transition-all">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold text-slate-900 truncate">{c.name}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${badge.color}`}>{badge.label}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-400">
+                      <span>{c.inventoryCount} 個版位</span>
+                      {c.totalCount > 0 && (
+                        <span className="flex items-center gap-1">
+                          {c.uploadedCount === c.totalCount
+                            ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            : <Clock className="w-3 h-3 text-amber-500" />}
+                          素材 {c.uploadedCount}/{c.totalCount}
+                        </span>
+                      )}
+                      <span>{new Date(c.createdAt).toLocaleDateString('zh-TW')}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('planner')}
+                    className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 flex-shrink-0"
+                  >
+                    繼續規劃 <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- Main CampaignPlannerPage ---
 export function CampaignPlannerPage() {
   // --- Supabase inventory ---
   const { allInventory, isLoadingInventory, fetchInventory } = usePlannerStore();
@@ -28,6 +246,9 @@ export function CampaignPlannerPage() {
   useEffect(() => {
     fetchInventory();
   }, [fetchInventory]);
+
+  // --- Tab State ---
+  const [activeTab, setActiveTab] = useState<'planner' | 'library' | 'campaigns'>('planner');
 
   // --- Step Flow State ---
   const [step, setStep] = useState<'inventory' | 'review'>('inventory');
@@ -152,7 +373,7 @@ export function CampaignPlannerPage() {
   };
 
   const handleUpdateDays = (inventoryId: string, days: number) => {
-    setSelectedItems(prev => 
+    setSelectedItems(prev =>
       prev.map(item => item.inventoryId === inventoryId ? { ...item, days } : item)
     );
   };
@@ -181,7 +402,7 @@ export function CampaignPlannerPage() {
 
   // Render Step Progress
   const StepProgress = () => (
-    <div className="flex items-center space-x-2 mr-6 text-sm">
+    <div className="flex items-center space-x-2 text-sm">
       <div
         className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
         onClick={() => step === 'review' ? setStep('inventory') : undefined}
@@ -203,56 +424,53 @@ export function CampaignPlannerPage() {
 
   return (
     <main className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
-      
+
       {/* Top Header */}
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 z-30 shadow-sm gap-3">
-        <div className="flex items-center min-w-0 space-x-3 sm:space-x-6">
-          {step === 'inventory' && (
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="lg:hidden relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm flex-shrink-0"
-              aria-label="Open filters"
-            >
-              <FilterIcon className="w-4 h-4" />
-              {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          )}
-          <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-800 truncate">{t('planner.title')}</h1>
-          <div className="hidden md:block h-6 w-px bg-slate-300"></div>
-          <div className="hidden md:block">
-            <StepProgress />
+        {/* Left: title + tabs */}
+        <div className="flex items-center gap-6 min-w-0">
+          <h1 className="text-base font-bold tracking-tight text-slate-800 whitespace-nowrap">Campaign Planner</h1>
+
+          {/* Tab switcher — desktop */}
+          <div className="hidden md:flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
+            {(['planner', 'library', 'campaigns'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                  activeTab === tab
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {tab === 'planner' ? '規劃版位' : tab === 'library' ? '素材庫' : '我的活動'}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-          {step === 'inventory' && (
-            <button
-              onClick={() => setIsSummaryOpen(true)}
-              className="lg:hidden relative flex items-center justify-center w-9 h-9 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
-              aria-label="Open media plan"
-            >
-              <Calculator className="w-4 h-4" />
-              {selectedItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
-                  {selectedItems.length}
-                </span>
-              )}
-            </button>
-          )}
+        {/* Right: actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Mobile tab buttons */}
+          <div className="flex md:hidden items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
+            {(['planner', 'library', 'campaigns'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-colors ${
+                  activeTab === tab ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'
+                }`}
+              >
+                {tab === 'planner' ? '規劃' : tab === 'library' ? '素材' : '活動'}
+              </button>
+            ))}
+          </div>
           <button
             onClick={toggleLocale}
-            className="flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-            aria-label={t('common.langToggle')}
+            className="hidden sm:flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             <Globe className="w-4 h-4 sm:mr-1.5" />
             <span className="hidden sm:inline">{t('common.langToggle')}</span>
-          </button>
-          <button className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
-            {t('planner.saveDraft')}
           </button>
           <button className="px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors shadow-sm">
             {t('planner.exit')}
@@ -260,79 +478,98 @@ export function CampaignPlannerPage() {
         </div>
       </header>
 
-      {/* Main Content Area based on Step */}
-      <div className={`flex-1 flex overflow-hidden relative${step === 'inventory' ? ' pb-16 lg:pb-14' : ''}`}>
-        
-        {step === 'inventory' && (
+      {/* Step progress sub-bar — only in Planner tab */}
+      {activeTab === 'planner' && (
+        <div className="h-10 bg-white border-b border-slate-100 flex items-center px-6 flex-shrink-0">
+          <StepProgress />
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className={`flex-1 flex overflow-hidden relative${activeTab === 'planner' && step === 'inventory' ? ' pb-16 lg:pb-14' : ''}`}>
+
+        {activeTab === 'planner' && (
           <>
-            <FilterSidebar
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-              activeFilterCount={activeFilterCount}
-              isOpen={isFilterOpen}
-              onClose={() => setIsFilterOpen(false)}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
+            {step === 'inventory' && (
+              <>
+                <FilterSidebar
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onClearFilters={handleClearFilters}
+                  activeFilterCount={activeFilterCount}
+                  isOpen={isFilterOpen}
+                  onClose={() => setIsFilterOpen(false)}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                />
 
-            <InventoryDiscovery
-              inventory={filteredAndSortedInventory}
-              sortOption={sortOption}
-              onSortChange={setSortOption}
-              currentView={currentView}
-              onViewChange={setCurrentView}
-              selectedItems={selectedItems}
-              onViewDetails={setSelectedInventoryForDetail}
-              onAdd={handleAdd}
-              objective={filters.campaignObjective}
-            />
+                <InventoryDiscovery
+                  inventory={filteredAndSortedInventory}
+                  sortOption={sortOption}
+                  onSortChange={setSortOption}
+                  currentView={currentView}
+                  onViewChange={setCurrentView}
+                  selectedItems={selectedItems}
+                  onViewDetails={setSelectedInventoryForDetail}
+                  onAdd={handleAdd}
+                  objective={filters.campaignObjective}
+                />
 
-            <MediaPlanSummary
-              selectedItems={selectedItems}
-              allInventory={allInventory}
-              onRemove={handleRemove}
-              onUpdateDays={handleUpdateDays}
-              onContinue={handleContinueToReview}
-              onAllUploaded={handleContinueToReview}
-              isSaving={isSaving}
-              isOpen={isSummaryOpen}
-              onClose={() => setIsSummaryOpen(false)}
-              campaignId={campaignId}
-              storedRequirements={storedRequirements}
-              onStoredRequirementsChange={setStoredRequirements}
-              onCreativeUploaded={() => {}}
-            />
+                <MediaPlanSummary
+                  selectedItems={selectedItems}
+                  allInventory={allInventory}
+                  onRemove={handleRemove}
+                  onUpdateDays={handleUpdateDays}
+                  onContinue={handleContinueToReview}
+                  onAllUploaded={handleContinueToReview}
+                  isSaving={isSaving}
+                  isOpen={isSummaryOpen}
+                  onClose={() => setIsSummaryOpen(false)}
+                  campaignId={campaignId}
+                  storedRequirements={storedRequirements}
+                  onStoredRequirementsChange={setStoredRequirements}
+                  onCreativeUploaded={() => {}}
+                />
 
-            {/* Detail Modal Overlay */}
-            {selectedInventoryForDetail && (
-              <InventoryDetailCard
-                item={selectedInventoryForDetail}
-                isSelected={selectedItems.some(i => i.inventoryId === selectedInventoryForDetail.id)}
-                onClose={() => setSelectedInventoryForDetail(null)}
-                onAdd={() => handleAdd(selectedInventoryForDetail)}
-                objective={filters.campaignObjective}
-              />
+                {/* Detail Modal Overlay */}
+                {selectedInventoryForDetail && (
+                  <InventoryDetailCard
+                    item={selectedInventoryForDetail}
+                    isSelected={selectedItems.some(i => i.inventoryId === selectedInventoryForDetail.id)}
+                    onClose={() => setSelectedInventoryForDetail(null)}
+                    onAdd={() => handleAdd(selectedInventoryForDetail)}
+                    objective={filters.campaignObjective}
+                  />
+                )}
+
+                <PerformanceBar
+                  selectedItems={selectedItems}
+                  allInventory={allInventory}
+                  objective={filters.campaignObjective}
+                  onOpenSummary={() => setIsSummaryOpen(true)}
+                />
+              </>
             )}
 
-            <PerformanceBar
-              selectedItems={selectedItems}
-              allInventory={allInventory}
-              objective={filters.campaignObjective}
-              onOpenSummary={() => setIsSummaryOpen(true)}
-            />
+            {step === 'review' && (
+              <CampaignReviewStep
+                selectedItems={selectedItems}
+                allInventory={allInventory}
+                campaignId={campaignId}
+                storedRequirements={storedRequirements}
+                onStoredRequirementsChange={setStoredRequirements}
+                onBack={() => setStep('inventory')}
+              />
+            )}
           </>
         )}
 
-        {step === 'review' && (
-          <CampaignReviewStep
-            selectedItems={selectedItems}
-            allInventory={allInventory}
-            campaignId={campaignId}
-            storedRequirements={storedRequirements}
-            onStoredRequirementsChange={setStoredRequirements}
-            onBack={() => setStep('inventory')}
-          />
+        {activeTab === 'library' && (
+          <LibraryTabContent />
+        )}
+
+        {activeTab === 'campaigns' && (
+          <CampaignsTabContent setActiveTab={setActiveTab} />
         )}
 
       </div>
