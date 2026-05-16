@@ -45,13 +45,17 @@ export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
   if (dbError || !asset) throw new Error(dbError?.message ?? 'Failed to save asset');
 
   // Submit to the admin review queue (campaign_id null = standalone upload)
-  await supabase.from('creative_assets').insert({
+  const { error: linkError } = await supabase.from('creative_assets').insert({
     campaign_id: null,
     media_asset_id: asset.id,
     name: file.name,
     source: 'platform',
     approval_status: 'pending_review',
   });
+
+  if (linkError) {
+    console.error('[uploadCreativeAsset] Failed to insert creative_assets row:', linkError.message, linkError.details, linkError.hint);
+  }
 
   return {
     id: asset.id as string,

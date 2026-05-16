@@ -21,6 +21,7 @@ interface Props {
   onBack: () => void;
   flightStart: string | null;
   flightEnd: string | null;
+  onFlightDateChange: (start: string | null, end: string | null) => void;
 }
 
 type ActiveModal = {
@@ -29,7 +30,7 @@ type ActiveModal = {
   venueCount: number;
 };
 
-export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack, flightStart, flightEnd }: Props) {
+export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack, flightStart, flightEnd, onFlightDateChange }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -443,11 +444,37 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
               </div>
 
               {(!flightDatesSet || (!allFormatsReady && groups.length > 0)) && (
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-start gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-red-600 font-medium">
-                    {!flightDatesSet ? '請先在側欄設定走期' : '請完成所有素材上傳'}
-                  </p>
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  {!flightDatesSet ? (
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-red-600 font-medium">請設定走期</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="date"
+                          value={flightStart ?? ''}
+                          min={new Date().toISOString().slice(0, 10)}
+                          onChange={e => onFlightDateChange(e.target.value || null, flightEnd)}
+                          className="flex-1 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none min-w-0"
+                        />
+                        <span className="text-[10px] text-slate-400">–</span>
+                        <input
+                          type="date"
+                          value={flightEnd ?? ''}
+                          min={flightStart ?? new Date().toISOString().slice(0, 10)}
+                          onChange={e => onFlightDateChange(flightStart, e.target.value || null)}
+                          className="flex-1 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none min-w-0"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-red-600 font-medium">請完成所有素材上傳</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

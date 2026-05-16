@@ -1,108 +1,114 @@
-import { supabase } from '@/lib/supabase';
+import { canSubmitCreatives, computeLaunchReadiness, shouldAutoTransitionToReview } from '@/utils/campaignStateMachine';
+import { deriveRequiredFormats, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import type {
-  CampaignDraft,
-  CampaignInventoryItemRow,
   CampaignCreativeRequirement,
+  CampaignDraft,
+  CampaignDraftStatus,
+  CampaignInventoryItemRow,
   CampaignSubmission,
   LaunchReadiness,
-  DerivedCreativeRequirement,
 } from '@/types/campaign-draft';
-import type { CanonicalFormat } from '@/types/creative';
-import { FORMAT_SPECS, deriveRequiredFormats } from '@/utils/creativeRequirements';
-import {
-  canSubmitCreatives,
-  computeLaunchReadiness,
-  shouldAutoTransitionToReview,
-} from '@/utils/campaignStateMachine';
-import type { MediaPlanItem, InventoryLocation } from '@/types/inventory';
+import type { InventoryLocation } from '@/types/inventory';
+import type { MediaPlanItem } from '@/types/inventory';
+import type { CreativeAsset } from '@/types/inventory';
+import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_ADVERTISER_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
-const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000002';
 
-// ─── Helpers ───────────────────────────────────────────────
+type LegacyCampaignDraftStatus = CampaignDraftStatus;
 
-function mapCampaignRow(row: Record<string, unknown>): CampaignDraft {
+type CampaignRow = {
+  id: string;
+  advertiserId: string;
+  name: string;
+  objective: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: LegacyCampaignDraftStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const campaignStore: Record<string, CampaignRow> = {};
+const campaignInventoryStore: Record<string, CampaignInventoryItemRow[]> = {};
+const campaignRequirementsStore: Record<string, CampaignCreativeRequirement[]> = {};
+
+function mapCampaignRow(row: CampaignRow): CampaignDraft {
   return {
-    id: row.id as string,
-    advertiserId: row.advertiser_id as string,
-    name: row.name as string,
-    objective: (row.objective as string | null) ?? null,
-    startDate: (row.start_date as string | null) ?? null,
-    endDate: (row.end_date as string | null) ?? null,
-    status: row.status as CampaignDraft['status'],
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    id: row.id,
+    advertiserId: row.advertiserId,
+    name: row.name,
+    objective: row.objective,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    status: row.status,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
-function mapRequirementRow(row: Record<string, unknown>): CampaignCreativeRequirement {
-  return {
-    id: row.id as string,
-    campaignId: row.campaign_id as string,
-    canonicalFormat: row.canonical_format as CanonicalFormat,
-    status: row.status as CampaignCreativeRequirement['status'],
-    mediaAssetId: (row.media_asset_id as string | null) ?? null,
-    rejectionReason: (row.rejection_reason as string | null) ?? null,
-  };
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function normalizeCampaignDateRange(start: string | null, end: string | null): void {
+  if (!start || !end) return;
+  if (new Date(start) > new Date(end)) {
+    throw new Error('invalid_date_range');
+  }
 }
 
 // ─── Campaign CRUD ─────────────────────────────────────────
 
 export async function createDraftCampaign(): Promise<CampaignDraft> {
-  const name = `Unnamed Campaign`;
-  const { data, error } = await supabase
-    .from('campaigns')
-    .insert({
-      advertiser_id: DEFAULT_ADVERTISER_ID,
-      created_by_user_id: DEFAULT_USER_ID,
-      name,
-      objective: null,
-      status: 'draft',
-      buying_type: 'direct',
-      campaign_days: 7,
-      total_budget: 0,
-      estimated_impressions: 0,
-    })
-    .select()
-    .single();
-
-  if (error || !data) throw new Error(error?.message ?? 'Failed to create campaign');
-  return mapCampaignRow(data);
+  const createdAt = nowIso();
+  const id = `draft-${uuidv4()}`;
+  const row: CampaignRow = {
+    id,
+    advertiserId: DEFAULT_ADVERTISER_ID,
+    name: 'Unnamed Campaign',
+    objective: null,
+    startDate: null,
+    endDate: null,
+    status: 'draft',
+    createdAt,
+    updatedAt: createdAt,
+  };
+  campaignStore[id] = row;
+  campaignInventoryStore[id] = [];
+  campaignRequirementsStore[id] = [];
+  return mapCampaignRow(row);
 }
 
 export async function getCampaign(campaignId: string): Promise<CampaignDraft> {
-  const { data, error } = await supabase
-    .from('campaigns')
-    .select('*')
-    .eq('id', campaignId)
-    .single();
-
-  if (error || !data) throw new Error(error?.message ?? 'Campaign not found');
-  return mapCampaignRow(data);
+  const row = campaignStore[campaignId];
+  if (!row) throw new Error('Campaign not found');
+  return mapCampaignRow(row);
 }
 
 export async function updateDraftCampaign(
   campaignId: string,
   updates: Partial<Pick<CampaignDraft, 'name' | 'objective' | 'startDate' | 'endDate'>>,
 ): Promise<CampaignDraft> {
-  const dbUpdates: Record<string, unknown> = {};
-  if (updates.name !== undefined) dbUpdates.name = updates.name;
-  if (updates.objective !== undefined) dbUpdates.objective = updates.objective;
-  if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
-  if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate;
+  const row = campaignStore[campaignId];
+  if (!row) throw new Error('Campaign not found');
 
-  const { data, error } = await supabase
-    .from('campaigns')
-    .update(dbUpdates)
-    .eq('id', campaignId)
-    .select()
-    .single();
+  if (updates.startDate !== undefined || updates.endDate !== undefined) {
+    normalizeCampaignDateRange(
+      updates.startDate ?? row.startDate,
+      updates.endDate ?? row.endDate,
+    );
+  }
 
-  if (error || !data) throw new Error(error?.message ?? 'Failed to update campaign');
-  return mapCampaignRow(data);
+  const next: CampaignRow = {
+    ...row,
+    ...updates,
+    updatedAt: nowIso(),
+  };
+  campaignStore[campaignId] = next;
+  return mapCampaignRow(next);
 }
 
-// save-draft is a semantic alias for updateDraftCampaign
 export const saveDraftCampaign = updateDraftCampaign;
 
 // ─── Inventory Items ───────────────────────────────────────
@@ -114,244 +120,159 @@ export async function addInventoryItem(
   pricePerDay: number,
   dailyImpressions: number,
 ): Promise<CampaignInventoryItemRow> {
-  const { data, error } = await supabase
-    .from('campaign_inventory_items')
-    .insert({
-      campaign_id: campaignId,
-      inventory_location_id: inventoryLocationId,
-      days,
-      price_per_day: pricePerDay,
-      daily_impressions: dailyImpressions,
-    })
-    .select()
-    .single();
+  void dailyImpressions;
+  const row = campaignStore[campaignId];
+  if (!row) throw new Error('Campaign not found');
 
-  if (error || !data) throw new Error(error?.message ?? 'Failed to add inventory item');
-  return {
-    id: data.id as string,
-    campaignId: data.campaign_id as string,
-    inventoryLocationId: data.inventory_location_id as string,
-    days: data.days as number,
-    pricePerDaySnapshot: data.price_per_day as number,
+  const item: CampaignInventoryItemRow = {
+    id: `inv-${uuidv4()}`,
+    campaignId,
+    inventoryLocationId,
+    days,
+    pricePerDaySnapshot: pricePerDay,
   };
+
+  const list = campaignInventoryStore[campaignId] ?? [];
+  if (list.some(i => i.inventoryLocationId === inventoryLocationId)) {
+    // Avoid accidental duplicates in the planner flow.
+    return list.find(i => i.inventoryLocationId === inventoryLocationId)!;
+  }
+
+  campaignInventoryStore[campaignId] = [item, ...list];
+  return item;
 }
 
 export async function removeInventoryItem(itemId: string): Promise<void> {
-  const { error } = await supabase
-    .from('campaign_inventory_items')
-    .delete()
-    .eq('id', itemId);
-
-  if (error) throw new Error(error.message);
+  for (const campaignId of Object.keys(campaignInventoryStore)) {
+    const before = campaignInventoryStore[campaignId];
+    const next = before.filter(item => item.id !== itemId);
+    campaignInventoryStore[campaignId] = next;
+    // When inventory changes, invalidate requirement cache to force re-generation on next request.
+    if (next.length !== before.length) {
+      campaignRequirementsStore[campaignId] = [];
+      break;
+    }
+  }
 }
 
 export async function getInventoryItems(campaignId: string): Promise<CampaignInventoryItemRow[]> {
-  const { data, error } = await supabase
-    .from('campaign_inventory_items')
-    .select('*')
-    .eq('campaign_id', campaignId);
-
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(row => ({
-    id: row.id as string,
-    campaignId: row.campaign_id as string,
-    inventoryLocationId: row.inventory_location_id as string,
-    days: row.days as number,
-    pricePerDaySnapshot: row.price_per_day as number,
-  }));
+  return campaignInventoryStore[campaignId] ?? [];
 }
 
 // ─── Creative Requirements (derived) ──────────────────────
 
-export function getDerivedCreativeRequirements(
-  selectedItems: MediaPlanItem[],
-  allInventory: InventoryLocation[],
-): DerivedCreativeRequirement[] {
-  const formats = deriveRequiredFormats(selectedItems, allInventory);
-  return formats.map(format => {
-    const spec = FORMAT_SPECS.find(s => s.format === format)!;
-    const venueCount = selectedItems.filter(item => {
-      const venue = allInventory.find(v => v.id === item.inventoryId);
-      return venue && spec.screenTypes.includes(venue.screenType);
-    }).length;
-    return {
-      format,
-      label: spec.label,
-      dimensions: spec.dimensions,
-      venueCount,
-    };
-  });
-}
-
 export async function getStoredCreativeRequirements(
   campaignId: string,
 ): Promise<CampaignCreativeRequirement[]> {
-  const { data, error } = await supabase
-    .from('campaign_creative_requirements')
-    .select('*')
-    .eq('campaign_id', campaignId);
-
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(mapRequirementRow);
+  return campaignRequirementsStore[campaignId] ?? [];
 }
 
-// ─── Submit Creatives for Review ───────────────────────────
+function deriveCountFromSelections(
+  selectedItems: MediaPlanItem[],
+  allInventory: InventoryLocation[],
+) {
+  const formats = deriveRequiredFormats(selectedItems, allInventory);
+  return formats.map(format => {
+    const spec = FORMAT_SPECS.find(s => s.format === format);
+    const venueCount = selectedItems.filter(item => {
+      const venue = allInventory.find(v => v.id === item.inventoryId);
+      return venue && spec && spec.screenTypes.includes(venue.screenType);
+    }).length;
+    return { format, venueCount };
+  });
+}
 
 export async function submitCreativesForReview(
   campaignId: string,
   selectedItems: MediaPlanItem[],
   allInventory: InventoryLocation[],
 ): Promise<CampaignCreativeRequirement[]> {
-  // Validate campaign status allows submission
   const campaign = await getCampaign(campaignId);
-  if (campaign.status === 'cancelled') throw new Error('campaign_cancelled');
+
   if (!canSubmitCreatives(campaign.status)) {
     throw new Error(`cannot_submit: campaign status is ${campaign.status}`);
   }
 
-  // Validate inventory exists
   const items = await getInventoryItems(campaignId);
   if (items.length === 0) throw new Error('no_inventory');
 
-  // Derive formats from current inventory
-  const formats = deriveRequiredFormats(selectedItems, allInventory);
-
-  // Check for existing requirements (may have been created via inline modal)
-  const existingReqs = await getStoredCreativeRequirements(campaignId);
-  if (existingReqs.length > 0) {
-    // Requirements already exist — just ensure campaign status is correct
-    const { error: statusError } = await supabase
-      .from('campaigns')
-      .update({ status: 'pending_creative_review' })
-      .eq('id', campaignId);
-    if (statusError) throw new Error(statusError.message);
-    return existingReqs;
+  const existing = await getStoredCreativeRequirements(campaignId);
+  if (existing.length > 0) {
+    const next = campaignStore[campaignId];
+    if (next) {
+      next.status = existing.length > 0 ? next.status : 'pending_creative_review';
+      next.updatedAt = nowIso();
+    }
+    return existing;
   }
 
-  // Insert fresh snapshot
-  if (formats.length > 0) {
-    const rows = formats.map(format => ({
-      campaign_id: campaignId,
-      canonical_format: format,
-      status: 'pending_upload',
-    }));
-    const { error } = await supabase
-      .from('campaign_creative_requirements')
-      .insert(rows);
-    if (error) throw new Error(error.message);
+  const groups = deriveCountFromSelections(selectedItems, allInventory);
+  const requirements: CampaignCreativeRequirement[] = groups.map((group, index) => ({
+    id: `${campaignId}-req-${group.format}-${index + 1}`,
+    campaignId,
+    canonicalFormat: group.format,
+    status: 'pending_upload',
+    mediaAssetId: null,
+    rejectionReason: null,
+  }));
+
+  if (requirements.length > 0) {
+    campaignRequirementsStore[campaignId] = requirements;
   }
 
-  // Transition campaign to pending_creative_review
-  const { error: statusError } = await supabase
-    .from('campaigns')
-    .update({ status: 'pending_creative_review' })
-    .eq('id', campaignId);
-  if (statusError) throw new Error(statusError.message);
+  const next = campaignStore[campaignId];
+  if (next) {
+    if (next.status === 'draft' || next.status === 'blocked_by_creative') {
+      next.status = 'pending_creative_review';
+    }
+    next.updatedAt = nowIso();
+  }
 
-  return getStoredCreativeRequirements(campaignId);
+  return requirements;
 }
 
-// ─── Upload Asset to Requirement ──────────────────────────
+// ─── Upload Asset to Requirement ─────────────────────────
 
 export async function uploadAssetToRequirement(
   requirementId: string,
   mediaAssetId: string,
 ): Promise<void> {
-  // Read first to guard against overwriting an approved requirement
-  const { data: current, error: readError } = await supabase
-    .from('campaign_creative_requirements')
-    .select('status, campaign_id')
-    .eq('id', requirementId)
-    .single();
+  const campaignId = Object.keys(campaignRequirementsStore).find(id =>
+    (campaignRequirementsStore[id] ?? []).some(req => req.id === requirementId)
+  );
 
-  if (readError || !current) throw new Error(readError?.message ?? 'Requirement not found');
-  if (current.status === 'approved') throw new Error('requirement_already_approved');
+  if (!campaignId) throw new Error('requirement_not_found');
 
-  const campaignId = current.campaign_id as string;
+  const req = campaignRequirementsStore[campaignId].find(item => item.id === requirementId);
+  if (!req) throw new Error('requirement_not_found');
+  if (req.status === 'approved') throw new Error('requirement_already_approved');
 
-  // Check if this asset has already been approved at the library level
-  const { data: assetRow } = await supabase
-    .from('media_assets')
-    .select('original_filename, approval_status')
-    .eq('id', mediaAssetId)
-    .single();
+  req.status = 'uploaded';
+  req.mediaAssetId = mediaAssetId;
+  req.rejectionReason = null;
 
-  const assetName = (assetRow?.original_filename as string | null) ?? 'Creative';
-  const alreadyApproved = (assetRow?.approval_status as string | null) === 'approved';
-
-  // Mark requirement — skip review if asset is already approved
-  const { error: reqError } = await supabase
-    .from('campaign_creative_requirements')
-    .update({
-      status: alreadyApproved ? 'approved' : 'uploaded',
-      media_asset_id: mediaAssetId,
-    })
-    .eq('id', requirementId);
-
-  if (reqError) throw new Error(reqError.message);
-
-  // Upsert into creative_assets so admin review queue can see it
-  await supabase
-    .from('creative_assets')
-    .upsert(
-      {
-        campaign_id: campaignId,
-        media_asset_id: mediaAssetId,
-        name: assetName,
-        source: 'platform',
-        approval_status: alreadyApproved ? 'approved' : 'pending_review',
-      },
-      { onConflict: 'campaign_id,media_asset_id', ignoreDuplicates: true }
-    );
-
-  // Update campaign creative_status
-  await supabase
-    .from('campaigns')
-    .update({ creative_status: alreadyApproved ? 'approved' : 'pending_review' })
-    .eq('id', campaignId);
-
-  if (alreadyApproved) return; // no further review needed
-
-  // Auto-transition check
+  // If there are already no pending review requirements, the campaign can remain in-flight.
   const campaign = await getCampaign(campaignId);
   const allReqs = await getStoredCreativeRequirements(campaignId);
-
-  if (shouldAutoTransitionToReview(campaign.status, allReqs)) {
-    const { error: transitionError } = await supabase
-      .from('campaigns')
-      .update({ status: 'pending_creative_review' })
-      .eq('id', campaignId);
-    if (transitionError) throw new Error(transitionError.message);
+  if (campaign.status === 'blocked_by_creative' && shouldAutoTransitionToReview(campaign.status, allReqs)) {
+    campaignStore[campaignId].status = 'pending_creative_review';
   }
 }
 
 // ─── Unlink Asset from Requirement ────────────────────────
 
 export async function unlinkAssetFromRequirement(requirementId: string): Promise<void> {
-  const { data: current, error: readError } = await supabase
-    .from('campaign_creative_requirements')
-    .select('status, media_asset_id, campaign_id')
-    .eq('id', requirementId)
-    .single();
+  const campaignId = Object.keys(campaignRequirementsStore).find(id =>
+    (campaignRequirementsStore[id] ?? []).some(req => req.id === requirementId)
+  );
 
-  if (readError || !current) throw new Error(readError?.message ?? 'Requirement not found');
-  if (current.status === 'approved') throw new Error('requirement_already_approved');
+  if (!campaignId) throw new Error('requirement_not_found');
+  const req = campaignRequirementsStore[campaignId].find(item => item.id === requirementId);
+  if (!req) throw new Error('requirement_not_found');
+  if (req.status === 'approved') throw new Error('requirement_already_approved');
 
-  const { error } = await supabase
-    .from('campaign_creative_requirements')
-    .update({ status: 'pending_upload', media_asset_id: null })
-    .eq('id', requirementId);
-
-  if (error) throw new Error(error.message);
-
-  // Remove the corresponding creative_assets record if it exists
-  if (current.media_asset_id && current.campaign_id) {
-    await supabase
-      .from('creative_assets')
-      .delete()
-      .eq('campaign_id', current.campaign_id as string)
-      .eq('media_asset_id', current.media_asset_id as string);
-  }
+  req.status = 'pending_upload';
+  req.mediaAssetId = null;
 }
 
 // ─── Launch Readiness ──────────────────────────────────────
@@ -361,39 +282,32 @@ export async function getLaunchReadiness(campaignId: string): Promise<LaunchRead
     getInventoryItems(campaignId),
     getStoredCreativeRequirements(campaignId),
   ]);
+
   return computeLaunchReadiness(items.length, requirements);
 }
 
 // ─── Submit Campaign For Confirmation ─────────────────────
 
 export async function submitCampaignForConfirmation(campaignId: string): Promise<CampaignSubmission> {
-  // Fetch campaign, items and requirements in parallel
   const [campaign, items, requirements] = await Promise.all([
     getCampaign(campaignId),
     getInventoryItems(campaignId),
     getStoredCreativeRequirements(campaignId),
   ]);
+
   if (campaign.status === 'cancelled') throw new Error('campaign_cancelled');
 
-  // Check launch readiness
   const readiness = computeLaunchReadiness(items.length, requirements);
   if (!readiness.ready) {
     throw new Error('booking_not_ready');
   }
 
-  // Stamp campaigns so admin panel sees this campaign as awaiting confirmation.
-  // campaign_bookings is reserved for confirmed commercial booking records.
-  const now = new Date().toISOString();
-  const { error } = await supabase
-    .from('campaigns')
-    .update({
-      booking_status: 'pending_confirmation',
-      status: 'pending_review',
-      submitted_at: now,
-    })
-    .eq('id', campaignId);
-
-  if (error) throw new Error(error.message);
+  const now = nowIso();
+  const row = campaignStore[campaignId];
+  if (row) {
+    row.status = 'pending_review';
+    row.updatedAt = now;
+  }
 
   return {
     campaignId,
@@ -417,20 +331,15 @@ export async function ensureCreativeRequirements(
 // ─── Dashboard Queries ─────────────────────────────────────
 
 export async function listCampaigns(): Promise<CampaignDraft[]> {
-  const { data, error } = await supabase
-    .from('campaigns')
-    .select('*')
-    .eq('created_by_user_id', DEFAULT_USER_ID)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(mapCampaignRow);
+  return Object.values(campaignStore)
+    .map(mapCampaignRow)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
 export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { inventoryCount: number; uploadedCount: number; totalCount: number }>> {
   const campaigns = await listCampaigns();
 
-  const summaries = await Promise.all(campaigns.map(async (c) => {
+  const summaries = await Promise.all(campaigns.map(async c => {
     const [items, reqs] = await Promise.all([
       getInventoryItems(c.id),
       getStoredCreativeRequirements(c.id),
@@ -445,4 +354,24 @@ export async function listCampaignSummaries(): Promise<Array<CampaignDraft & { i
   }));
 
   return summaries;
+}
+
+export function mapLegacyCreativeStatus(status: CampaignCreativeRequirement['status']): CreativeAsset['status'] {
+  if (status === 'approved') return 'approved';
+  if (status === 'rejected') return 'rejected';
+  if (status === 'uploaded') return 'uploaded';
+  if (status === 'pending_upload') return 'pending_review';
+  return 'pending_review';
+}
+
+export function mapLegacyRequirementFromStatus(status: CampaignCreativeRequirement['status']): CampaignCreativeRequirement['status'] {
+  return status;
+}
+
+export function _debugClearCampaignDraftStoreForTests() {
+  for (const id of Object.keys(campaignStore)) {
+    delete campaignStore[id];
+    delete campaignInventoryStore[id];
+    delete campaignRequirementsStore[id];
+  }
 }

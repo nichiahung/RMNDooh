@@ -210,6 +210,51 @@ async function recomputeCampaignStatuses(campaignId: string): Promise<void> {
     .eq('id', campaignId);
 }
 
+// ── Standalone Creatives (media-library uploads with no campaign) ─
+
+export interface StandaloneCreative {
+  id: string;           // creative_assets.id
+  mediaAssetId: string;
+  name: string;
+  type: string;         // mime_type
+  fileSize: number;
+  durationSeconds?: number;
+  previewUrl: string;
+  status: string;       // approval_status
+  uploadedAt: string;
+}
+
+export async function fetchStandaloneCreatives(): Promise<StandaloneCreative[]> {
+  const { data, error } = await supabase
+    .from('creative_assets')
+    .select(`
+      id, name, approval_status, created_at, media_asset_id,
+      media_assets ( public_url, mime_type, file_size_bytes, duration_seconds )
+    `)
+    .is('campaign_id', null)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to fetch standalone creatives:', error.message);
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const media = row.media_assets as unknown as Record<string, unknown> | null;
+    return {
+      id: row.id as string,
+      mediaAssetId: row.media_asset_id as string,
+      name: row.name as string,
+      type: (media?.mime_type ?? 'image/jpeg') as string,
+      fileSize: Number(media?.file_size_bytes ?? 0),
+      durationSeconds: media?.duration_seconds ? Number(media.duration_seconds) : undefined,
+      previewUrl: (media?.public_url as string) ?? '',
+      status: (row.approval_status as string) ?? 'pending_review',
+      uploadedAt: (row.created_at as string) ?? new Date().toISOString(),
+    };
+  });
+}
+
 // ── Screens ──────────────────────────────────────────────────────
 
 export async function fetchAllScreens(): Promise<Screen[]> {
