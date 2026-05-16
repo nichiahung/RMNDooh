@@ -8,6 +8,7 @@ import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
 import { CanonicalFormat, FormatSpec } from '@/types/creative';
 import { ensureCreativeRequirements, unlinkAssetFromRequirement, saveDraftCampaign, getStoredCreativeRequirements } from '@/lib/api/campaign-draft';
+import { flightDays, addDays } from '@/utils/dates';
 import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
@@ -237,7 +238,7 @@ export function MediaPlanSummary({
           </div>
           {flightStart && flightEnd && (
             <p className="text-[10px] text-indigo-600 font-medium mt-1.5">
-              {Math.max(1, Math.round((new Date(flightEnd).getTime() - new Date(flightStart).getTime()) / 86400000) + 1)} 天
+              {flightDays(flightStart, flightEnd)} 天
             </p>
           )}
         </div>
@@ -297,9 +298,7 @@ export function MediaPlanSummary({
                               const d = parseInt(e.target.value) || 1;
                               onUpdateDays(inventoryId, d);
                               if (flightStart) {
-                                const end = new Date(flightStart);
-                                end.setDate(end.getDate() + d - 1);
-                                onFlightDateChange(flightStart, end.toISOString().slice(0, 10));
+                                onFlightDateChange(flightStart, addDays(flightStart, d - 1));
                               }
                             }}
                           />

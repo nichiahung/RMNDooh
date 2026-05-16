@@ -8,6 +8,7 @@ import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, 
 import { useI18n } from '@/i18n/I18nProvider';
 import { getCampaign, getStoredCreativeRequirements, submitCampaignForConfirmation, updateDraftCampaign, unlinkAssetFromRequirement } from '@/lib/api/campaign-draft';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
+import { flightDays } from '@/utils/dates';
 import { CanonicalFormat } from '@/types/creative';
 import { CreativeUploadModal } from './CreativeUploadModal';
 
@@ -302,7 +303,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                   {flightStart && flightEnd ? (
                     <>
                       <div className="text-lg font-bold text-slate-900">
-                        {Math.max(1, Math.round((new Date(flightEnd).getTime() - new Date(flightStart).getTime()) / 86400000) + 1)} 天
+                        {flightDays(flightStart, flightEnd)} 天
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         {flightStart} – {flightEnd}

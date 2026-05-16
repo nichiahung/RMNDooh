@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/campaign-draft';
 import { listMediaAssets, deleteMediaAsset, renameMediaAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
+import { flightDays } from '@/utils/dates';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
 import { Check, Globe, ImageIcon, Film, CheckCircle2, FileText, Plus, ChevronRight, Loader2, AlertCircle, Clock, Pencil, Trash2, X as XIcon } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -470,7 +471,7 @@ export function CampaignPlannerPage() {
     setFlightStart(start);
     setFlightEnd(end);
     if (start && end) {
-      const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1);
+      const days = flightDays(start, end);
       setSelectedItems(prev => prev.map(item => ({ ...item, days })));
     }
     if (campaignId) {
