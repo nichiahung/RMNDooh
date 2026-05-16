@@ -1,18 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FileText, Plus, ShoppingCart, Loader2, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
+import { FileText, Plus, ShoppingCart, Loader2, ChevronRight, CheckCircle2, Clock, LogOut, MapPin } from 'lucide-react';
+
 import { useAuth } from '@/context/AuthContext';
 import { listCampaignSummaries } from '@/lib/api/campaign-draft';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
+import { mockInventory } from '@/lib/mockData';
 import type { Proposal } from '@/types/trading-models';
+
+const InventoryMapPreview = dynamic(
+  () => import('./InventoryMapPreview').then(m => m.InventoryMapPreview),
+  { ssr: false, loading: () => <div className="rounded-2xl bg-slate-100 animate-pulse" style={{ height: 360 }} /> },
+);
 
 export function WorkspacePage() {
   const router = useRouter();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    router.push('/login');
+  }
   const role = currentUser?.role ?? 'advertiser';
   const [drafts, setDrafts] = useState<Awaited<ReturnType<typeof listCampaignSummaries>>>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -37,17 +50,43 @@ export function WorkspacePage() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Image src="/drmn-logo.png" alt="DRMN" height={28} width={100} className="object-contain" />
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {role === 'admin' && (
               <Link href="/admin" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
                 進入管理後台
               </Link>
             )}
+            <span className="text-sm text-slate-500">{currentUser?.email}</span>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" /> 登出
+            </button>
           </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-6 py-8 space-y-12">
+        {/* Map preview — advertiser only */}
+        {(role === 'advertiser' || role === 'admin') && (
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-indigo-500" />
+                  探索版位
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">台北・新北・桃園 共 {mockInventory.length} 個點位</p>
+              </div>
+            </div>
+            <InventoryMapPreview
+              inventory={mockInventory}
+              onStartPlanning={() => router.push('/campaign-planner')}
+            />
+          </section>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
