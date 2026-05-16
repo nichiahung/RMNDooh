@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Minus, Send, Sparkles } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import type { InventoryLocation } from '@/types/inventory';
 import { queryInventory, buildResponseText } from '@/lib/mockAI';
 
@@ -54,11 +54,6 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
 
   useEffect(() => () => { cancelStreamRef.current?.(); }, []);
 
-  function handleOpen() {
-    setIsOpen(true);
-    setPulseActive(false);
-  }
-
   function handleSubmit() {
     const userText = input.trim();
     if (!userText || isStreaming) return;
@@ -104,30 +99,23 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — always visible as toggle */}
       <button
-        onClick={handleOpen}
-        className={`fixed bottom-6 left-6 z-[9999] flex items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all ${
-          isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
+        onClick={() => { setIsOpen(o => !o); setPulseActive(false); }}
+        className="fixed bottom-6 right-6 z-[9999] flex items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all"
         style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
       >
-        <Sparkles className={`w-4 h-4 ${pulseActive ? 'animate-pulse' : ''}`} />
-        AI 規劃
+        <Sparkles className={`w-4 h-4 ${pulseActive && !isOpen ? 'animate-pulse' : ''}`} />
+        {isOpen ? '收起' : 'AI 規劃'}
       </button>
 
-      {/* Chat panel */}
+      {/* Chat panel — sits above the FAB */}
       {isOpen && (
-        <div className="fixed bottom-6 left-6 z-[9999] w-[360px] h-[480px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+        <div className="fixed bottom-20 right-6 z-[9999] w-[360px] h-[480px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-500" />
-              <span className="text-sm font-semibold text-slate-800">AI 規劃助手</span>
-            </div>
-            <button onClick={() => setIsOpen(false)} aria-label="最小化" className="text-slate-400 hover:text-slate-600">
-              <Minus className="w-4 h-4" />
-            </button>
+          <div className="flex items-center px-4 py-3 border-b border-slate-100 flex-shrink-0 gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            <span className="text-sm font-semibold text-slate-800">AI 規劃助手</span>
           </div>
 
           {/* Messages */}
