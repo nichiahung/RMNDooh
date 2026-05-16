@@ -42,6 +42,7 @@ describe('queryInventory', () => {
 
   it('combines city + audience filters', () => {
     const results = queryInventory('台北上班族', mockInventory);
+    expect(results.length).toBeGreaterThan(0);
     results.forEach(r => {
       expect(['台北市', 'Taipei']).toContain(r.city);
       expect(r.audienceTags).toContain('Professionals');
@@ -61,5 +62,14 @@ describe('buildResponseText', () => {
     expect(text).toContain(venues[0].name);
     expect(text).toContain(venues[1].name);
     expect(text).toContain('根據你的目標');
+  });
+
+  it('handles more than 3 venues safely', () => {
+    const venues = mockInventory.slice(0, 5);
+    const text = buildResponseText(venues, '台北');
+    expect(text).toContain('根據你的目標');
+    expect(text).not.toContain('undefined');
+    // Should only show 3 venues
+    expect(text.match(/①|②|③/g)?.length).toBe(3);
   });
 });

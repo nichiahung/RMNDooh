@@ -53,8 +53,9 @@ export function buildResponseText(venues: InventoryLocation[], _query: string): 
   }
   const markers = ['①', '②', '③'];
   const lines = capped.map((v, i) => {
+    const marker = markers[i] ?? `(${i + 1})`;
     const tags = v.audienceTags.slice(0, 2).join(' ');
-    return `${markers[i]} ${v.name}\n   NT$${v.pricePerDay.toLocaleString()}/天 · ${v.dailyImpressions.toLocaleString()} 日曝光 · ${tags}`;
+    return `${marker} ${v.name}\n   NT$${v.pricePerDay.toLocaleString()}/天 · ${v.dailyImpressions.toLocaleString()} 日曝光 · ${tags}`;
   });
   return `根據你的目標，我找到 ${capped.length} 個適合的版位：\n\n${lines.join('\n\n')}`;
 }
