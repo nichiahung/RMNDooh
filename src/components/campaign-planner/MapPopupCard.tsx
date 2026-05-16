@@ -6,7 +6,7 @@ import { availabilityLabel } from '@/utils/availabilityLabel';
 import { imgSrc } from '@/utils/imgSrc';
 import { X, Check } from 'lucide-react';
 
-interface Props {
+export interface MapPopupCardProps {
   item: InventoryLocation;
   isSelected: boolean;
   onAdd: () => void;
@@ -14,7 +14,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function MapPopupCard({ item, isSelected, onAdd, onViewDetail, onClose }: Props) {
+export function MapPopupCard({ item, isSelected, onAdd, onViewDetail, onClose }: MapPopupCardProps) {
   const avail = availabilityLabel(item.availability);
   const canAdd = item.availability >= 0.3;
 

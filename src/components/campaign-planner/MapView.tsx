@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
 import { isInMediaPlan } from '@/utils/mediaPlanCalculations';
 import { useI18n } from '@/i18n/I18nProvider';
-import { MapPopupCard } from './MapPopupCard';
+import { MapPopupCard, MapPopupCardProps } from './MapPopupCard';
 
 interface Props {
   inventory: InventoryLocation[];
@@ -52,6 +52,22 @@ function FitBounds({ inventory }: { inventory: InventoryLocation[] }) {
   }, [inventory, map]);
 
   return null;
+}
+
+interface CloseablePopupCardProps extends Omit<MapPopupCardProps, 'onClose'> {
+  onViewDetail: () => void;
+}
+
+function CloseablePopupCard({ onViewDetail, ...rest }: CloseablePopupCardProps) {
+  const map = useMap();
+  const close = () => map.closePopup();
+  return (
+    <MapPopupCard
+      {...rest}
+      onClose={close}
+      onViewDetail={() => { close(); onViewDetail(); }}
+    />
+  );
 }
 
 export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
@@ -106,12 +122,11 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
                 minWidth={240}
                 maxWidth={240}
               >
-                <MapPopupCard
+                <CloseablePopupCard
                   item={item}
                   isSelected={isSelected}
                   onAdd={() => onAdd(item)}
                   onViewDetail={() => onViewDetails(item)}
-                  onClose={() => {/* Popup closes when user clicks away or the X button calls onClose */}}
                 />
               </Popup>
             </Marker>
