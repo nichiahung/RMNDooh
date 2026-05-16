@@ -1,7 +1,8 @@
 import React from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight } from 'lucide-react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, Image, AlertTriangle } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { calculateCampaignEstimate } from '@/utils/mediaPlanCalculations';
+import { deriveGroupedRequirements } from '@/utils/creativeRequirements';
 import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -90,7 +91,7 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
           <div className="space-y-4">
             {selectedDetails.map(({ inventoryId, days, inventory }) => (
               <div key={inventoryId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors group relative">
-                <button 
+                <button
                   onClick={() => onRemove(inventoryId)}
                   className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors"
                   title="Remove from plan"
@@ -101,12 +102,12 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
                   <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1">{inventory?.name}</h4>
                   <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       min="1"
                       className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
                       value={days}
@@ -120,6 +121,8 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
                 </div>
               </div>
             ))}
+
+            <CreativeRequirementsPanel selectedItems={selectedItems} allInventory={allInventory} />
           </div>
         )}
       </div>
@@ -154,5 +157,66 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
 
     </aside>
     </>
+  );
+}
+
+function CreativeRequirementsPanel({
+  selectedItems,
+  allInventory,
+}: {
+  selectedItems: MediaPlanItem[];
+  allInventory: InventoryLocation[];
+}) {
+  const groups = deriveGroupedRequirements(selectedItems, allInventory);
+  if (groups.length === 0) return null;
+
+  const mimeLabel = (mimes: string[]) =>
+    mimes.includes('video/mp4') && mimes.includes('image/jpeg')
+      ? 'JPG / PNG / MP4'
+      : mimes.includes('video/mp4')
+      ? 'MP4'
+      : 'JPG / PNG';
+
+  return (
+    <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Image className="w-3.5 h-3.5 text-amber-600" />
+        <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">素材需求</span>
+        <span className="ml-auto bg-amber-200 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+          {groups.length} 種格式
+        </span>
+      </div>
+
+      <div className="space-y-2 mb-3">
+        {groups.map(group => (
+          <div key={group.format} className="bg-white rounded border border-amber-100 px-2.5 py-2">
+            <div className="flex items-start justify-between gap-1">
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-slate-800 truncate">{group.label}</div>
+                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                  {group.dimensions.replace(' px', '')} · {mimeLabel(group.acceptedMimeTypes)}
+                </div>
+              </div>
+              <span className="flex-shrink-0 text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                未上傳
+              </span>
+            </div>
+            <div className="mt-1.5 text-[10px] text-slate-400">
+              {group.locationNames.slice(0, 2).join('、')}
+              {group.locationNames.length > 2
+                ? ` 等 ${group.locationNames.length} 個版位`
+                : ` (${group.locationCount} 個版位)`}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-1.5 items-start">
+        <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+        <p className="text-[10px] text-amber-700 leading-relaxed">
+          可繼續選點位，所有素材需在上線前完成上傳與審核。
+        </p>
+      </div>
+    </div>
   );
 }

@@ -40,6 +40,56 @@ export const FORMAT_SPECS: FormatSpec[] = [
   },
 ];
 
+export interface GroupedCreativeRequirement {
+  format: CanonicalFormat;
+  label: string;
+  dimensions: string;
+  acceptedMimeTypes: string[];
+  maxFileSizeMB: number;
+  locationCount: number;
+  locationNames: string[];
+}
+
+/** Returns one entry per distinct format, with location count for each. */
+export function deriveGroupedRequirements(
+  selectedItems: MediaPlanItem[],
+  allInventory: InventoryLocation[],
+): GroupedCreativeRequirement[] {
+  const groups = new Map<CanonicalFormat, GroupedCreativeRequirement>();
+
+  for (const item of selectedItems) {
+    const venue = allInventory.find(v => v.id === item.inventoryId);
+    if (!venue) continue;
+    const spec = FORMAT_SPECS.find(s => s.screenTypes.includes(venue.screenType));
+    if (!spec) continue;
+
+    if (!groups.has(spec.format)) {
+      groups.set(spec.format, {
+        format: spec.format,
+        label: spec.label,
+        dimensions: spec.dimensions,
+        acceptedMimeTypes: spec.acceptedMimeTypes,
+        maxFileSizeMB: spec.maxFileSizeMB,
+        locationCount: 0,
+        locationNames: [],
+      });
+    }
+    const group = groups.get(spec.format)!;
+    group.locationCount++;
+    group.locationNames.push(venue.name);
+  }
+
+  return Array.from(groups.values());
+}
+
+/** Returns the compact dimension label (e.g. "1920×1080") for a given screenType. */
+export function getSpecChip(screenType: string): string | null {
+  const spec = FORMAT_SPECS.find(s => s.screenTypes.includes(screenType));
+  if (!spec) return null;
+  // e.g. "1920 × 1080 px" → "1920×1080"
+  return spec.dimensions.replace(/\s/g, '').replace('px', '');
+}
+
 export function deriveRequiredFormats(
   selectedItems: MediaPlanItem[],
   allInventory: Pick<InventoryLocation, 'id' | 'screenType'>[],

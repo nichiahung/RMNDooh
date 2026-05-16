@@ -1,5 +1,6 @@
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatCompact, formatCPM } from '@/utils/formatters';
+import { getSpecChip } from '@/utils/creativeRequirements';
 import { MapPin, Users, Monitor, Check, Plus, Info } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
@@ -85,6 +86,9 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
           <span className="flex items-center gap-1 min-w-0">
             <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
             <span className="truncate">{item.screenType}</span>
+            {getSpecChip(item.screenType) && (
+              <span className="text-[10px] text-slate-400 font-mono">· {getSpecChip(item.screenType)}</span>
+            )}
           </span>
           <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">
             <Users className="w-3 h-3 text-slate-400" />
