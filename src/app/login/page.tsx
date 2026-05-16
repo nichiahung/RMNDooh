@@ -29,7 +29,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 w-full max-w-sm">
-        <Image src="/drmn-logo.png" alt="DRMN" height={36} width={130} className="object-contain mb-2" />
+        <Image src="/drmn-logo.png" alt="DRMN" height={36} width={130} className="object-contain mb-2 mx-auto" />
         <p className="text-sm text-slate-500 mb-8">請登入以繼續</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
