@@ -1,11 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ImageIcon, Plus } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, ImageIcon, Eye, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export function AppNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { currentUser, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    router.push('/login');
+  }
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-30">
@@ -28,14 +36,27 @@ export function AppNav() {
           >
             <ImageIcon className="w-4 h-4" /> 素材庫
           </Link>
+          <Link
+            href="/proposal-review"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              pathname === '/proposal-review' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Eye className="w-4 h-4" /> 提案審核
+          </Link>
         </nav>
       </div>
-      <Link
-        href="/campaign-planner"
-        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
-      >
-        <Plus className="w-4 h-4" /> 新增活動
-      </Link>
+      {currentUser && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">{currentUser.email}</span>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" /> 登出
+          </button>
+        </div>
+      )}
     </header>
   );
 }
