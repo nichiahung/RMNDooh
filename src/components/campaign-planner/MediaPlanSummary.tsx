@@ -7,7 +7,7 @@ import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequire
 import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
 import { CanonicalFormat, FormatSpec } from '@/types/creative';
-import { ensureCreativeRequirements, unlinkAssetFromRequirement, saveDraftCampaign } from '@/lib/api/campaign-draft';
+import { ensureCreativeRequirements, unlinkAssetFromRequirement, saveDraftCampaign, getStoredCreativeRequirements } from '@/lib/api/campaign-draft';
 import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
@@ -134,10 +134,23 @@ export function MediaPlanSummary({
     setActiveModal({ spec, venueCount, requirementId: req.id });
   }, [campaignId, storedRequirements, selectedItems, allInventory, onStoredRequirementsChange]);
 
-  const handleUploadSuccess = useCallback((asset: CreativeAsset, format: CanonicalFormat) => {
-    setUploadedFormats(prev => new Set([...prev, format]));
+  const handleUploadSuccess = useCallback(async (asset: CreativeAsset, format: CanonicalFormat) => {
     onCreativeUploaded(asset, format);
-  }, [onCreativeUploaded]);
+    if (!campaignId) {
+      setUploadedFormats(prev => new Set([...prev, format]));
+      return;
+    }
+    try {
+      const reqs = await getStoredCreativeRequirements(campaignId);
+      const seeded = new Set<CanonicalFormat>(
+        reqs.filter(r => r.status === 'uploaded' || r.status === 'approved').map(r => r.canonicalFormat as CanonicalFormat)
+      );
+      setUploadedFormats(seeded);
+      onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })));
+    } catch {
+      setUploadedFormats(prev => new Set([...prev, format]));
+    }
+  }, [campaignId, onCreativeUploaded, onStoredRequirementsChange]);
 
   const handleUnlink = useCallback(async (format: CanonicalFormat) => {
     const req = storedRequirements?.find(r => r.canonicalFormat === format);

@@ -119,9 +119,24 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
     setActiveModal({ format, requirementId: req.id, venueCount });
   };
 
-  const handleUploadSuccess = useCallback((_asset: CreativeAsset, format: CanonicalFormat) => {
-    setUploadedFormats(prev => new Set([...prev, format]));
-  }, []);
+  const handleUploadSuccess = useCallback(async (_asset: CreativeAsset, _format: CanonicalFormat) => {
+    if (!campaignId) return;
+    // Re-fetch from DB to pick up auto-approval (asset already approved in library)
+    try {
+      const reqs = await getStoredCreativeRequirements(campaignId);
+      const uploaded = new Set<CanonicalFormat>(
+        reqs.filter(r => r.status === 'uploaded' || r.status === 'approved').map(r => r.canonicalFormat as CanonicalFormat)
+      );
+      const approved = new Set<CanonicalFormat>(
+        reqs.filter(r => r.status === 'approved').map(r => r.canonicalFormat as CanonicalFormat)
+      );
+      setUploadedFormats(uploaded);
+      setApprovedFormats(approved);
+      onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })));
+    } catch (err) {
+      console.error('Failed to refresh requirements after upload:', err);
+    }
+  }, [campaignId, onStoredRequirementsChange]);
 
   const handleUnlink = useCallback(async (format: CanonicalFormat) => {
     const req = storedRequirements?.find(r => r.canonicalFormat === format);
