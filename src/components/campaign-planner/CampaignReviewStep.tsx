@@ -219,8 +219,12 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
     },
     {
       label: '庫存確認',
-      status: 'pending',
-      detail: '送審後自動確認',
+      status: campaignStatus === 'approved' ? 'pass'
+            : campaignStatus === 'pending_review' ? 'pending'
+            : 'waiting',
+      detail: campaignStatus === 'approved' ? '庫存已確認'
+            : campaignStatus === 'pending_review' ? '等待平台確認庫存'
+            : '送審後由平台確認',
     },
   ] as const;
 
