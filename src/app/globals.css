@@ -39,3 +39,25 @@ body {
 .map-popup-clean .leaflet-popup-tip-container {
   display: none;
 }
+
+/* DOOH venue popup — clean card with pointer tip */
+.dooh-popup .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e2e8f0;
+  padding: 0;
+  overflow: hidden;
+}
+.dooh-popup .leaflet-popup-content {
+  margin: 14px 16px;
+}
+.dooh-popup .leaflet-popup-tip {
+  background: white;
+  box-shadow: none;
+}
+.dooh-popup .leaflet-popup-close-button {
+  color: #94a3b8;
+  font-size: 18px;
+  top: 6px;
+  right: 8px;
+}

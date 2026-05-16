@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { useRouter } from 'next/navigation';
 import type { InventoryLocation } from '@/types/inventory';
-import { VenueDetailPanel } from './VenueDetailPanel';
 
 interface InventoryExplorerProps {
   inventory: InventoryLocation[];
@@ -36,19 +35,49 @@ function getPinStyle(item: InventoryLocation, usedIds: Set<string>) {
   return { color: '#94a3b8', size: 12, star: false };
 }
 
+function getAvailStyle(availability: number): { color: string; label: string } {
+  if (availability >= 0.7) return { color: '#6366f1', label: '可用' };
+  if (availability >= 0.3) return { color: '#f59e0b', label: '有限' };
+  return { color: '#94a3b8', label: '不可用' };
+}
+
+function buildPopupHtml(item: InventoryLocation, isUsed: boolean): string {
+  const { color, label } = getAvailStyle(item.availability);
+  const pct = Math.round(item.availability * 100);
+  const tags = item.audienceTags.slice(0, 3).join(' · ');
+  const usedBadge = isUsed
+    ? `<div style="margin-top:6px;display:inline-block;background:#d1fae5;color:#065f46;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px">★ 已使用於過去活動</div>`
+    : '';
+  return `
+    <div style="min-width:210px;font-family:system-ui,sans-serif;line-height:1.4">
+      <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:4px">${item.name}</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:6px">${item.district} · ${item.screenType}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>
+        <span style="font-size:11px;color:#475569">${label} ${pct}%</span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:4px;margin-bottom:8px">
+        <div style="background:${color};width:${pct}%;height:100%;border-radius:4px"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:8px">
+        <div style="font-size:11px;color:#0f172a;font-weight:600">NT$${item.pricePerDay.toLocaleString()}<span style="font-weight:400;color:#64748b">/天</span></div>
+        <div style="font-size:11px;color:#64748b">${(item.dailyImpressions / 1000).toFixed(0)}K 曝光</div>
+      </div>
+      ${tags ? `<div style="font-size:10px;color:#6366f1;margin-bottom:8px">${tags}</div>` : ''}
+      ${usedBadge}
+      <a href="/campaign-planner?inventoryId=${item.id}" style="display:block;margin-top:8px;text-align:center;background:#4f46e5;color:white;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;text-decoration:none">開始規劃 →</a>
+    </div>
+  `;
+}
+
 export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExplorerProps) {
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<unknown>(null);
   const markerLayerRef = useRef<unknown>(null);
-  const selectVenueRef = useRef<(v: InventoryLocation) => void>(() => {});
 
   const [cityFilter, setCityFilter] = useState<CityFilter>('全部');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('全部');
-  const [selectedVenue, setSelectedVenue] = useState<InventoryLocation | null>(null);
-
-  // Keep ref in sync so marker click handlers always see latest setter
-  useEffect(() => { selectVenueRef.current = setSelectedVenue; }, []);
 
   const displayed = useMemo(() => {
     return inventory.filter(item => {
@@ -106,13 +135,31 @@ export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExpl
           iconSize: [size, size],
           iconAnchor: [half, half],
         });
+        const isUsed = usedInventoryIds.has(item.id);
         const marker = L.marker([item.latitude, item.longitude], { icon });
-        marker.on('click', () => selectVenueRef.current(item));
+        marker.bindPopup(buildPopupHtml(item, isUsed), {
+          maxWidth: 260,
+          className: 'dooh-popup',
+        });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (markerLayerRef.current as any).addLayer(marker);
       });
     });
   }, [displayed, usedInventoryIds]);
+
+  // Handle "開始規劃" clicks inside Leaflet popup (not React-rendered)
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href^="/campaign-planner"]');
+      if (link) {
+        e.preventDefault();
+        router.push((link as HTMLAnchorElement).href.replace(window.location.origin, ''));
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [router]);
 
   const cityTabs: CityFilter[] = ['全部', '台北', '新北', '桃園'];
   const typeFilters: TypeFilter[] = ['全部', '捷運站', '看板', '商場', '機場'];
@@ -121,7 +168,6 @@ export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExpl
     <div className="space-y-3">
       {/* Filter bar */}
       <div className="flex items-center gap-4 flex-wrap">
-        {/* City tabs */}
         <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
           {cityTabs.map(c => (
             <button
@@ -135,7 +181,6 @@ export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExpl
             </button>
           ))}
         </div>
-        {/* Type pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {typeFilters.map(t => (
             <button
@@ -179,13 +224,6 @@ export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExpl
             + 開始規劃
           </button>
         </div>
-
-        {/* Detail panel — rendered inside map container so absolute positioning works */}
-        <VenueDetailPanel
-          venue={selectedVenue}
-          isUsed={selectedVenue ? usedInventoryIds.has(selectedVenue.id) : false}
-          onClose={() => setSelectedVenue(null)}
-        />
       </div>
     </div>
   );

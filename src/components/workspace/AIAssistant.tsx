@@ -107,7 +107,7 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
       {/* FAB */}
       <button
         onClick={handleOpen}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all ${
+        className={`fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-semibold shadow-lg transition-all ${
           isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
         style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
@@ -118,7 +118,7 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
 
       {/* Chat panel */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[360px] h-[480px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
+        <div className="fixed bottom-6 left-6 z-50 w-[360px] h-[480px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
             <div className="flex items-center gap-2">
