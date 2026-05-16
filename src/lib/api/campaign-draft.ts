@@ -216,12 +216,17 @@ export async function submitCreativesForReview(
   // Derive formats from current inventory
   const formats = deriveRequiredFormats(selectedItems, allInventory);
 
-  // Delete existing requirement snapshot
-  const { error: deleteError } = await supabase
-    .from('campaign_creative_requirements')
-    .delete()
-    .eq('campaign_id', campaignId);
-  if (deleteError) throw new Error(deleteError.message);
+  // Check for existing requirements (may have been created via inline modal)
+  const existingReqs = await getStoredCreativeRequirements(campaignId);
+  if (existingReqs.length > 0) {
+    // Requirements already exist — just ensure campaign status is correct
+    const { error: statusError } = await supabase
+      .from('campaigns')
+      .update({ status: 'pending_creative_review' })
+      .eq('id', campaignId);
+    if (statusError) throw new Error(statusError.message);
+    return existingReqs;
+  }
 
   // Insert fresh snapshot
   if (formats.length > 0) {
@@ -347,4 +352,16 @@ export async function confirmBooking(campaignId: string): Promise<CampaignBookin
     totalAmount: booking.total_amount as number,
     bookingStatus: booking.booking_status as CampaignBooking['bookingStatus'],
   };
+}
+
+// ─── Ensure Creative Requirements ─────────────────────────
+
+export async function ensureCreativeRequirements(
+  campaignId: string,
+  selectedItems: MediaPlanItem[],
+  allInventory: InventoryLocation[],
+): Promise<CampaignCreativeRequirement[]> {
+  const existing = await getStoredCreativeRequirements(campaignId);
+  if (existing.length > 0) return existing;
+  return submitCreativesForReview(campaignId, selectedItems, allInventory);
 }

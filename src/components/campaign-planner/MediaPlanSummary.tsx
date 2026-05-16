@@ -1,10 +1,14 @@
-import React from 'react';
-import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon } from 'lucide-react';
-import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
-import { calculateCampaignEstimate } from '@/utils/mediaPlanCalculations';
-import { deriveGroupedRequirements } from '@/utils/creativeRequirements';
+'use client';
+
+import React, { useState, useCallback } from 'react';
+import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2 } from 'lucide-react';
+import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
+import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
 import { formatCurrency, formatCPM } from '@/utils/formatters';
 import { useI18n } from '@/i18n/I18nProvider';
+import { CanonicalFormat, FormatSpec } from '@/types/creative';
+import { ensureCreativeRequirements } from '@/lib/api/campaign-draft';
+import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
   selectedItems: MediaPlanItem[];
@@ -12,20 +16,43 @@ interface Props {
   onRemove: (id: string) => void;
   onUpdateDays: (id: string, days: number) => void;
   onContinue?: () => void;
+  onAllUploaded?: () => void;
   isOpen: boolean;
   onClose: () => void;
   isSaving?: boolean;
+  campaignId: string | null;
+  storedRequirements: Array<{ id: string; canonicalFormat: string }> | null;
+  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string }>) => void;
+  onCreativeUploaded: (asset: CreativeAsset, format: CanonicalFormat) => void;
 }
 
-export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpdateDays, onContinue, isOpen, onClose, isSaving }: Props) {
+type ActiveModal = {
+  spec: FormatSpec;
+  venueCount: number;
+  requirementId: string;
+};
+
+export function MediaPlanSummary({
+  selectedItems,
+  allInventory,
+  onRemove,
+  onUpdateDays,
+  onContinue,
+  onAllUploaded,
+  isOpen,
+  onClose,
+  isSaving,
+  campaignId,
+  storedRequirements,
+  onStoredRequirementsChange,
+  onCreativeUploaded,
+}: Props) {
   const { t } = useI18n();
-  
-  // Use utility from Step 3 to calculate metrics
-  // Defaulting to 1 campaign day for the overall estimate right now, 
-  // but since each item has its own 'days', we sum them individually below for itemized display
-  const estimate = calculateCampaignEstimate(selectedItems, allInventory, 1);
-  
-  // Because our mock setup allows different days per item, let's recalculate accurately based on individual days
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
+  const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
+  const [isEnsuring, setIsEnsuring] = useState(false);
+
+  // Compute totals
   let exactTotalImpressions = 0;
   let exactTotalBudget = 0;
 
@@ -40,9 +67,52 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
     exactTotalBudget += inventory.pricePerDay * days;
   });
 
-  const exactAvgCpm = exactTotalImpressions > 0 
-    ? (exactTotalBudget / exactTotalImpressions) * 1000 
+  const exactAvgCpm = exactTotalImpressions > 0
+    ? (exactTotalBudget / exactTotalImpressions) * 1000
     : 0;
+
+  const groups = deriveGroupedRequirements(selectedItems, allInventory);
+  const allFormatsUploaded = groups.length > 0 && groups.every(g => uploadedFormats.has(g.format));
+
+  const handleFormatClick = useCallback(async (format: CanonicalFormat, venueCount: number) => {
+    if (!campaignId) return;
+    const spec = FORMAT_SPECS.find(s => s.format === format);
+    if (!spec) return;
+
+    let reqs = storedRequirements;
+
+    if (!reqs) {
+      setIsEnsuring(true);
+      try {
+        const created = await ensureCreativeRequirements(campaignId, selectedItems, allInventory);
+        reqs = created.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat }));
+        onStoredRequirementsChange(reqs);
+      } catch (err) {
+        console.error('Failed to ensure requirements:', err);
+        setIsEnsuring(false);
+        return;
+      }
+      setIsEnsuring(false);
+    }
+
+    const req = reqs.find(r => r.canonicalFormat === format);
+    if (!req) return;
+
+    setActiveModal({ spec, venueCount, requirementId: req.id });
+  }, [campaignId, storedRequirements, selectedItems, allInventory, onStoredRequirementsChange]);
+
+  const handleUploadSuccess = useCallback((asset: CreativeAsset, format: CanonicalFormat) => {
+    setUploadedFormats(prev => new Set([...prev, format]));
+    onCreativeUploaded(asset, format);
+  }, [onCreativeUploaded]);
+
+  const footerButtonLabel = isSaving
+    ? '儲存中...'
+    : allFormatsUploaded
+    ? '確認並送審 →'
+    : '前往上傳廣告素材 →';
+
+  const footerButtonAction = allFormatsUploaded && onAllUploaded ? onAllUploaded : onContinue;
 
   return (
     <>
@@ -53,110 +123,125 @@ export function MediaPlanSummary({ selectedItems, allInventory, onRemove, onUpda
           aria-hidden
         />
       )}
+
+      {activeModal && (
+        <CreativeUploadModal
+          spec={activeModal.spec}
+          venueCount={activeModal.venueCount}
+          requirementId={activeModal.requirementId}
+          onSuccess={handleUploadSuccess}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+
       <aside
         className={`fixed lg:static inset-y-0 right-0 w-full sm:w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-[52] lg:z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
       >
+        {/* Header */}
+        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <h2 className="text-base font-semibold text-slate-900 flex items-center">
+            <Calculator className="w-4 h-4 mr-2 text-indigo-600" /> {t('mediaPlan.title')}
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-semibold">
+              {selectedItems.length} {t('planner.locations')}
+            </span>
+            <button
+              onClick={onClose}
+              className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
+              aria-label="Close media plan"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-      {/* Header */}
-      <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <h2 className="text-base font-semibold text-slate-900 flex items-center">
-          <Calculator className="w-4 h-4 mr-2 text-indigo-600" /> {t('mediaPlan.title')}
-        </h2>
-        <div className="flex items-center gap-3">
-          <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-semibold">
-            {selectedItems.length} {t('planner.locations')}
-          </span>
+        {/* Selected Items Area */}
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar bg-slate-50/30">
+          {selectedDetails.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center mb-4">
+                <MapPin className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-sm font-medium text-slate-900 mb-1">{t('mediaPlan.empty')}</p>
+              <p className="text-xs text-slate-500 px-4">{t('mediaPlan.emptyDesc')}</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {selectedDetails.map(({ inventoryId, days, inventory }) => (
+                <div key={inventoryId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors group relative">
+                  <button
+                    onClick={() => onRemove(inventoryId)}
+                    className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Remove from plan"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <div className="pr-6">
+                    <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1">{inventory?.name}</h4>
+                    <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="number"
+                        min="1"
+                        className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
+                        value={days}
+                        onChange={(e) => onUpdateDays(inventoryId, parseInt(e.target.value) || 1)}
+                      />
+                      <span className="text-xs text-slate-500">{t('mediaPlan.days')}</span>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {formatCurrency((inventory?.pricePerDay || 0) * days)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <CreativeRequirementsPanel
+                groups={groups}
+                uploadedFormats={uploadedFormats}
+                onFormatClick={handleFormatClick}
+                isEnsuring={isEnsuring}
+                hasActiveCampaign={!!campaignId}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 border-t border-slate-200 bg-white">
+          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('mediaPlan.campaignEstimate')}</h3>
+          <div className="space-y-3 mb-6">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500 flex items-center"><Eye className="w-4 h-4 mr-2 text-slate-400" /> {t('mediaPlan.totalImpressions')}</span>
+              <span className="font-semibold text-slate-900">{exactTotalImpressions.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500 flex items-center"><TrendingUp className="w-4 h-4 mr-2 text-slate-400" /> {t('mediaPlan.avgCpm')}</span>
+              <span className="font-semibold text-slate-900">NT${formatCPM(exactAvgCpm)}</span>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+              <span className="text-slate-700 font-medium">{t('mediaPlan.totalBudget')}</span>
+              <span className="font-bold text-lg text-indigo-600">{formatCurrency(exactTotalBudget)}</span>
+            </div>
+          </div>
+
           <button
-            onClick={onClose}
-            className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
-            aria-label="Close media plan"
+            onClick={footerButtonAction}
+            className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+              allFormatsUploaded
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            }`}
+            disabled={selectedItems.length === 0 || (!onContinue && !onAllUploaded) || isSaving}
           >
-            <ChevronRight className="w-4 h-4" />
+            {footerButtonLabel}
           </button>
         </div>
-      </div>
-
-      {/* Selected Items Area */}
-      <div className="flex-1 overflow-y-auto p-5 custom-scrollbar bg-slate-50/30">
-        {selectedDetails.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center mb-4">
-              <MapPin className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-sm font-medium text-slate-900 mb-1">{t('mediaPlan.empty')}</p>
-            <p className="text-xs text-slate-500 px-4">
-              {t('mediaPlan.emptyDesc')}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {selectedDetails.map(({ inventoryId, days, inventory }) => (
-              <div key={inventoryId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors group relative">
-                <button
-                  onClick={() => onRemove(inventoryId)}
-                  className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors"
-                  title="Remove from plan"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <div className="pr-6">
-                  <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1">{inventory?.name}</h4>
-                  <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <input
-                      type="number"
-                      min="1"
-                      className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
-                      value={days}
-                      onChange={(e) => onUpdateDays(inventoryId, parseInt(e.target.value) || 1)}
-                    />
-                    <span className="text-xs text-slate-500">{t('mediaPlan.days')}</span>
-                  </div>
-                  <div className="text-sm font-semibold text-slate-900">
-                    {formatCurrency((inventory?.pricePerDay || 0) * days)}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <CreativeRequirementsPanel selectedItems={selectedItems} allInventory={allInventory} />
-          </div>
-        )}
-      </div>
-
-      {/* Footer Calculation Area */}
-      <div className="p-5 border-t border-slate-200 bg-white">
-        <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('mediaPlan.campaignEstimate')}</h3>
-        
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-500 flex items-center"><Eye className="w-4 h-4 mr-2 text-slate-400"/> {t('mediaPlan.totalImpressions')}</span>
-            <span className="font-semibold text-slate-900">{exactTotalImpressions.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-slate-500 flex items-center"><TrendingUp className="w-4 h-4 mr-2 text-slate-400"/> {t('mediaPlan.avgCpm')}</span>
-            <span className="font-semibold text-slate-900">NT${formatCPM(exactAvgCpm)}</span>
-          </div>
-          <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-            <span className="text-slate-700 font-medium">{t('mediaPlan.totalBudget')}</span>
-            <span className="font-bold text-lg text-indigo-600">{formatCurrency(exactTotalBudget)}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={onContinue}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={selectedItems.length === 0 || !onContinue || isSaving}
-        >
-          {isSaving ? '儲存中...' : '前往上傳廣告素材 →'}
-        </button>
-      </div>
-
-    </aside>
+      </aside>
     </>
   );
 }
@@ -170,48 +255,81 @@ function OrientationMark({ format }: { format: string }) {
 }
 
 function CreativeRequirementsPanel({
-  selectedItems,
-  allInventory,
+  groups,
+  uploadedFormats,
+  onFormatClick,
+  isEnsuring,
+  hasActiveCampaign,
 }: {
-  selectedItems: MediaPlanItem[];
-  allInventory: InventoryLocation[];
+  groups: ReturnType<typeof deriveGroupedRequirements>;
+  uploadedFormats: Set<CanonicalFormat>;
+  onFormatClick: (format: CanonicalFormat, venueCount: number) => void;
+  isEnsuring: boolean;
+  hasActiveCampaign: boolean;
 }) {
-  const groups = deriveGroupedRequirements(selectedItems, allInventory);
   if (groups.length === 0) return null;
+
+  const uploadedCount = groups.filter(g => uploadedFormats.has(g.format)).length;
 
   return (
     <div className="mt-1 pt-3 border-t border-slate-100">
-      {/* Header */}
       <div className="flex items-center justify-between mb-2.5">
         <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
           <ImageIcon className="w-3 h-3" /> 素材需求
         </span>
-        <span className="text-[10px] text-slate-400">{groups.length} 種格式</span>
+        <span className="text-[10px] text-slate-400">
+          {uploadedCount}/{groups.length} 已上傳
+        </span>
       </div>
 
-      {/* Format rows */}
-      <div className="space-y-3">
-        {groups.map(group => (
-          <div key={group.format} className="flex items-start gap-2.5">
-            <OrientationMark format={group.format} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-semibold text-slate-800 truncate">{group.label}</span>
-                <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">待上傳</span>
+      <div className="space-y-2">
+        {groups.map(group => {
+          const isUploaded = uploadedFormats.has(group.format);
+          return (
+            <button
+              key={group.format}
+              onClick={() => !isUploaded && hasActiveCampaign && onFormatClick(group.format, group.locationCount)}
+              disabled={isUploaded || !hasActiveCampaign || isEnsuring}
+              className={`w-full flex items-start gap-2.5 p-2 rounded-lg text-left transition-colors ${
+                isUploaded
+                  ? 'bg-emerald-50 border border-emerald-100 cursor-default'
+                  : hasActiveCampaign
+                  ? 'hover:bg-slate-50 border border-transparent hover:border-slate-200 cursor-pointer'
+                  : 'border border-transparent cursor-default opacity-60'
+              }`}
+            >
+              <OrientationMark format={group.format} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className={`text-xs font-semibold truncate ${isUploaded ? 'text-emerald-700' : 'text-slate-800'}`}>
+                    {group.label}
+                  </span>
+                  {isUploaded ? (
+                    <span className="flex items-center gap-0.5 flex-shrink-0 text-[10px] font-semibold text-emerald-600">
+                      <CheckCircle2 className="w-3 h-3" /> 已上傳
+                    </span>
+                  ) : (
+                    <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">
+                      {isEnsuring ? '...' : '待上傳'}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono leading-snug">
+                  {group.dimensions.replace(' px', '')}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  {group.locationCount} 個版位需要此格式
+                </div>
               </div>
-              <div className="text-[10px] text-slate-400 font-mono leading-snug">
-                {group.dimensions.replace(' px', '')}
-              </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {group.locationCount} 個版位需要此格式
-              </div>
-            </div>
-          </div>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       <p className="mt-3 text-[10px] text-slate-400 leading-relaxed border-t border-slate-100 pt-2.5">
-        可繼續選點位。確認後點擊下方按鈕，前往上傳所有格式的廣告素材。
+        {hasActiveCampaign
+          ? '點擊格式列即可上傳素材，也可繼續選點位後統一上傳。'
+          : '請先加入點位以開始上傳素材。'}
       </p>
     </div>
   );

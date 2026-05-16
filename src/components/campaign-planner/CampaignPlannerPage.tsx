@@ -304,9 +304,14 @@ export function CampaignPlannerPage() {
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
               onContinue={handleContinueToCreative}
+              onAllUploaded={() => setStep('review')}
               isSaving={isSaving}
               isOpen={isSummaryOpen}
               onClose={() => setIsSummaryOpen(false)}
+              campaignId={campaignId}
+              storedRequirements={storedRequirements}
+              onStoredRequirementsChange={setStoredRequirements}
+              onCreativeUploaded={(asset) => setCreatives(prev => [...prev, asset])}
             />
 
             {/* Detail Modal Overlay */}
