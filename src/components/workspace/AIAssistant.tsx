@@ -7,6 +7,7 @@ import type { InventoryLocation } from '@/types/inventory';
 import { queryInventory, buildResponseText } from '@/lib/mockAI';
 
 interface Message {
+  id: string;
   role: 'user' | 'ai';
   text: string;
   venues?: InventoryLocation[];
@@ -20,15 +21,17 @@ function streamText(
   fullText: string,
   onChunk: (partial: string) => void,
   onDone: () => void,
-) {
+): () => void {
   let i = 0;
+  let timeoutId: ReturnType<typeof setTimeout>;
   function next() {
     if (i >= fullText.length) { onDone(); return; }
     onChunk(fullText.slice(0, i + 1));
     i++;
-    setTimeout(next, 18);
+    timeoutId = setTimeout(next, 18);
   }
   next();
+  return () => clearTimeout(timeoutId);
 }
 
 const WELCOME = '告訴我你的廣告目標，我來推薦最適合的版位。\n\n例如：「台北通勤族，預算每天5000以下」';
@@ -40,13 +43,16 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', text: WELCOME },
+    { id: 'welcome', role: 'ai', text: WELCOME },
   ]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const cancelStreamRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => () => { cancelStreamRef.current?.(); }, []);
 
   function handleOpen() {
     setIsOpen(true);
@@ -58,15 +64,27 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
     if (!userText || isStreaming) return;
     setInput('');
 
-    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    const userId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random().toString(36).slice(2);
+    setMessages(prev => [...prev, { id: userId, role: 'user', text: userText }]);
 
-    const venues = queryInventory(userText, inventory);
-    const fullText = buildResponseText(venues, userText);
+    let venues: InventoryLocation[];
+    let fullText: string;
+    try {
+      venues = queryInventory(userText, inventory);
+      fullText = buildResponseText(venues, userText);
+    } catch {
+      const errId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random().toString(36).slice(2);
+      setMessages(prev => [...prev, { id: errId, role: 'ai', text: '抱歉，處理您的請求時發生錯誤。請再試一次。' }]);
+      setIsStreaming(false);
+      return;
+    }
 
+    const aiId = crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random().toString(36).slice(2);
     setIsStreaming(true);
-    setMessages(prev => [...prev, { role: 'ai', text: '' }]);
+    setMessages(prev => [...prev, { id: aiId, role: 'ai', text: '' }]);
 
-    streamText(
+    cancelStreamRef.current?.();
+    cancelStreamRef.current = streamText(
       fullText,
       partial => setMessages(prev => {
         const next = [...prev];
@@ -115,7 +133,7 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className="max-w-[85%] space-y-2">
                   <div
                     className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap ${
