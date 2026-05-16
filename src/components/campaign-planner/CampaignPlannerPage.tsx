@@ -6,10 +6,9 @@ import { InventoryDiscovery } from './InventoryDiscovery';
 import { MediaPlanSummary } from './MediaPlanSummary';
 import { InventoryDetailCard } from './InventoryDetailCard';
 import { PerformanceBar } from './PerformanceBar';
-import { CreativeUploadStep } from './CreativeUploadStep';
 import { CampaignReviewStep } from './CampaignReviewStep';
 
-import { InventoryLocation, MediaPlanItem, FilterState, CreativeAsset } from '@/types/inventory';
+import { InventoryLocation, MediaPlanItem, FilterState } from '@/types/inventory';
 import {
   createDraftCampaign,
   addInventoryItem,
@@ -31,7 +30,7 @@ export function CampaignPlannerPage() {
   }, [fetchInventory]);
 
   // --- Step Flow State ---
-  const [step, setStep] = useState<'inventory' | 'creative' | 'review'>('inventory');
+  const [step, setStep] = useState<'inventory' | 'review'>('inventory');
 
   // --- Campaign Draft State ---
   const [campaignId, setCampaignId] = useState<string | null>(null);
@@ -48,7 +47,6 @@ export function CampaignPlannerPage() {
 
   const [selectedItems, setSelectedItems] = useState<MediaPlanItem[]>([]);
   const [selectedInventoryForDetail, setSelectedInventoryForDetail] = useState<InventoryLocation | null>(null);
-  const [creatives, setCreatives] = useState<CreativeAsset[]>([]);
 
   const dbItemIdMap = useRef<Map<string, string>>(new Map()); // inventoryId → campaign_inventory_items row id
   const isCreatingDraft = useRef(false);
@@ -159,7 +157,7 @@ export function CampaignPlannerPage() {
     );
   };
 
-  const handleContinueToCreative = async () => {
+  const handleContinueToReview = async () => {
     if (selectedItems.length === 0) return;
     setIsSaving(true);
     try {
@@ -170,17 +168,13 @@ export function CampaignPlannerPage() {
           canonicalFormat: r.canonicalFormat,
         })));
       }
-      setStep('creative');
+      setStep('review');
     } catch (err) {
       console.error('Failed to submit for review:', err);
-      setStep('creative'); // still advance even if DB fails
+      setStep('review'); // still advance even if DB fails
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleContinueToReview = () => {
-    if (selectedItems.length > 0 && creatives.length > 0) setStep('review');
   };
 
   const { t, toggleLocale } = useI18n();
@@ -188,25 +182,21 @@ export function CampaignPlannerPage() {
   // Render Step Progress
   const StepProgress = () => (
     <div className="flex items-center space-x-2 mr-6 text-sm">
-      <div className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`} onClick={() => setStep('inventory')}>
+      <div
+        className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
+        onClick={() => step === 'review' ? setStep('inventory') : undefined}
+      >
         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'inventory' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-          {step === 'inventory' ? '1' : <Check className="w-3 h-3" />}
+          {step === 'review' ? <Check className="w-3 h-3" /> : '1'}
         </div>
-        {t('step.inventory')}
-      </div>
-      <div className="w-6 h-px bg-slate-300"></div>
-      <div className={`flex items-center ${step === 'creative' ? 'text-indigo-600 font-bold' : step === 'review' ? 'text-slate-500 font-medium cursor-pointer' : 'text-slate-400 font-medium'}`} onClick={() => step === 'review' ? setStep('creative') : null}>
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'creative' ? 'bg-indigo-600 text-white' : step === 'review' ? 'bg-slate-200 text-slate-500' : 'bg-slate-100 text-slate-400'}`}>
-          {step === 'review' ? <Check className="w-3 h-3" /> : '2'}
-        </div>
-        {t('step.creative')}
+        選擇版位
       </div>
       <div className="w-6 h-px bg-slate-300"></div>
       <div className={`flex items-center ${step === 'review' ? 'text-indigo-600 font-bold' : 'text-slate-400 font-medium'}`}>
         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-          3
+          2
         </div>
-        {t('step.review')}
+        確認送審
       </div>
     </div>
   );
@@ -303,15 +293,15 @@ export function CampaignPlannerPage() {
               allInventory={allInventory}
               onRemove={handleRemove}
               onUpdateDays={handleUpdateDays}
-              onContinue={handleContinueToCreative}
-              onAllUploaded={() => setStep('review')}
+              onContinue={handleContinueToReview}
+              onAllUploaded={handleContinueToReview}
               isSaving={isSaving}
               isOpen={isSummaryOpen}
               onClose={() => setIsSummaryOpen(false)}
               campaignId={campaignId}
               storedRequirements={storedRequirements}
               onStoredRequirementsChange={setStoredRequirements}
-              onCreativeUploaded={(asset) => setCreatives(prev => [...prev, asset])}
+              onCreativeUploaded={() => {}}
             />
 
             {/* Detail Modal Overlay */}
@@ -334,25 +324,14 @@ export function CampaignPlannerPage() {
           </>
         )}
 
-        {step === 'creative' && (
-          <CreativeUploadStep
-            selectedItems={selectedItems}
-            allInventory={allInventory}
-            creatives={creatives}
-            setCreatives={setCreatives}
-            onBack={() => setStep('inventory')}
-            onContinue={handleContinueToReview}
-            storedRequirements={storedRequirements}
-          />
-        )}
-
         {step === 'review' && (
           <CampaignReviewStep
             selectedItems={selectedItems}
             allInventory={allInventory}
-            creatives={creatives}
             campaignId={campaignId}
-            onBack={() => setStep('creative')}
+            storedRequirements={storedRequirements}
+            onStoredRequirementsChange={setStoredRequirements}
+            onBack={() => setStep('inventory')}
           />
         )}
 

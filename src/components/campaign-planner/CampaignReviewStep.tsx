@@ -1,26 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { CreativeAsset, MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { ReviewSection } from './ReviewSection';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { ArrowLeft, CheckCircle, MapPin, Image as ImageIcon, Settings, Calculator, Send, AlertTriangle, Play } from 'lucide-react';
+import { ArrowLeft, CheckCircle, MapPin, ImageIcon, Settings, Calculator, Send, AlertTriangle, CheckCircle2, Upload } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { confirmBooking } from '@/lib/api/campaign-draft';
+import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
+import { CanonicalFormat } from '@/types/creative';
+import { CreativeUploadModal } from './CreativeUploadModal';
 
 interface Props {
   selectedItems: MediaPlanItem[];
   allInventory: InventoryLocation[];
-  creatives: CreativeAsset[];
   campaignId: string | null;
+  storedRequirements: Array<{ id: string; canonicalFormat: string }> | null;
+  onStoredRequirementsChange: (reqs: Array<{ id: string; canonicalFormat: string }>) => void;
   onBack: () => void;
 }
 
-export function CampaignReviewStep({ selectedItems, allInventory, creatives, campaignId, onBack }: Props) {
+type ActiveModal = {
+  format: CanonicalFormat;
+  requirementId: string;
+  venueCount: number;
+};
+
+export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
+  const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
 
   const selectedDetails = selectedItems
     .map(item => ({ ...item, inventory: allInventory.find(i => i.id === item.inventoryId)! }))
@@ -40,6 +54,28 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, cam
   });
 
   const exactAvgCpm = exactTotalImpressions > 0 ? (exactTotalBudget / exactTotalImpressions) * 1000 : 0;
+
+  // Creative requirement groups
+  const groups = deriveGroupedRequirements(selectedItems, allInventory);
+  const allFormatsReady = groups.length > 0 && groups.every(g => uploadedFormats.has(g.format));
+
+  const handleFormatUploadClick = (format: CanonicalFormat, venueCount: number) => {
+    const req = storedRequirements?.find(r => r.canonicalFormat === format);
+    if (!req) return;
+    setActiveModal({ format, requirementId: req.id, venueCount });
+  };
+
+  const handleUploadSuccess = useCallback((_asset: CreativeAsset, format: CanonicalFormat) => {
+    setUploadedFormats(prev => new Set([...prev, format]));
+  }, []);
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    await new Promise(r => setTimeout(r, 600)); // simulate save
+    setIsSavingDraft(false);
+    setDraftSaved(true);
+    setTimeout(() => setDraftSaved(false), 3000);
+  };
 
   if (isSubmitted) {
     return (
@@ -74,6 +110,16 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, cam
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#F8FAFC] p-8 custom-scrollbar">
+      {activeModal && storedRequirements && (
+        <CreativeUploadModal
+          spec={FORMAT_SPECS.find(s => s.format === activeModal.format)!}
+          venueCount={activeModal.venueCount}
+          requirementId={activeModal.requirementId}
+          onSuccess={handleUploadSuccess}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
+
       <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         <div className="flex items-center justify-between mb-8">
@@ -84,26 +130,44 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, cam
             </div>
             <p className="text-slate-500">{t('review.subtitle')}</p>
           </div>
-          <button
-            disabled={isSubmitting}
-            onClick={async () => {
-              setIsSubmitting(true);
-              setSubmitError(null);
-              try {
-                if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
-                await confirmBooking(campaignId);
-                setIsSubmitted(true);
-              } catch (err) {
-                setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
-              } finally {
-                setIsSubmitting(false);
-              }
-            }}
-            className="flex items-center px-8 py-3 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-5 h-5 ml-2" /></>}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSaveDraft}
+              disabled={isSavingDraft}
+              className="flex items-center px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              {draftSaved ? <><CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500" />已儲存</> : isSavingDraft ? '儲存中...' : '儲存草稿'}
+            </button>
+            <button
+              disabled={isSubmitting || !allFormatsReady}
+              onClick={async () => {
+                setIsSubmitting(true);
+                setSubmitError(null);
+                try {
+                  if (!campaignId) throw new Error('找不到草稿活動，請重新開始');
+                  await confirmBooking(campaignId);
+                  setIsSubmitted(true);
+                } catch (err) {
+                  setSubmitError(err instanceof Error ? err.message : '送出失敗，請稍後再試');
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="flex items-center px-8 py-2.5 text-base font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-lg hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-4 h-4 ml-2" /></>}
+            </button>
+          </div>
         </div>
+
+        {!allFormatsReady && groups.length > 0 && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800">
+              尚有 <strong>{groups.filter(g => !uploadedFormats.has(g.format)).length}</strong> 種素材格式未上傳，請完成後才能送審。
+            </p>
+          </div>
+        )}
 
         {submitError && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
@@ -186,33 +250,57 @@ export function CampaignReviewStep({ selectedItems, allInventory, creatives, cam
           </div>
         </ReviewSection>
 
-        <ReviewSection title={`${t('review.section.creatives')} (${creatives.length})`} icon={<ImageIcon />}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {creatives.map(creative => {
-              const isVideo = creative.type.includes('video');
-              const sizeMB = (creative.fileSize / (1024 * 1024)).toFixed(1);
-              return (
-                <div key={creative.id} className="border border-slate-200 rounded-lg overflow-hidden bg-white">
-                  <div className="h-32 bg-slate-100 relative">
-                    <img src={creative.previewUrl} alt={creative.name} className="w-full h-full object-cover" />
-                    {isVideo && <div className="absolute inset-0 flex items-center justify-center bg-slate-900/20"><Play className="w-8 h-8 text-white opacity-80" /></div>}
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-slate-900 text-sm truncate mb-1" title={creative.name}>{creative.name}</div>
-                    <div className="flex justify-between items-center text-xs text-slate-500">
-                      <span>{isVideo ? 'MP4' : 'Image'} • {sizeMB} MB</span>
-                      <span className="text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">{t('review.creative.pending')}</span>
+        {/* Creative Requirements Section */}
+        <ReviewSection title={`廣告素材 (${uploadedFormats.size}/${groups.length})`} icon={<ImageIcon />}>
+          {groups.length === 0 ? (
+            <p className="text-sm text-slate-500">無需上傳素材</p>
+          ) : (
+            <div className="space-y-3">
+              {groups.map(group => {
+                const isUploaded = uploadedFormats.has(group.format);
+                const req = storedRequirements?.find(r => r.canonicalFormat === group.format);
+                return (
+                  <div
+                    key={group.format}
+                    className={`flex items-center justify-between p-4 rounded-xl border ${
+                      isUploaded
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isUploaded
+                        ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                        : <div className="w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0" />
+                      }
+                      <div>
+                        <div className={`text-sm font-semibold ${isUploaded ? 'text-emerald-800' : 'text-slate-800'}`}>
+                          {group.label}
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">{group.dimensions.replace(' px', '')} · {group.locationCount} 個版位</div>
+                      </div>
                     </div>
+                    {isUploaded ? (
+                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full">已上傳</span>
+                    ) : (
+                      <button
+                        onClick={() => handleFormatUploadClick(group.format, group.locationCount)}
+                        disabled={!req}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Upload className="w-3.5 h-3.5" /> 上傳素材
+                      </button>
+                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </ReviewSection>
 
         <div className="mt-8 pt-6 border-t border-slate-200">
           <button onClick={onBack} className="flex items-center px-6 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
-            <ArrowLeft className="w-4 h-4 mr-2" /> {t('review.backToUpload')}
+            <ArrowLeft className="w-4 h-4 mr-2" /> 返回選點位
           </button>
         </div>
 
