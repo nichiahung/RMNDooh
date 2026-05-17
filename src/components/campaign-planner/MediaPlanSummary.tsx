@@ -16,6 +16,7 @@ interface Props {
   allInventory: InventoryLocation[];
   onRemove: (id: string) => void;
   onUpdateDays: (id: string, days: number) => void;
+  onUpdateItemFlight: (id: string, start: string | null, end: string | null) => void;
   onContinue?: () => void;
   onAllUploaded?: () => void;
   isOpen: boolean;
@@ -42,6 +43,7 @@ export function MediaPlanSummary({
   allInventory,
   onRemove,
   onUpdateDays,
+  onUpdateItemFlight,
   onContinue,
   onAllUploaded,
   isOpen,
@@ -171,6 +173,22 @@ export function MediaPlanSummary({
     : '繼續 →';
 
   const footerButtonAction = allFormatsUploaded && onAllUploaded ? onAllUploaded : onContinue;
+  const mainFlightIsSet = !!(flightStart && flightEnd);
+
+  function updateSubFlight(inventoryId: string, nextStart: string | null, nextEnd: string | null) {
+    if (!flightStart || !flightEnd) return;
+
+    let start = nextStart;
+    let end = nextEnd;
+
+    if (start && start < flightStart) start = flightStart;
+    if (start && start > flightEnd) start = flightEnd;
+    if (end && end < flightStart) end = flightStart;
+    if (end && end > flightEnd) end = flightEnd;
+    if (start && end && end < start) end = start;
+
+    onUpdateItemFlight(inventoryId, start, end);
+  }
 
   return (
     <>
@@ -214,10 +232,10 @@ export function MediaPlanSummary({
           </div>
         </div>
 
-        {/* Flight date picker */}
+        {/* Main flight date picker */}
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/30">
           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-            <Calendar className="w-3 h-3" /> 走期設定
+            <Calendar className="w-3 h-3" /> 主要走期
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -238,7 +256,7 @@ export function MediaPlanSummary({
           </div>
           {flightStart && flightEnd && (
             <p className="text-[10px] text-indigo-600 font-medium mt-1.5">
-              {flightDays(flightStart, flightEnd)} 天
+              全 Campaign {flightDays(flightStart, flightEnd)} 天，版位可設定子走期
             </p>
           )}
         </div>
@@ -269,7 +287,10 @@ export function MediaPlanSummary({
             </div>
           ) : (
             <div className="space-y-4">
-              {selectedDetails.map(({ inventoryId, days, inventory }) => (
+              {selectedDetails.map(({ inventoryId, days, startDate, endDate, inventory }) => {
+                const itemStart = startDate ?? flightStart ?? '';
+                const itemEnd = endDate ?? flightEnd ?? '';
+                return (
                 <div key={inventoryId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors group relative">
                   <button
                     onClick={() => onRemove(inventoryId)}
@@ -282,36 +303,63 @@ export function MediaPlanSummary({
                     <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1">{inventory?.name}</h4>
                     <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <div className="flex items-center space-x-1 text-slate-500">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {!(flightStart && flightEnd) ? (
-                        <>
+                  <div className="space-y-3 pt-3 border-t border-slate-100">
+                    {mainFlightIsSet ? (
+                      <div>
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                            <Calendar className="w-3 h-3" /> 版位子走期
+                          </span>
+                          <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                            {days} 天
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5">
                           <input
-                            type="number"
-                            min="1"
-                            className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
-                            value={days}
-                            onChange={(e) => {
-                              const d = parseInt(e.target.value) || 1;
-                              onUpdateDays(inventoryId, d);
-                              if (flightStart) {
-                                onFlightDateChange(flightStart, addDays(flightStart, d - 1));
-                              }
-                            }}
+                            type="date"
+                            value={itemStart}
+                            min={flightStart ?? undefined}
+                            max={flightEnd ?? undefined}
+                            onChange={e => updateSubFlight(inventoryId, e.target.value || null, itemEnd || null)}
+                            className="min-w-0 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
                           />
-                          <span className="text-xs">{t('mediaPlan.days')}</span>
-                        </>
-                      ) : (
-                        <span className="text-xs bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-medium">{days} 天</span>
-                      )}
-                    </div>
-                    <div className={`text-sm font-semibold text-slate-900 ${flightStart && flightEnd ? 'ml-auto' : ''}`}>
+                          <span className="text-[10px] text-slate-400">至</span>
+                          <input
+                            type="date"
+                            value={itemEnd}
+                            min={itemStart || flightStart || undefined}
+                            max={flightEnd ?? undefined}
+                            onChange={e => updateSubFlight(inventoryId, itemStart || null, e.target.value || null)}
+                            className="min-w-0 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-1 text-slate-500">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
+                          value={days}
+                          onChange={(e) => {
+                            const d = parseInt(e.target.value) || 1;
+                            onUpdateDays(inventoryId, d);
+                            if (flightStart) {
+                              onFlightDateChange(flightStart, addDays(flightStart, d - 1));
+                            }
+                          }}
+                        />
+                        <span className="text-xs">{t('mediaPlan.days')}</span>
+                      </div>
+                    )}
+                    <div className="text-right text-sm font-semibold text-slate-900">
                       {formatCurrency((inventory?.pricePerDay || 0) * days)}
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
 
               <CreativeRequirementsPanel
                 groups={groups}

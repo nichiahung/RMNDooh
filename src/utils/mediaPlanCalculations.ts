@@ -7,7 +7,9 @@ import { InventoryLocation, MediaPlanItem, CampaignEstimate } from '../types/inv
 export function addToMediaPlan(
   selectedItems: MediaPlanItem[], 
   inventoryLocation: InventoryLocation, 
-  days: number = 7
+  days: number = 7,
+  startDate?: string | null,
+  endDate?: string | null,
 ): MediaPlanItem[] {
   const isDuplicate = selectedItems.some(item => item.inventoryId === inventoryLocation.id);
   
@@ -15,7 +17,15 @@ export function addToMediaPlan(
     return selectedItems; // Return unchanged array if it already exists
   }
   
-  return [...selectedItems, { inventoryId: inventoryLocation.id, days }];
+  return [
+    ...selectedItems,
+    {
+      inventoryId: inventoryLocation.id,
+      days,
+      startDate: startDate ?? undefined,
+      endDate: endDate ?? undefined,
+    },
+  ];
 }
 
 /**

@@ -195,7 +195,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   // Eligibility checklist items
   const checks = [
     {
-      label: '走期設定',
+      label: '主要走期',
       status: (flightStart && flightEnd) ? 'pass' : 'blocked',
       detail: (flightStart && flightEnd) ? `${flightStart} – ${flightEnd}` : '尚未設定走期',
     },
@@ -353,7 +353,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {selectedDetails.map(({ inventoryId, days, inventory }) => (
+                    {selectedDetails.map(({ inventoryId, days, startDate, endDate, inventory }) => (
                       <tr key={inventoryId} className="hover:bg-slate-50">
                         <td className="px-4 py-3">
                           <div className="font-semibold text-slate-900">{inventory.name}</div>
@@ -361,7 +361,12 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                         </td>
                         <td className="px-4 py-3 text-slate-600">{inventory.screenType}</td>
                         <td className="px-4 py-3 text-right font-medium">{formatNumber(inventory.dailyImpressions)}</td>
-                        <td className="px-4 py-3 text-right text-slate-600">{days} {t('review.table.days')}</td>
+                        <td className="px-4 py-3 text-right text-slate-600">
+                          <div>{days} {t('review.table.days')}</div>
+                          {startDate && endDate && (
+                            <div className="text-[11px] text-slate-400 mt-0.5">{startDate} - {endDate}</div>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right font-semibold text-indigo-600">{formatCurrency(inventory.pricePerDay * days)}</td>
                       </tr>
                     ))}

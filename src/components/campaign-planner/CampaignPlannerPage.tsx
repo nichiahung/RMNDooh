@@ -10,7 +10,7 @@ import { InventoryDetailCard } from './InventoryDetailCard';
 import { PerformanceBar } from './PerformanceBar';
 import { CampaignReviewStep } from './CampaignReviewStep';
 
-import { InventoryLocation, MediaPlanItem, FilterState } from '@/types/inventory';
+import { InventoryLocation, MediaPlanItem, FilterState, MediaPlanAddOptions } from '@/types/inventory';
 import {
   createDraftCampaign,
   addInventoryItem,
@@ -20,10 +20,11 @@ import {
   getStoredCreativeRequirements,
   getCampaign,
   updateDraftCampaign,
+  updateInventoryItemDays,
 } from '@/lib/api/campaign-draft';
 import { listMediaAssets, deleteMediaAsset, renameMediaAsset, uploadCreativeAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
-import { flightDays } from '@/utils/dates';
+import { addDays, flightDays } from '@/utils/dates';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
 import { Check, Globe, ImageIcon, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -217,7 +218,7 @@ function CampaignPlannerPageContent() {
 
   const dbItemIdMap = useRef<Map<string, string>>(new Map()); // inventoryId → campaign_inventory_items row id
   const isCreatingDraft = useRef(false);
-  const pendingItemsRef = useRef<InventoryLocation[]>([]);
+  const pendingItemsRef = useRef<Array<{ item: InventoryLocation; options?: MediaPlanAddOptions }>>([]);
 
   // Mobile drawer state for filter and media-plan sidebars (<lg)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -256,16 +257,34 @@ function CampaignPlannerPageContent() {
     setFilters({});
   };
 
-  const handleAdd = async (item: InventoryLocation) => {
+  const getDefaultItemDays = () => {
+    if (flightStart && flightEnd) return flightDays(flightStart, flightEnd);
+    return 7;
+  };
+
+  const resolveAddOptions = (options?: MediaPlanAddOptions) => {
+    const defaultDays = Math.max(1, options?.days ?? getDefaultItemDays());
+    const defaultStart = options?.startDate ?? flightStart;
+    const defaultEnd = options?.endDate ?? (
+      defaultStart ? addDays(defaultStart, defaultDays - 1) : flightEnd
+    );
+    const boundedEnd = defaultEnd && flightEnd && defaultEnd > flightEnd ? flightEnd : defaultEnd;
+    const boundedDays = defaultStart && boundedEnd ? flightDays(defaultStart, boundedEnd) : defaultDays;
+    return { days: boundedDays, startDate: defaultStart, endDate: boundedEnd };
+  };
+
+  const handleAdd = async (item: InventoryLocation, options?: MediaPlanAddOptions) => {
+    const resolved = resolveAddOptions(options);
+
     // Always add to local state immediately
-    setSelectedItems(prev => addToMediaPlan(prev, item, 7)); // Default 7 days
+    setSelectedItems(prev => addToMediaPlan(prev, item, resolved.days, resolved.startDate, resolved.endDate));
 
     let cId = campaignId;
 
     if (!cId) {
       if (isCreatingDraft.current) {
         // Draft creation in progress — queue for DB write after it finishes
-        pendingItemsRef.current.push(item);
+        pendingItemsRef.current.push({ item, options });
         return;
       }
 
@@ -285,11 +304,12 @@ function CampaignPlannerPageContent() {
 
       // Flush all pending items that arrived during draft creation
       for (const pending of pendingItemsRef.current) {
-        const alreadyMapped = dbItemIdMap.current.has(pending.id);
+        const pendingResolved = resolveAddOptions(pending.options);
+        const alreadyMapped = dbItemIdMap.current.has(pending.item.id);
         if (!alreadyMapped) {
           try {
-            const dbRow = await addInventoryItem(cId, pending.id, 7, pending.pricePerDay, pending.dailyImpressions);
-            dbItemIdMap.current.set(pending.id, dbRow.id);
+            const dbRow = await addInventoryItem(cId, pending.item.id, pendingResolved.days, pending.item.pricePerDay, pending.item.dailyImpressions);
+            dbItemIdMap.current.set(pending.item.id, dbRow.id);
           } catch (err) {
             console.error('Failed to persist queued inventory item:', err);
           }
@@ -303,7 +323,7 @@ function CampaignPlannerPageContent() {
     const alreadyMapped = dbItemIdMap.current.has(item.id);
     if (cId && !alreadyInPlan && !alreadyMapped) {
       try {
-        const dbRow = await addInventoryItem(cId, item.id, 7, item.pricePerDay, item.dailyImpressions);
+        const dbRow = await addInventoryItem(cId, item.id, resolved.days, item.pricePerDay, item.dailyImpressions);
         dbItemIdMap.current.set(item.id, dbRow.id);
       } catch (err) {
         console.error('Failed to persist inventory item:', err);
@@ -326,6 +346,32 @@ function CampaignPlannerPageContent() {
     setSelectedItems(prev =>
       prev.map(item => item.inventoryId === inventoryId ? { ...item, days } : item)
     );
+    const dbRowId = dbItemIdMap.current.get(inventoryId);
+    if (dbRowId) {
+      updateInventoryItemDays(dbRowId, days).catch(err => console.error('Failed to update inventory item days:', err));
+    }
+  };
+
+  const handleUpdateItemFlight = (inventoryId: string, start: string | null, end: string | null) => {
+    const currentItem = selectedItems.find(item => item.inventoryId === inventoryId);
+    const nextDays = start && end ? flightDays(start, end) : currentItem?.days ?? 1;
+    setSelectedItems(prev =>
+      prev.map(item => {
+        if (item.inventoryId !== inventoryId) return item;
+        const startDate = start ?? undefined;
+        const endDate = end ?? undefined;
+        return {
+          ...item,
+          startDate,
+          endDate,
+          days: nextDays,
+        };
+      })
+    );
+    const dbRowId = dbItemIdMap.current.get(inventoryId);
+    if (dbRowId) {
+      updateInventoryItemDays(dbRowId, nextDays).catch(err => console.error('Failed to update inventory item days:', err));
+    }
   };
 
   const handleFlightDateChange = async (start: string | null, end: string | null) => {
@@ -333,7 +379,19 @@ function CampaignPlannerPageContent() {
     setFlightEnd(end);
     if (start && end) {
       const days = flightDays(start, end);
-      setSelectedItems(prev => prev.map(item => ({ ...item, days })));
+      const nextItems = selectedItems.map(item => ({
+        ...item,
+        startDate: start,
+        endDate: end,
+        days,
+      }));
+      setSelectedItems(nextItems);
+      nextItems.forEach(item => {
+        const dbRowId = dbItemIdMap.current.get(item.inventoryId);
+        if (dbRowId) {
+          updateInventoryItemDays(dbRowId, days).catch(err => console.error('Failed to update inventory item days:', err));
+        }
+      });
     }
     if (campaignId) {
       try {
@@ -383,7 +441,6 @@ function CampaignPlannerPageContent() {
         inventoryId: row.inventoryLocationId,
         days: row.days,
       }));
-      setSelectedItems(restored);
 
       // Rebuild dbItemIdMap
       dbItemIdMap.current = new Map(items.map(row => [row.inventoryLocationId, row.id]));
@@ -396,6 +453,13 @@ function CampaignPlannerPageContent() {
       const campaign = await getCampaign(resumeId);
       setFlightStart(campaign.startDate ?? null);
       setFlightEnd(campaign.endDate ?? null);
+      setSelectedItems(
+        restored.map(item => ({
+          ...item,
+          startDate: campaign.startDate ?? undefined,
+          endDate: campaign.endDate ?? undefined,
+        }))
+      );
       setCampaignStatus(campaign.status);
 
       // Reset to inventory step
@@ -510,6 +574,9 @@ function CampaignPlannerPageContent() {
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
+                  flightStart={flightStart}
+                  flightEnd={flightEnd}
+                  onFlightDateChange={handleFlightDateChange}
                 />
 
                 <MediaPlanSummary
@@ -517,6 +584,7 @@ function CampaignPlannerPageContent() {
                   allInventory={allInventory}
                   onRemove={handleRemove}
                   onUpdateDays={handleUpdateDays}
+                  onUpdateItemFlight={handleUpdateItemFlight}
                   onContinue={handleContinueToReview}
                   onAllUploaded={handleContinueToReview}
                   isSaving={isSaving}

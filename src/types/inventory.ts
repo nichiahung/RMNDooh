@@ -41,6 +41,14 @@ export interface InventoryLocation {
 export interface MediaPlanItem {
   inventoryId: string;
   days: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface MediaPlanAddOptions {
+  days?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface CampaignEstimate {
@@ -196,7 +204,4 @@ export interface CampaignReport {
   creativeDelivery: CreativeDeliveryData[];
   recentPoPLogs: ProofOfPlayLog[];
 }
-
-
-
 

@@ -61,3 +61,21 @@ body {
   top: 6px;
   right: 8px;
 }
+
+@keyframes ai-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.ai-planner-shimmer {
+  animation: ai-shimmer 1.35s ease-in-out var(--ai-shimmer-delay, 0ms) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-planner-shimmer {
+    animation: none;
+    opacity: 0.35;
+    transform: none;
+  }
+}

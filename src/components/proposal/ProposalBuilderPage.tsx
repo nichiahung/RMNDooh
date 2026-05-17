@@ -332,6 +332,12 @@ function ProposalBuilderPageContent() {
               onAdd={handleAdd}
               activeFilterCount={activeFilterCount}
               onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
+              flightStart={startDate}
+              flightEnd={endDate}
+              onFlightDateChange={(start, end) => {
+                if (start) setStartDate(start);
+                if (end) setEndDate(end);
+              }}
             />
           )}
 

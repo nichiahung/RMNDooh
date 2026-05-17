@@ -155,6 +155,21 @@ export async function removeInventoryItem(itemId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function updateInventoryItemDays(
+  itemId: string,
+  days: number,
+): Promise<CampaignInventoryItemRow> {
+  const { data, error } = await supabase
+    .from('campaign_inventory_items')
+    .update({ days })
+    .eq('id', itemId)
+    .select('*')
+    .single();
+
+  if (error || !data) throw new Error(error?.message ?? 'Failed to update inventory item days');
+  return mapInventoryItemRow(data);
+}
+
 export async function getInventoryItems(campaignId: string): Promise<CampaignInventoryItemRow[]> {
   const { data, error } = await supabase
     .from('campaign_inventory_items')

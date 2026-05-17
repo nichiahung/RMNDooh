@@ -5,20 +5,32 @@ import { InventoryLocation, FilterState, VenueType, ScreenType, AudienceTag } fr
  * If a filter array is empty or undefined, it is ignored.
  */
 export function filterInventory(inventory: InventoryLocation[], filters: FilterState): InventoryLocation[] {
+  const selectedCities = filters.cities && filters.cities.length > 0
+    ? filters.cities
+    : filters.city
+      ? [filters.city]
+      : [];
+  const selectedDistricts = filters.districts ?? [];
+  const districtsByCity = new Map<string, Set<string>>();
+
+  if (selectedDistricts.length > 0) {
+    inventory.forEach(item => {
+      if (!selectedDistricts.includes(item.district)) return;
+      const districts = districtsByCity.get(item.city) ?? new Set<string>();
+      districts.add(item.district);
+      districtsByCity.set(item.city, districts);
+    });
+  }
+
   return inventory.filter((item) => {
     // 1. Filter by city
-    const selectedCities = filters.cities && filters.cities.length > 0
-      ? filters.cities
-      : filters.city
-        ? [filters.city]
-        : [];
-    if (selectedCities.length > 0 && !selectedCities.includes(item.city)) {
-      return false;
-    }
+    if (selectedCities.length > 0) {
+      if (!selectedCities.includes(item.city)) return false;
 
-    // 2. Filter by district
-    if (filters.districts && filters.districts.length > 0) {
-      if (!filters.districts.includes(item.district)) return false;
+      const partialDistricts = districtsByCity.get(item.city);
+      if (partialDistricts && !partialDistricts.has(item.district)) return false;
+    } else if (selectedDistricts.length > 0) {
+      if (!selectedDistricts.includes(item.district)) return false;
     }
 
     // 3. Filter by venueType

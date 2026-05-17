@@ -1,6 +1,6 @@
 'use client';
 
-import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
+import { InventoryLocation, MediaPlanAddOptions, MediaPlanItem } from '@/types/inventory';
 import { ListView } from './ListView';
 import { MapWrapper } from './MapWrapper';
 import { PlannerTopbar } from './PlannerTopbar';
@@ -18,10 +18,13 @@ interface Props {
   onViewChange: (view: ViewMode) => void;
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
-  onAdd: (item: InventoryLocation) => void;
+  onAdd: (item: InventoryLocation, options?: MediaPlanAddOptions) => void;
   objective?: string;
   activeFilterCount?: number;
   onOpenFilters?: () => void;
+  flightStart: string | null;
+  flightEnd: string | null;
+  onFlightDateChange: (start: string | null, end: string | null) => void;
 }
 
 export function InventoryDiscovery({
@@ -37,6 +40,9 @@ export function InventoryDiscovery({
   objective,
   activeFilterCount,
   onOpenFilters,
+  flightStart,
+  flightEnd,
+  onFlightDateChange,
 }: Props) {
   const { t } = useI18n();
   const showFloatingFilterButton = currentView !== 'ai' && Boolean(onOpenFilters);
@@ -89,6 +95,9 @@ export function InventoryDiscovery({
             allInventory={allInventory}
             selectedItems={selectedItems}
             onAdd={onAdd}
+            flightStart={flightStart}
+            flightEnd={flightEnd}
+            onFlightDateChange={onFlightDateChange}
           />
         )}
       </div>

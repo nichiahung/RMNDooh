@@ -10,6 +10,7 @@ import {
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const USE_GOOGLE_AI_API = false;
 
 export async function generateAiMediaPlans(
   input: AiPlannerInput,
@@ -23,6 +24,8 @@ export async function generateAiMediaPlans(
       options: [],
     };
   }
+
+  if (!USE_GOOGLE_AI_API) return buildFallbackMediaPlans(input, candidates);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
   if (!apiKey) return buildFallbackMediaPlans(input, candidates);

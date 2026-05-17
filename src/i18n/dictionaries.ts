@@ -22,7 +22,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     // Filter Sidebar
     'filter.title': 'Filters',
     'filter.objective': 'Campaign Objective',
+    'filter.location': 'Location',
     'filter.city': 'City',
+    'filter.selectCityFirst': 'Select city first',
     'filter.city.Taipei': 'Taipei',
     'filter.city.NewTaipei': 'New Taipei',
     'filter.district': 'District',
@@ -460,7 +462,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     // Filter Sidebar
     'filter.title': '篩選條件',
     'filter.objective': '廣告活動目標',
+    'filter.location': '投放地區',
     'filter.city': '城市',
+    'filter.selectCityFirst': '先選擇城市',
     'filter.city.Taipei': '台北市',
     'filter.city.NewTaipei': '新北市',
     'filter.district': '行政區',
