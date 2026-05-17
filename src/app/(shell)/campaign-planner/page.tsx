@@ -1,3 +1,3 @@
 'use client';
-import { CampaignPlannerPage } from '@/components/campaign-planner/CampaignPlannerPage';
-export default function Page() { return <CampaignPlannerPage />; }
+import { CampaignListPage } from '@/components/campaign-planner/CampaignListPage';
+export default function Page() { return <CampaignListPage />; }

@@ -33,8 +33,8 @@ export const NAV_CONFIG: Record<Role, NavSection[]> = {
     {
       label: '廣告活動',
       items: [
-        { id: 'campaign-planner', label: '活動規劃', icon: Megaphone, href: '/campaign-planner' },
-        { id: 'proposals', label: '我的提案', icon: FileText, href: '/proposal-review' },
+        { id: 'campaign-planner', label: '活動管理', icon: Megaphone, href: '/campaign-planner' },
+        { id: 'proposals', label: '提案確認', icon: FileText, href: '/proposal-review' },
       ],
     },
     {
@@ -60,8 +60,8 @@ export const NAV_CONFIG: Record<Role, NavSection[]> = {
     {
       label: '提案管理',
       items: [
-        { id: 'proposals-pending', label: '待處理提案', icon: FileText, href: '/proposal-review', badge: 'proposals_pending' },
-        { id: 'proposals-all', label: '所有提案', icon: ClipboardList, href: '/proposal-builder' },
+        { id: 'proposals-pending', label: '提案跟進', icon: FileText, href: '/proposal-review', badge: 'proposals_pending' },
+        { id: 'proposals-all', label: '新增提案', icon: ClipboardList, href: '/proposal-builder' },
       ],
     },
     {

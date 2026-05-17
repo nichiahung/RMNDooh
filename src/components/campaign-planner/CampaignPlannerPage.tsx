@@ -31,6 +31,30 @@ import { usePlannerStore } from '@/store/usePlannerStore';
 
 // --- Types ---
 type MediaAsset = Awaited<ReturnType<typeof listMediaAssets>>[number];
+type PlannerStep = 'inventory' | 'review';
+
+function StepProgress({ step, onBackToInventory }: { step: PlannerStep; onBackToInventory: () => void }) {
+  return (
+    <div className="flex items-center space-x-2 text-sm">
+      <div
+        className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
+        onClick={() => step === 'review' ? onBackToInventory() : undefined}
+      >
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'inventory' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+          {step === 'review' ? <Check className="w-3 h-3" /> : '1'}
+        </div>
+        選擇版位
+      </div>
+      <div className="w-6 h-px bg-slate-300"></div>
+      <div className={`flex items-center ${step === 'review' ? 'text-indigo-600 font-bold' : 'text-slate-400 font-medium'}`}>
+        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+          2
+        </div>
+        確認送審
+      </div>
+    </div>
+  );
+}
 
 // --- LibraryTabContent ---
 function LibraryTabContent() {
@@ -293,7 +317,7 @@ function CampaignPlannerPageContent() {
   const [activeTab, setActiveTab] = useState<'planner' | 'library'>('planner');
 
   // --- Step Flow State ---
-  const [step, setStep] = useState<'inventory' | 'review'>('inventory');
+  const [step, setStep] = useState<PlannerStep>('inventory');
 
   // --- Campaign Draft State ---
   const [campaignId, setCampaignId] = useState<string | null>(null);
@@ -375,7 +399,7 @@ function CampaignPlannerPageContent() {
         cId = draft.id;
         setCampaignId(draft.id);
         // Update the URL to reflect the new draft
-        router.replace(`/campaign-planner?id=${draft.id}`, { scroll: false });
+        router.replace(`/campaign-planner/new?id=${draft.id}`, { scroll: false });
       } catch (err) {
         console.error('Failed to create campaign draft:', err);
         isCreatingDraft.current = false;
@@ -514,28 +538,6 @@ function CampaignPlannerPageContent() {
 
   const { t, toggleLocale } = useI18n();
 
-  // Render Step Progress
-  const StepProgress = () => (
-    <div className="flex items-center space-x-2 text-sm">
-      <div
-        className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
-        onClick={() => step === 'review' ? setStep('inventory') : undefined}
-      >
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'inventory' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-          {step === 'review' ? <Check className="w-3 h-3" /> : '1'}
-        </div>
-        選擇版位
-      </div>
-      <div className="w-6 h-px bg-slate-300"></div>
-      <div className={`flex items-center ${step === 'review' ? 'text-indigo-600 font-bold' : 'text-slate-400 font-medium'}`}>
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-          2
-        </div>
-        確認送審
-      </div>
-    </div>
-  );
-
   return (
     <main className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
 
@@ -595,7 +597,7 @@ function CampaignPlannerPageContent() {
       {/* Step progress sub-bar — only in Planner tab */}
       {activeTab === 'planner' && (
         <div className="h-10 bg-white border-b border-slate-100 flex items-center px-6 flex-shrink-0">
-          <StepProgress />
+          <StepProgress step={step} onBackToInventory={() => setStep('inventory')} />
         </div>
       )}
 

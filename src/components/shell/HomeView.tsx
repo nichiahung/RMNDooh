@@ -79,7 +79,7 @@ function AdvertiserHome() {
               </div>
             </div>
             <Link
-              href={`/campaign-planner?id=${heroCampaign.id}`}
+              href={`/campaign-planner/new?id=${heroCampaign.id}`}
               className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
             >
               繼續編輯 <ChevronRight className="w-4 h-4" />
@@ -91,7 +91,7 @@ function AdvertiserHome() {
             <h2 className="text-lg font-bold text-slate-800 mb-1">開始你的第一個廣告活動</h2>
             <p className="text-slate-500 text-sm mb-4">選擇版位、設定時段、上傳素材</p>
             <Link
-              href="/campaign-planner"
+              href="/campaign-planner/new"
               className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
             >
               <Plus className="w-4 h-4" /> 新增活動
@@ -105,10 +105,10 @@ function AdvertiserHome() {
         <h3 className="text-sm font-semibold text-slate-500 mb-3">快速操作</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { href: '/campaign-planner', icon: Megaphone, label: '規劃活動',   color: 'text-indigo-600 bg-indigo-50' },
+            { href: '/campaign-planner', icon: Megaphone, label: '活動管理',   color: 'text-indigo-600 bg-indigo-50' },
             { href: '/assets',           icon: ImageIcon,  label: '上傳素材',   color: 'text-purple-600 bg-purple-50' },
             { href: '/reports',          icon: BarChart2,  label: '查看報告',   color: 'text-green-600 bg-green-50' },
-            { href: '/campaign-planner?view=ai', icon: Sparkles, label: 'AI 規劃', color: 'text-amber-600 bg-amber-50' },
+            { href: '/campaign-planner/new?view=ai', icon: Sparkles, label: 'AI 規劃', color: 'text-amber-600 bg-amber-50' },
           ].map(action => (
             <Link
               key={action.href}
@@ -153,7 +153,7 @@ function AdvertiserHome() {
               return (
                 <Link
                   key={c.id}
-                  href={`/campaign-planner?id=${c.id}`}
+                  href={`/campaign-planner/new?id=${c.id}`}
                   className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3 hover:border-slate-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3">

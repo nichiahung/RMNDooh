@@ -7,10 +7,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
 import { NAV_CONFIG, type NavItem } from './navConfig';
-import { listCampaignSummaries } from '@/lib/api/campaign-draft';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
-
-type CampaignSummary = Awaited<ReturnType<typeof listCampaignSummaries>>[number];
 
 export function AppSidebar() {
   const { currentUser, logout } = useAuth();
@@ -18,18 +15,12 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebarCollapse();
 
-  const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [pendingProposalCount, setPendingProposalCount] = useState(0);
 
   const role = currentUser?.role ?? 'advertiser';
   const sections = NAV_CONFIG[role] ?? [];
 
   useEffect(() => {
-    if (role === 'advertiser') {
-      listCampaignSummaries()
-        .then(all => setCampaigns(all.slice(0, 5)))
-        .catch(() => setCampaigns([]));
-    }
     if (role === 'sales') {
       listAdminProposalsApi()
         .then(({ countsByStatus }) => {
@@ -90,52 +81,34 @@ export function AppSidebar() {
                 const active = isActive(item.href);
                 const badgeCount = resolveBadge(item.badge);
                 return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className={`group relative flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-indigo-500/20 text-indigo-300'
-                        : 'text-slate-400 hover:bg-white/[0.07] hover:text-slate-200'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    {!collapsed && (
-                      <span className="flex-1 whitespace-nowrap">{item.label}</span>
-                    )}
-                    {!collapsed && badgeCount > 0 && (
-                      <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                        {badgeCount}
-                      </span>
-                    )}
-                    {collapsed && (
-                      <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-900 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
-                        {item.label}{badgeCount > 0 ? ` (${badgeCount})` : ''}
-                      </span>
-                    )}
-                  </Link>
+                  <div key={item.id}>
+                    <Link
+                      href={item.href}
+                      className={`group relative flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        active
+                          ? 'bg-indigo-500/20 text-indigo-300'
+                          : 'text-slate-400 hover:bg-white/[0.07] hover:text-slate-200'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      {!collapsed && (
+                        <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                      )}
+                      {!collapsed && badgeCount > 0 && (
+                        <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                          {badgeCount}
+                        </span>
+                      )}
+                      {collapsed && (
+                        <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-900 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+                          {item.label}{badgeCount > 0 ? ` (${badgeCount})` : ''}
+                        </span>
+                      )}
+                    </Link>
+                  </div>
                 );
               })}
             </div>
-
-            {/* Campaign sub-items under 活動規劃 (advertiser only, expanded only) */}
-            {!collapsed &&
-              role === 'advertiser' &&
-              section.items.some(i => i.id === 'campaign-planner') &&
-              campaigns.length > 0 && (
-                <div className="mt-1 ml-3 space-y-0.5">
-                  {campaigns.map(c => (
-                    <Link
-                      key={c.id}
-                      href={`/campaign-planner?id=${c.id}`}
-                      className="flex items-center gap-2 px-2 py-1 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-white/[0.05] transition-colors"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-600 flex-shrink-0" />
-                      <span className="truncate max-w-[140px]">{c.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
           </div>
         ))}
       </nav>

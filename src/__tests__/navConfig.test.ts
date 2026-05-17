@@ -1,9 +1,11 @@
 import { NAV_CONFIG } from '@/components/shell/navConfig';
 
 describe('NAV_CONFIG', () => {
-  it('advertiser has 首頁, 活動規劃, 我的提案, 素材庫, 成效報告', () => {
+  it('advertiser has 首頁, 活動管理, 提案確認, 素材庫, 成效報告', () => {
     const items = NAV_CONFIG.advertiser.flatMap(s => s.items);
+    const labels = items.map(i => i.label);
     const hrefs = items.map(i => i.href);
+    expect(labels).toEqual(['首頁', '活動管理', '提案確認', '素材庫', '成效報告']);
     expect(hrefs).toContain('/');
     expect(hrefs).toContain('/campaign-planner');
     expect(hrefs).toContain('/proposal-review');
@@ -17,16 +19,18 @@ describe('NAV_CONFIG', () => {
     expect(ids).not.toContain('proposals-pending');
   });
 
-  it('sales has 首頁, 待處理提案, 所有提案, 業績報告', () => {
+  it('sales has 首頁, 提案跟進, 新增提案, 業績報告', () => {
     const items = NAV_CONFIG.sales.flatMap(s => s.items);
+    const labels = items.map(i => i.label);
     const hrefs = items.map(i => i.href);
+    expect(labels).toEqual(['首頁', '提案跟進', '新增提案', '業績報告']);
     expect(hrefs).toContain('/');
     expect(hrefs).toContain('/proposal-review');
     expect(hrefs).toContain('/proposal-builder');
     expect(hrefs).toContain('/reports');
   });
 
-  it('sales 待處理提案 has proposals_pending badge', () => {
+  it('sales 提案跟進 has proposals_pending badge', () => {
     const items = NAV_CONFIG.sales.flatMap(s => s.items);
     const pending = items.find(i => i.id === 'proposals-pending');
     expect(pending?.badge).toBe('proposals_pending');
