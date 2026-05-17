@@ -17,8 +17,11 @@ import {
   CheckCircle,
   Shield,
   Rocket,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
 
 export type AdminTab =
   | 'overview'
@@ -43,6 +46,7 @@ interface Props {
 
 export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props) {
   const { t } = useI18n();
+  const { collapsed, toggle } = useSidebarCollapse();
 
   const navSections = [
     {
@@ -94,7 +98,9 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
         />
       )}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col h-full flex-shrink-0 z-40 transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+        className={`fixed lg:static inset-y-0 left-0 bg-slate-900 text-slate-300 flex flex-col h-full flex-shrink-0 z-40 transform transition-transform transition-[width] duration-200 ease-in-out lg:transform-none overflow-hidden w-64 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${collapsed ? 'lg:w-[60px]' : 'lg:w-[220px]'}`}
       >
 
       {/* Brand */}
@@ -118,7 +124,7 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4 custom-scrollbar">
         {navSections.map((section) => (
           <div key={section.label}>
-            <div className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            <div className={`px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500 ${collapsed ? 'lg:hidden' : ''}`}>
               {section.label}
             </div>
             <div className="space-y-0.5">
@@ -129,14 +135,19 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
                   <button
                     key={item.id}
                     onClick={() => handleTabChange(item.id as AdminTab)}
-                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    className={`relative group w-full flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                       isActive
                         ? 'bg-indigo-500/10 text-indigo-400'
                         : 'hover:bg-slate-800 hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 mr-3 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
-                    {item.label}
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'lg:mr-0' : 'mr-3'} ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+                    <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
+                    {collapsed && (
+                      <span className="absolute left-[52px] z-50 hidden group-hover:lg:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+                        {item.label}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -147,6 +158,21 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
 
       {/* Bottom Settings */}
       <div className="p-4 border-t border-slate-800 space-y-1">
+        <button
+          onClick={toggle}
+          className="group relative w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          aria-label={collapsed ? '展開側欄' : '收合側欄'}
+        >
+          {collapsed
+            ? <ChevronRight className="w-4 h-4 flex-shrink-0" />
+            : <><ChevronLeft className="w-4 h-4 flex-shrink-0 mr-3" /><span>收合側欄</span></>
+          }
+          {collapsed && (
+            <span className="absolute left-[52px] z-50 hidden group-hover:lg:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+              展開側欄
+            </span>
+          )}
+        </button>
         <button className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
           <Settings className="w-4 h-4 mr-3" /> {t('admin.nav.settings')}
         </button>
