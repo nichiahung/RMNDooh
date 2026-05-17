@@ -212,11 +212,16 @@ function normalizeOption(raw: unknown, candidates: AiPlannerCandidate[], input: 
   const option = raw as Partial<AiMediaPlanOption>;
   if (!option || !isPlanId(option.id)) return null;
   const candidateMap = new Map(candidates.map(candidate => [candidate.id, candidate]));
-  const items = Array.isArray(option.items)
-    ? option.items
-        .map(item => normalizeItem(item, candidateMap, input))
-        .filter((item): item is AiMediaPlanItem => Boolean(item))
-    : [];
+  const items: AiMediaPlanItem[] = [];
+  let remainingBudget = input.budget;
+  if (Array.isArray(option.items)) {
+    for (const item of option.items) {
+      const normalized = normalizeItem(item, candidateMap, input, remainingBudget);
+      if (!normalized) continue;
+      items.push(normalized);
+      remainingBudget -= normalized.budget;
+    }
+  }
   return finalizeOption({
     id: option.id,
     title: typeof option.title === 'string' && option.title.trim() ? option.title : PLAN_LABELS[option.id],
@@ -226,12 +231,20 @@ function normalizeOption(raw: unknown, candidates: AiPlannerCandidate[], input: 
   }, candidates);
 }
 
-function normalizeItem(raw: unknown, candidateMap: Map<string, AiPlannerCandidate>, input: AiPlannerInput): AiMediaPlanItem | null {
+function normalizeItem(
+  raw: unknown,
+  candidateMap: Map<string, AiPlannerCandidate>,
+  input: AiPlannerInput,
+  remainingBudget: number,
+): AiMediaPlanItem | null {
   const item = raw as Partial<AiMediaPlanItem>;
   if (!item || typeof item.inventoryId !== 'string') return null;
   const candidate = candidateMap.get(item.inventoryId);
   if (!candidate) return null;
-  const days = Math.max(1, Math.min(input.days, Math.floor(Number(item.days) || input.days)));
+  const affordableDays = Math.floor(remainingBudget / candidate.pricePerDay);
+  if (affordableDays < 1) return null;
+  const requestedDays = Math.floor(Number(item.days) || input.days);
+  const days = Math.max(1, Math.min(input.days, requestedDays, affordableDays));
   return {
     inventoryId: candidate.id,
     days,

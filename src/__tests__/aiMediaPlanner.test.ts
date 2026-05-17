@@ -46,7 +46,8 @@ describe('prepareAiPlannerCandidates', () => {
 
 describe('parseAiMediaPlanResponse', () => {
   it('accepts valid JSON, drops unknown inventory IDs, and recomputes totals locally', () => {
-    const candidates = prepareAiPlannerCandidates(baseInput, mockInventory, 6);
+    const generousInput = { ...baseInput, budget: 999999 };
+    const candidates = prepareAiPlannerCandidates(generousInput, mockInventory, 6);
     const first = candidates[0];
     const raw = JSON.stringify({
       options: [
@@ -69,7 +70,7 @@ describe('parseAiMediaPlanResponse', () => {
       ],
     });
 
-    const parsed = parseAiMediaPlanResponse(raw, candidates, baseInput);
+    const parsed = parseAiMediaPlanResponse(raw, candidates, generousInput);
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) throw new Error(parsed.error);
     expect(parsed.value.options).toHaveLength(3);
@@ -82,6 +83,36 @@ describe('parseAiMediaPlanResponse', () => {
   it('rejects malformed JSON', () => {
     const candidates = prepareAiPlannerCandidates(baseInput, mockInventory, 6);
     expect(parseAiMediaPlanResponse('not-json', candidates, baseInput).ok).toBe(false);
+  });
+
+  it('reduces or drops AI item days so parsed option stays within budget', () => {
+    const constrainedInput = { ...baseInput, budget: 50000, days: 14 };
+    const candidates = prepareAiPlannerCandidates(constrainedInput, mockInventory, 6);
+    const first = candidates[0];
+    const raw = JSON.stringify({
+      options: [
+        {
+          id: 'exposure',
+          title: '曝光最大化',
+          summary: '集中高曝光版位。',
+          items: [{ inventoryId: first.id, days: 14, budget: 999999, estimatedImpressions: 1, reason: '高人流' }],
+          totalBudget: 999999,
+          estimatedImpressions: 1,
+          averageCpm: 1,
+          creativeFormats: [],
+          caveats: [],
+        },
+        { id: 'efficiency', title: '預算效率', summary: '降低 CPM。', items: [{ inventoryId: first.id, days: 14, budget: 999999, estimatedImpressions: 1, reason: '低 CPM' }], totalBudget: 999999, estimatedImpressions: 1, averageCpm: 1, creativeFormats: [], caveats: [] },
+        { id: 'balanced', title: '平衡方案', summary: '兼顧曝光與成本。', items: [{ inventoryId: first.id, days: 14, budget: 999999, estimatedImpressions: 1, reason: '平衡' }], totalBudget: 999999, estimatedImpressions: 1, averageCpm: 1, creativeFormats: [], caveats: [] },
+      ],
+    });
+
+    const parsed = parseAiMediaPlanResponse(raw, candidates, constrainedInput);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) throw new Error(parsed.error);
+    parsed.value.options.forEach(option => {
+      expect(option.totalBudget).toBeLessThanOrEqual(constrainedInput.budget);
+    });
   });
 });
 
