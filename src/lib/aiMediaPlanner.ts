@@ -139,7 +139,7 @@ export function parseAiMediaPlanResponse(
     if (!parsed || !Array.isArray(parsed.options) || parsed.options.length !== 3) {
       return { ok: false, error: 'AI response must contain exactly three options.' };
     }
-    const options = parsed.options
+    const options: AiMediaPlanOption[] = parsed.options
       .map((option: unknown) => normalizeOption(option, candidates, input))
       .filter((option: AiMediaPlanOption | null): option is AiMediaPlanOption => option !== null);
     const ids = options.map(option => option.id);
