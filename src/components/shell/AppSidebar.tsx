@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
+import { imgSrc } from '@/utils/imgSrc';
 import { NAV_CONFIG, type NavItem } from './navConfig';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
 import { listMediaAssets } from '@/lib/api/creatives';
@@ -87,7 +88,7 @@ export function AppSidebar() {
           collapsed ? 'w-6' : 'w-[116px]'
         }`}>
           <Image
-            src="/drmn-logo-sidebar.png"
+            src={imgSrc('/drmn-logo-sidebar.png')}
             alt="DRMN"
             width={120}
             height={40}
