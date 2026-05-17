@@ -34,6 +34,21 @@ Used by:
 - admin dashboard fetch/update helpers
 - campaign draft helper functions
 
+## AI Environment Variables
+
+Required when replacing the mock AI planning helper with a Google AI-backed flow:
+
+```bash
+NEXT_PUBLIC_GOOGLE_AI_API_KEY=...
+```
+
+Used by:
+
+- AI planning/recommendation features that run from the browser bundle.
+- GitHub Pages builds via repository secret `NEXT_PUBLIC_GOOGLE_AI_API_KEY`.
+
+Because this app is statically exported, any `NEXT_PUBLIC_*` value is bundled into the frontend at build time. Treat this as a browser API key: restrict it in Google Cloud to the expected APIs and allowed HTTP referrers.
+
 ## Behavior Without Supabase Env
 
 If env vars are missing:
@@ -84,5 +99,6 @@ Local dev routes do not include `/RMNDooh`.
 - Do not commit `.env.local`.
 - Do not paste real Supabase keys into docs.
 - Use `NEXT_PUBLIC_*` only for client-safe anon values.
+- Do not paste real Google AI keys into docs or committed env examples.
 - Do not introduce service-role keys into the browser app.
 - If backend/admin privileged actions are required, document the need for a server-side boundary instead of putting secrets in Next client code.
