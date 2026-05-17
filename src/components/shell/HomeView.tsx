@@ -41,6 +41,13 @@ function AdvertiserHome() {
 
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
 
+  function campaignDisplayName(c: CampaignSummary, seq: number): string {
+    if (c.name?.trim()) return c.name.trim();
+    const d = new Date(c.createdAt);
+    const yyyymmdd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    return `Campaign_${yyyymmdd}_${String(seq).padStart(3, '0')}`;
+  }
+
   const heroCampaign = campaigns[0] ?? null;
   const otherCampaigns = campaigns.slice(1);
   const CAMPAIGN_LIMIT = 4;
@@ -74,7 +81,7 @@ function AdvertiserHome() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-slate-300">#1</span>
                 <h2 className="text-lg font-bold text-slate-900">
-                  {heroCampaign.name?.trim() || '未命名活動'}
+                  {campaignDisplayName(heroCampaign, 1)}
                 </h2>
               </div>
               <div className="flex items-center gap-3 mt-2">
@@ -173,7 +180,7 @@ function AdvertiserHome() {
                     <span className="text-xs font-mono text-slate-300 w-6 text-right flex-shrink-0">#{seq}</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
                     <span className="text-sm font-medium text-slate-800">
-                      {c.name?.trim() || `未命名活動`}
+                      {campaignDisplayName(c, seq)}
                     </span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
