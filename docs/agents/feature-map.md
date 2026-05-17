@@ -4,13 +4,29 @@ This map connects user-facing routes to implementation and data sources.
 
 ## Route Map
 
+All non-admin, non-login routes are wrapped in the `(shell)` route group (`src/app/(shell)/`), which applies `AuthGuard + AppShell` (persistent collapsible sidebar) via `src/app/(shell)/layout.tsx`.
+
 | Route | Entry point | Main responsibility |
 | --- | --- | --- |
-| `/` | `src/app/page.tsx` | Redirects to `/campaign-planner`, with GitHub Pages SPA redirect recovery. |
-| `/campaign-planner` | `src/app/campaign-planner/page.tsx` | Advertiser planning, inventory discovery, media plan, required-format upload, review, and submit/booking confirmation. |
-| `/admin` | `src/app/admin/page.tsx` | Internal dashboard for campaigns, creative review, inventory, screens. |
-| `/reports` | `src/app/reports/page.tsx` | Advertiser delivery report dashboard using mock report data. |
-| `/player/[screenId]` | `src/app/player/[screenId]/page.tsx` | Static-export screen player simulator using known mock screen IDs. |
+| `/` | `src/app/(shell)/page.tsx` | Role-aware HomeView: AdvertiserHome or SalesHome. Admin role redirects to `/admin`. |
+| `/campaign-planner` | `src/app/(shell)/campaign-planner/page.tsx` | Advertiser planning, inventory discovery, media plan, creative upload, review, and submit. |
+| `/assets` | `src/app/(shell)/assets/page.tsx` | Creative asset library listing from Supabase `media_assets`. |
+| `/reports` | `src/app/(shell)/reports/page.tsx` | Advertiser delivery report dashboard (mock data). |
+| `/proposal-builder` | `src/app/(shell)/proposal-builder/page.tsx` | Sales proposal creation flow. |
+| `/proposal-review` | `src/app/(shell)/proposal-review/page.tsx` | Proposal review for advertiser and sales. |
+| `/admin` | `src/app/admin/page.tsx` | Internal dashboard for campaigns, creative review, inventory, screens. Uses `AdminSidebar` (no AppShell). |
+| `/login` | `src/app/login/page.tsx` | Auth page. On success redirects admin → `/admin`, others → `/`. |
+| `/player/[screenId]` | `src/app/player/[screenId]/page.tsx` | Static-export screen player simulator. |
+
+## App Shell
+
+| Component | File | Purpose |
+| --- | --- | --- |
+| `AppShell` | `src/components/shell/AppShell.tsx` | Layout wrapper: `h-screen flex overflow-hidden`, sidebar + scrollable content |
+| `AppSidebar` | `src/components/shell/AppSidebar.tsx` | Collapsible sidebar 220px ↔ 60px icon rail, role-filtered nav, badge counts, campaign sub-items |
+| `navConfig` | `src/components/shell/navConfig.ts` | Static `NAV_CONFIG: Record<Role, NavSection[]>`, `admin` maps to `[]` |
+| `HomeView` | `src/components/shell/HomeView.tsx` | Role-specific home: `AdvertiserHome` (campaign hero, metrics, AI insights) / `SalesHome` (pipeline, follow-up queue) |
+| `useSidebarCollapse` | `src/hooks/useSidebarCollapse.ts` | localStorage-backed collapse state, key `sidebar_collapsed` |
 
 ## Campaign Planner
 
@@ -36,7 +52,7 @@ Business behavior:
 - Search matches name, district, or address.
 - Filters are exact client-side comparisons.
 - Selected inventory cannot be duplicated.
-- Selecting the first InventoryLocation creates a draft Campaign when Supabase is available.
+- Selecting the first InventoryLocation creates a draft Campaign when Supabase is available. The campaign is auto-named `Campaign_YYYYMMDD_NNN` (date + sequential count); the user can rename it in the Review step.
 - Selected items default to 7 days and are persisted as campaign inventory items in the draft flow.
 - Budget is `pricePerDay * days` per InventoryLocation.
 - Estimated impressions are `dailyImpressions * days` per InventoryLocation.

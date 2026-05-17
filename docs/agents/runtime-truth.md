@@ -6,12 +6,15 @@ This file describes what the app actually does today. Treat it as higher priorit
 
 | Surface | Route | Current data source | Notes |
 | --- | --- | --- | --- |
-| Campaign Planner | `/campaign-planner` | Supabase inventory via `fetchInventoryLocations()` | The planner fetches real inventory rows when env vars and tables exist. |
-| Media Plan | `/campaign-planner` | Client state + Supabase draft helpers | Selected items live in React state and are persisted as draft inventory items when a draft Campaign exists. |
-| Creative Upload | `/campaign-planner` | Supabase Storage + `media_assets` + requirement link | `CreativeUploadModal` validates against format specs, uploads the file, then links it to a campaign creative requirement. |
-| Campaign Submit / Booking | `/campaign-planner` | Supabase campaign draft helpers | `submitCampaignForConfirmation(campaignId)` marks the campaign as `pending_confirmation`; formal booking rows are created only by Admin confirmation. |
-| Campaign Draft API Helpers | `/campaign-planner` draft flow | Supabase | `src/lib/api/campaign-draft.ts` is now wired into planner add/remove/requirements/confirm paths in the current worktree. |
-| Admin Dashboard | `/admin` | Supabase campaigns, inventory, screens | Falls back to empty lists on fetch errors in some helpers. |
+| Home (Advertiser) | `/` | `listCampaignSummaries()` + `mockReportData` | AdvertiserHome: hero campaign card, 5 perf metrics, pending actions. |
+| Home (Sales) | `/` | `listAdminProposalsApi()` | SalesHome: proposal pipeline counts, follow-up queue. |
+| Campaign Planner | `/campaign-planner` | Supabase inventory via `fetchInventoryLocations()` | Fetches real inventory rows when env vars and tables exist. |
+| Media Plan | `/campaign-planner` | Client state + Supabase draft helpers | Selected items in React state, persisted as draft inventory items when a draft Campaign exists. |
+| Creative Upload | `/campaign-planner` | Supabase Storage + `media_assets` + requirement link | `CreativeUploadModal` validates format specs, uploads file, links to campaign creative requirement. |
+| Campaign Submit / Booking | `/campaign-planner` | Supabase campaign draft helpers | `submitCampaignForConfirmation(campaignId)` marks `pending_confirmation`; booking rows created only by Admin. |
+| Campaign Draft API Helpers | `/campaign-planner` draft flow | Supabase | `src/lib/api/campaign-draft.ts`. New campaigns auto-named `Campaign_YYYYMMDD_NNN` on create. |
+| Creative Library | `/assets` | Supabase `media_assets` via `listMediaAssets()` | Lists all uploaded assets for the current advertiser. |
+| Admin Dashboard | `/admin` | Supabase campaigns, inventory, screens | Uses `AdminSidebar` with collapse toggle. Falls back to empty lists on fetch errors. |
 | Reports | `/reports` | `src/data/mockReportData.ts` | No live Supabase reporting integration yet. |
 | Web Player | `/player/[screenId]` | `src/data/mockScreens.ts`, `src/data/mockPlaylists.ts` | Simulates heartbeat, playback loop, and POP logs locally. |
 | i18n | global layout/provider | `src/i18n` dictionaries | Lightweight custom provider, no heavy i18n framework. |
@@ -65,7 +68,7 @@ The active route imports `src/components/campaign-planner/CampaignPlannerPage.ts
 | Feature | Current behavior |
 | --- | --- |
 | Save Draft button in planner header | UI only in the main planner header. Review step has a simulated save-draft confirmation. |
-| Settings / Sign Out in admin sidebar | UI placeholders. |
+| Settings in admin sidebar | UI placeholder, no action. |
 | Reports location filter | Disabled, labelled as coming soon. |
 | Auth / role-based access | Not implemented as production UI auth. |
 | Programmatic bidding | Spec exists; no real OpenRTB/SSP/DSP runtime. |
@@ -73,9 +76,9 @@ The active route imports `src/components/campaign-planner/CampaignPlannerPage.ts
 
 ## Known Drift To Resolve Before Editing
 
-- Current dirty worktree shows a planner/review prop-interface mismatch around `CampaignReviewStep` props; verify compile before treating the draft upload flow as stable.
 - `viewMode` defaults to `map` in Zustand, but `CampaignPlannerPage` local state initializes `currentView` to `list`.
 - Campaign status models are split between `CampaignStatus`, Step 15 three-status model, and draft lifecycle types. Do not collapse them without checking the business flow.
+- Existing campaigns in DB with null/empty names display as `Campaign_YYYYMMDD_NNN` fallback in HomeView only. They are not backfilled in DB — only new campaigns get the auto-generated name on insert.
 
 ## Agent Rule
 
