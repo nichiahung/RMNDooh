@@ -213,12 +213,12 @@ function SalesHome() {
     p.status === 'revised',
   );
 
-  const pipeline: Array<{ label: string; status: ProposalStatus; color: string }> = [
-    { label: '草稿',     status: 'draft',                  color: 'text-slate-600 bg-slate-100' },
-    { label: '已送出',   status: 'sent_to_advertiser',     color: 'text-blue-600 bg-blue-50' },
-    { label: '已查看',   status: 'viewed_by_advertiser',   color: 'text-amber-600 bg-amber-50' },
-    { label: '要求修改', status: 'change_requested',       color: 'text-red-600 bg-red-50' },
-    { label: '已核准',   status: 'approved_by_advertiser', color: 'text-green-600 bg-green-50' },
+  const pipeline: Array<{ label: string; status: ProposalStatus; textColor: string; bgColor: string }> = [
+    { label: '草稿',     status: 'draft',                  textColor: 'text-slate-600', bgColor: 'bg-slate-100' },
+    { label: '已送出',   status: 'sent_to_advertiser',     textColor: 'text-blue-600',  bgColor: 'bg-blue-50' },
+    { label: '已查看',   status: 'viewed_by_advertiser',   textColor: 'text-amber-600', bgColor: 'bg-amber-50' },
+    { label: '要求修改', status: 'change_requested',       textColor: 'text-red-600',   bgColor: 'bg-red-50' },
+    { label: '已核准',   status: 'approved_by_advertiser', textColor: 'text-green-600', bgColor: 'bg-green-50' },
   ];
 
   return (
@@ -236,10 +236,10 @@ function SalesHome() {
         <div className="grid grid-cols-5 gap-2">
           {pipeline.map(p => (
             <div key={p.status} className="bg-white rounded-xl border border-slate-200 p-3 text-center">
-              <p className={`text-2xl font-bold ${p.color.split(' ')[0]}`}>
+              <p className={`text-2xl font-bold ${p.textColor}`}>
                 {!loading && countsByStatus ? (countsByStatus[p.status] ?? 0) : '—'}
               </p>
-              <p className={`text-xs font-semibold mt-1 px-1.5 py-0.5 rounded-full inline-block ${p.color}`}>
+              <p className={`text-xs font-semibold mt-1 px-1.5 py-0.5 rounded-full inline-block ${p.textColor} ${p.bgColor}`}>
                 {p.label}
               </p>
             </div>
@@ -320,6 +320,8 @@ function SalesHome() {
 
 export function HomeView() {
   const { currentUser } = useAuth();
-  if (currentUser?.role === 'sales') return <SalesHome />;
+  if (!currentUser) return null;
+  if (currentUser.role === 'admin') return null;
+  if (currentUser.role === 'sales') return <SalesHome />;
   return <AdvertiserHome />;
 }
