@@ -35,6 +35,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.reset': 'Reset All',
     'filter.searchAndFilter': 'Search & Filter',
     'filter.collapse': 'Collapse',
+    'filter.open': 'Open filters',
+    'filter.close': 'Close filters',
     'filter.anyObjective': 'Any Objective',
     'filter.awareness': 'Awareness',
     'filter.storeVisits': 'Store visits',
@@ -84,6 +86,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'map.limited': 'Limited',
     'map.unavailable': 'Unavailable',
     'map.selectedInPlan': 'Selected in Plan',
+    'map.zoomIn': 'Zoom in',
+    'map.zoomOut': 'Zoom out',
 
     // Inventory Card
     'card.dailyImpressions': 'Daily Impressions',
@@ -469,6 +473,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.reset': '清除所有篩選',
     'filter.searchAndFilter': '搜尋 & 篩選',
     'filter.collapse': '收合',
+    'filter.open': '開啟篩選',
+    'filter.close': '關閉篩選',
     'filter.anyObjective': '不限目標',
     'filter.awareness': '品牌知名度',
     'filter.storeVisits': '門市導流',
@@ -518,6 +524,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'map.limited': '檔期有限',
     'map.unavailable': '已售罄',
     'map.selectedInPlan': '已排入排期',
+    'map.zoomIn': '放大地圖',
+    'map.zoomOut': '縮小地圖',
 
     // Inventory Card
     'card.dailyImpressions': '每日觸及人次',

@@ -85,7 +85,8 @@ function ProposalBuilderPageContent() {
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (filters.city) count++;
+    if (filters.cities?.length || filters.city) count++;
+    if (filters.campaignObjectives?.length || filters.campaignObjective) count++;
     if (filters.districts?.length) count++;
     if (filters.venueTypes?.length) count++;
     if (filters.screenTypes?.length) count++;
@@ -329,6 +330,8 @@ function ProposalBuilderPageContent() {
               selectedItems={selectedItems}
               onViewDetails={() => {}}
               onAdd={handleAdd}
+              activeFilterCount={activeFilterCount}
+              onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
             />
           )}
 

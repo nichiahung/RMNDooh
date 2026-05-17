@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { Minus, Plus } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { InventoryLocation, MediaPlanItem } from '@/types/inventory';
@@ -42,14 +43,23 @@ const createIcon = (color: string, isSelected: boolean) => {
 
 function FitBounds({ inventory }: { inventory: InventoryLocation[] }) {
   const map = useMap();
-  const fitted = React.useRef(false);
+  const locationKey = React.useMemo(
+    () => inventory.map(i => `${i.id}:${i.latitude},${i.longitude}`).sort().join('|'),
+    [inventory]
+  );
 
   React.useEffect(() => {
-    if (inventory.length === 0 || fitted.current) return;
+    if (inventory.length === 0) return;
+
+    if (inventory.length === 1) {
+      const [item] = inventory;
+      map.setView([item.latitude, item.longitude], Math.max(map.getZoom(), 15), { animate: true });
+      return;
+    }
+
     const bounds = L.latLngBounds(inventory.map(i => [i.latitude, i.longitude]));
-    map.fitBounds(bounds.pad(0.15), { maxZoom: 15 });
-    fitted.current = true;
-  }, [inventory, map]);
+    map.fitBounds(bounds.pad(0.18), { maxZoom: 15, animate: true });
+  }, [inventory, locationKey, map]);
 
   return null;
 }
@@ -67,6 +77,35 @@ function CloseablePopupCard({ onViewDetail, ...rest }: CloseablePopupCardProps) 
       onClose={close}
       onViewDetail={() => { close(); onViewDetail(); }}
     />
+  );
+}
+
+function MapZoomControls() {
+  const map = useMap();
+  const { t } = useI18n();
+
+  return (
+    <div className="absolute right-4 top-16 z-[1000] overflow-hidden rounded-lg border border-slate-200 bg-white/95 shadow-lg shadow-slate-900/10 backdrop-blur-sm">
+      <button
+        type="button"
+        onClick={() => map.zoomIn()}
+        className="flex h-9 w-9 items-center justify-center text-slate-700 transition-colors hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+        aria-label={t('map.zoomIn')}
+        title={t('map.zoomIn')}
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+      <div className="h-px bg-slate-200" />
+      <button
+        type="button"
+        onClick={() => map.zoomOut()}
+        className="flex h-9 w-9 items-center justify-center text-slate-700 transition-colors hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+        aria-label={t('map.zoomOut')}
+        title={t('map.zoomOut')}
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 
@@ -92,6 +131,7 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
       <MapContainer
         center={center}
         zoom={13}
+        zoomControl={false}
         scrollWheelZoom={true}
         className="w-full h-full z-0"
         style={{ background: '#f1f5f9' }}
@@ -102,6 +142,7 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
         />
 
         <FitBounds inventory={inventory} />
+        <MapZoomControls />
 
         {inventory.map(item => {
           const isSelected = isInMediaPlan(selectedItems, item.id);
@@ -154,7 +195,7 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
       </div>
 
       {/* Count */}
-      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm border border-slate-200 font-semibold text-slate-800 text-sm z-[1000]">
+      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm border border-slate-200 font-semibold text-slate-800 text-sm z-[1000]">
         {t('planner.showing')} {inventory.length} {t('planner.locations')}
       </div>
     </div>

@@ -7,7 +7,12 @@ import { InventoryLocation, FilterState, VenueType, ScreenType, AudienceTag } fr
 export function filterInventory(inventory: InventoryLocation[], filters: FilterState): InventoryLocation[] {
   return inventory.filter((item) => {
     // 1. Filter by city
-    if (filters.city && item.city !== filters.city) {
+    const selectedCities = filters.cities && filters.cities.length > 0
+      ? filters.cities
+      : filters.city
+        ? [filters.city]
+        : [];
+    if (selectedCities.length > 0 && !selectedCities.includes(item.city)) {
       return false;
     }
 

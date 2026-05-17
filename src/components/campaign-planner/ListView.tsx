@@ -11,9 +11,10 @@ interface Props {
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
   objective?: string;
+  reserveFilterSpace?: boolean;
 }
 
-export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objective }: Props) {
+export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objective, reserveFilterSpace = false }: Props) {
   const { t } = useI18n();
 
   if (inventory.length === 0) {
@@ -28,7 +29,7 @@ export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objec
   }
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className={`p-4 sm:p-6 ${reserveFilterSpace ? 'pt-18 pl-4 sm:pt-6 sm:pl-36' : ''}`}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
         {inventory.map((item) => (
           <InventoryCard

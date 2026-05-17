@@ -54,11 +54,13 @@ export interface CampaignEstimate {
 export interface FilterState {
   searchQuery?: string;
   city?: string;
+  cities?: string[];
   districts?: string[];
   venueTypes?: VenueType[];
   screenTypes?: ScreenType[];
   audienceTags?: AudienceTag[];
   campaignObjective?: CampaignObjective | string;
+  campaignObjectives?: Array<CampaignObjective | string>;
   minBudget?: number;
   maxBudget?: number;
   minImpressions?: number;

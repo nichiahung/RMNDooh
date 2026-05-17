@@ -233,8 +233,8 @@ function CampaignPlannerPageContent() {
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (filters.campaignObjective) count++;
-    if (filters.city) count++;
+    if (filters.campaignObjectives?.length || filters.campaignObjective) count++;
+    if (filters.cities?.length || filters.city) count++;
     if (filters.districts && filters.districts.length > 0) count++;
     if (filters.venueTypes && filters.venueTypes.length > 0) count++;
     if (filters.screenTypes && filters.screenTypes.length > 0) count++;
@@ -244,6 +244,8 @@ function CampaignPlannerPageContent() {
     if (filters.minImpressions !== undefined || filters.maxImpressions !== undefined) count++;
     return count;
   }, [filters]);
+
+  const selectedObjective = filters.campaignObjectives?.[0] ?? filters.campaignObjective;
 
   // --- Handlers ---
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
@@ -482,16 +484,18 @@ function CampaignPlannerPageContent() {
           <>
             {step === 'inventory' && (
               <>
-                <FilterSidebar
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
+                {currentView !== 'ai' && (
+                  <FilterSidebar
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
                   onClearFilters={handleClearFilters}
                   activeFilterCount={activeFilterCount}
                   isOpen={isFilterOpen}
                   onClose={() => setIsFilterOpen(false)}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                />
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                  />
+                )}
 
                 <InventoryDiscovery
                   inventory={filteredAndSortedInventory}
@@ -503,7 +507,9 @@ function CampaignPlannerPageContent() {
                   selectedItems={selectedItems}
                   onViewDetails={setSelectedInventoryForDetail}
                   onAdd={handleAdd}
-                  objective={filters.campaignObjective}
+                  objective={selectedObjective}
+                  activeFilterCount={activeFilterCount}
+                  onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
                 />
 
                 <MediaPlanSummary
@@ -533,14 +539,14 @@ function CampaignPlannerPageContent() {
                     isSelected={selectedItems.some(i => i.inventoryId === selectedInventoryForDetail.id)}
                     onClose={() => setSelectedInventoryForDetail(null)}
                     onAdd={() => handleAdd(selectedInventoryForDetail)}
-                    objective={filters.campaignObjective}
+                    objective={selectedObjective}
                   />
                 )}
 
                 <PerformanceBar
                   selectedItems={selectedItems}
                   allInventory={allInventory}
-                  objective={filters.campaignObjective}
+                  objective={selectedObjective}
                   onOpenSummary={() => setIsSummaryOpen(true)}
                 />
               </>

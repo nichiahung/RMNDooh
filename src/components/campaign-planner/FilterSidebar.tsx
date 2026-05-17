@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Filter, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useMemo } from 'react';
+import { Filter, Search, X } from 'lucide-react';
 import { FilterState } from '@/types/inventory';
 import { getAvailableDistricts, getAvailableVenueTypes, getAvailableScreenTypes, getAvailableAudienceTags } from '@/utils/inventoryFilters';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -13,23 +13,23 @@ interface Props {
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   onClearFilters: () => void;
   activeFilterCount: number;
-  // Mobile drawer props (from main)
   isOpen: boolean;
   onClose: () => void;
-  // Search props (from feature branch)
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
 export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeFilterCount, isOpen, onClose, searchQuery, onSearchChange }: Props) {
   const { t } = useI18n();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const allInventory = usePlannerStore((s) => s.allInventory);
 
+  const availableCities = useMemo(() => Array.from(new Set(allInventory.map(item => item.city))).sort(), [allInventory]);
   const availableDistricts = useMemo(() => getAvailableDistricts(allInventory), [allInventory]);
   const availableVenueTypes = useMemo(() => getAvailableVenueTypes(allInventory), [allInventory]);
   const availableScreenTypes = useMemo(() => getAvailableScreenTypes(allInventory), [allInventory]);
   const availableAudienceTags = useMemo(() => getAvailableAudienceTags(allInventory), [allInventory]);
+  const selectedCities = filters.cities ?? (filters.city ? [filters.city] : []);
+  const selectedObjectives = filters.campaignObjectives ?? (filters.campaignObjective ? [filters.campaignObjective] : []);
 
   const handleArrayToggle = (key: keyof FilterState, value: string) => {
     const currentArray = (filters[key] as string[]) || [];
@@ -39,52 +39,36 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
     onFilterChange({ [key]: newArray.length > 0 ? newArray : undefined });
   };
 
+  const handleCityToggle = (city: string) => {
+    const nextCities = selectedCities.includes(city)
+      ? selectedCities.filter(item => item !== city)
+      : [...selectedCities, city];
+    const allowedDistricts = new Set(
+      allInventory
+        .filter(item => nextCities.length === 0 || nextCities.includes(item.city))
+        .map(item => item.district)
+    );
+    onFilterChange({
+      city: undefined,
+      cities: nextCities.length > 0 ? nextCities : undefined,
+      districts: (filters.districts ?? []).filter(district => allowedDistricts.has(district)),
+    });
+  };
+
   const handleNumberInput = (key: keyof FilterState, value: string) => {
     const num = parseInt(value);
     onFilterChange({ [key]: isNaN(num) ? undefined : num });
   };
 
-  // ── Collapsed state (desktop only) ──────────────────────────────────
-  if (isCollapsed) {
-    return (
-      <aside className="hidden lg:flex w-10 bg-white border-r border-slate-200 flex-col items-center py-3 gap-3 flex-shrink-0 z-20 transition-all duration-200">
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-slate-100 text-slate-500 transition-colors"
-          title={t('filter.searchAndFilter')}
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <div className="relative">
-          <div className="w-7 h-7 flex items-center justify-center rounded-md bg-slate-50 text-slate-500">
-            <Filter className="w-4 h-4" />
-          </div>
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-              {activeFilterCount}
-            </span>
-          )}
-        </div>
-      </aside>
-    );
+  if (!isOpen) {
+    return null;
   }
 
-  // ── Expanded state ────────────────────────────────────────────────────
   return (
-    <>
-      {/* Mobile backdrop */}
-      {isOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
-          onClick={onClose}
-          aria-hidden
-        />
-      )}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 w-72 lg:w-64 bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-40 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-      >
-        {/* Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+    <aside className="flex h-full w-80 flex-shrink-0 border-r border-slate-200 bg-slate-50/80 p-3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
+          {/* Header */}
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-800 flex items-center">
             <Filter className="w-4 h-4 mr-2 text-slate-500" />
             {t('filter.searchAndFilter')}
@@ -103,26 +87,17 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
                 {t('filter.clearAll')}
               </button>
             )}
-            {/* Mobile close */}
             <button
               onClick={onClose}
-              className="lg:hidden text-slate-400 hover:text-slate-700 transition-colors"
-              aria-label="Close filters"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label={t('filter.close')}
             >
               <X className="w-4 h-4" />
             </button>
-            {/* Desktop collapse */}
-            <button
-              onClick={() => setIsCollapsed(true)}
-              className="hidden lg:flex w-6 h-6 items-center justify-center rounded-md hover:bg-slate-100 text-slate-400 transition-colors"
-              title={t('filter.collapse')}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
           </div>
-        </div>
+          </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
@@ -138,31 +113,50 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
           {/* Objective */}
           <div>
             <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('filter.objective')}</h3>
-            <select
-              className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2"
-              value={filters.campaignObjective || ''}
-              onChange={(e) => onFilterChange({ campaignObjective: e.target.value || undefined })}
-            >
-              <option value="">{t('filter.anyObjective')}</option>
-              <option value="Awareness">{t('filter.awareness')}</option>
-              <option value="Store visits">{t('filter.storeVisits')}</option>
-              <option value="Product launch">{t('filter.productLaunch')}</option>
-              <option value="Event promotion">{t('filter.eventPromotion')}</option>
-            </select>
+            <div className="space-y-2 pl-1">
+              {[
+                ['Awareness', t('filter.awareness')],
+                ['Store visits', t('filter.storeVisits')],
+                ['Product launch', t('filter.productLaunch')],
+                ['Event promotion', t('filter.eventPromotion')],
+              ].map(([value, label]) => (
+                <label key={value} className="flex items-center text-sm text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    checked={selectedObjectives.includes(value)}
+                    onChange={() => {
+                      const nextObjectives = selectedObjectives.includes(value)
+                        ? selectedObjectives.filter(item => item !== value)
+                        : [...selectedObjectives, value];
+                      onFilterChange({
+                        campaignObjective: undefined,
+                        campaignObjectives: nextObjectives.length > 0 ? nextObjectives : undefined,
+                      });
+                    }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* City */}
           <div>
             <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('filter.city')}</h3>
-            <select
-              className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-2"
-              value={filters.city || ''}
-              onChange={(e) => onFilterChange({ city: e.target.value || undefined, districts: [] })}
-            >
-              <option value="">{t('filter.anyCity')}</option>
-              <option value="Taipei">{t(CITY_KEY['Taipei'])}</option>
-              <option value="New Taipei">{t(CITY_KEY['New Taipei'])}</option>
-            </select>
+            <div className="space-y-2 pl-1">
+              {availableCities.map(city => (
+                <label key={city} className="flex items-center text-sm text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    checked={selectedCities.includes(city)}
+                    onChange={() => handleCityToggle(city)}
+                  />
+                  {t(CITY_KEY[city] ?? city)}
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* District */}
@@ -170,7 +164,7 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
             <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-2">{t('filter.district')}</h3>
             <div className="space-y-2 pl-1 max-h-36 overflow-y-auto custom-scrollbar">
               {availableDistricts
-                .filter(d => !filters.city || allInventory.find(i => i.district === d)?.city === filters.city)
+                .filter(d => selectedCities.length === 0 || selectedCities.includes(allInventory.find(i => i.district === d)?.city ?? ''))
                 .map(district => (
                   <label key={district} className="flex items-center text-sm text-slate-600 cursor-pointer">
                     <input type="checkbox" className="mr-2 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
@@ -274,7 +268,7 @@ export function FilterSidebar({ filters, onFilterChange, onClearFilters, activeF
             </div>
           </div>
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }
