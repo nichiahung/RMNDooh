@@ -22,7 +22,7 @@ function mapCampaignRow(row: Record<string, unknown>): CampaignDraft {
   return {
     id: row.id as string,
     advertiserId: (row.advertiser_id as string) ?? DEFAULT_ADVERTISER_ID,
-    name: (row.name as string) ?? 'Unnamed Campaign',
+    name: (row.name as string) ?? '',
     objective: (row.objective as string) ?? null,
     startDate: (row.start_date as string) ?? null,
     endDate: (row.end_date as string) ?? null,
@@ -56,12 +56,22 @@ function mapRequirementRow(row: Record<string, unknown>): CampaignCreativeRequir
 // ─── Campaign CRUD ─────────────────────────────────────────
 
 export async function createDraftCampaign(): Promise<CampaignDraft> {
+  const { count } = await supabase
+    .from('campaigns')
+    .select('id', { count: 'exact', head: true })
+    .eq('advertiser_id', DEFAULT_ADVERTISER_ID);
+
+  const now = new Date();
+  const yyyymmdd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const seq = String((count ?? 0) + 1).padStart(3, '0');
+  const generatedName = `Campaign_${yyyymmdd}_${seq}`;
+
   const { data, error } = await supabase
     .from('campaigns')
     .insert({
       advertiser_id: DEFAULT_ADVERTISER_ID,
       created_by_user_id: DEFAULT_USER_ID,
-      name: 'Unnamed Campaign',
+      name: generatedName,
       objective: 'awareness',
       status: 'draft',
       buying_type: 'direct',
