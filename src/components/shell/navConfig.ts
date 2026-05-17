@@ -5,6 +5,7 @@ import {
   Image as ImageIcon,
   BarChart2,
   ClipboardList,
+  Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Role } from '@/utils/mockAuth';
@@ -62,6 +63,7 @@ export const NAV_CONFIG: Record<Role, NavSection[]> = {
       items: [
         { id: 'proposals-pending', label: '提案跟進', icon: FileText, href: '/proposal-review', badge: 'proposals_pending' },
         { id: 'proposals-all', label: '新增提案', icon: ClipboardList, href: '/proposal-builder' },
+        { id: 'clients', label: '客戶管理', icon: Users, href: '/clients' },
       ],
     },
     {

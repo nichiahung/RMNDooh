@@ -25,14 +25,15 @@ describe('NAV_CONFIG', () => {
     expect(assets?.badge).toBe('creative_attention');
   });
 
-  it('sales has 首頁, 提案跟進, 新增提案, 業績報告', () => {
+  it('sales has 首頁, 提案跟進, 新增提案, 客戶管理, 業績報告', () => {
     const items = NAV_CONFIG.sales.flatMap(s => s.items);
     const labels = items.map(i => i.label);
     const hrefs = items.map(i => i.href);
-    expect(labels).toEqual(['首頁', '提案跟進', '新增提案', '業績報告']);
+    expect(labels).toEqual(['首頁', '提案跟進', '新增提案', '客戶管理', '業績報告']);
     expect(hrefs).toContain('/');
     expect(hrefs).toContain('/proposal-review');
     expect(hrefs).toContain('/proposal-builder');
+    expect(hrefs).toContain('/clients');
     expect(hrefs).toContain('/reports');
   });
 
@@ -40,6 +41,14 @@ describe('NAV_CONFIG', () => {
     const items = NAV_CONFIG.sales.flatMap(s => s.items);
     const pending = items.find(i => i.id === 'proposals-pending');
     expect(pending?.badge).toBe('proposals_pending');
+  });
+
+  it('sales has 客戶管理 linking to /clients', () => {
+    const items = NAV_CONFIG.sales.flatMap(s => s.items);
+    const clientsItem = items.find(i => i.id === 'clients');
+    expect(clientsItem).toBeDefined();
+    expect(clientsItem?.href).toBe('/clients');
+    expect(clientsItem?.label).toBe('客戶管理');
   });
 
   it('sales does not have campaign-planner', () => {
