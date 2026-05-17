@@ -9,10 +9,33 @@ import { CreativeReviewQueue } from './CreativeReviewQueue';
 import { InventoryManagementTable } from './InventoryManagementTable';
 import { ScreenManagementTable } from './ScreenManagementTable';
 import { OverviewPanel } from './OverviewPanel';
+import { AdminWorkQueuesPanel } from './AdminWorkQueuesPanel';
+import { AdminProposalsPanel } from './AdminProposalsPanel';
+import { AdminCampaignDraftsPanel } from './AdminCampaignDraftsPanel';
+import { AdminBookingsPanel } from './AdminBookingsPanel';
+import { AdminPricingPanel } from './AdminPricingPanel';
+import { AdminCreativeLibraryPanel } from './AdminCreativeLibraryPanel';
+import { AdminCreativeCoveragePanel } from './AdminCreativeCoveragePanel';
+import { AdminLaunchReadinessPanel } from './AdminLaunchReadinessPanel';
 
 import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
 import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus, confirmBooking, fetchStandaloneCreatives, StandaloneCreative } from '@/lib/api/admin';
 import { fetchInventoryLocations } from '@/lib/api/inventory';
+
+const TAB_LABELS: Record<AdminTab, string> = {
+  overview: 'Overview',
+  proposals: 'Proposals',
+  'campaign-drafts': 'Campaign Drafts',
+  bookings: 'Bookings',
+  campaigns: 'Campaigns',
+  inventory: 'Inventory',
+  pricing: 'Pricing & Rate Cards',
+  'creative-library': 'Creative Library',
+  creative: 'Creative Review',
+  'creative-coverage': 'Creative Coverage',
+  'launch-readiness': 'Launch Readiness',
+  screens: 'Screens',
+};
 
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
@@ -26,52 +49,66 @@ export function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  useEffect(() => {
-    Promise.all([
+  const refreshDashboardData = async () => {
+    const [c, i, s, sc] = await Promise.all([
       fetchAllCampaigns(),
       fetchInventoryLocations(),
       fetchAllScreens(),
       fetchStandaloneCreatives(),
-    ]).then(([c, i, s, sc]) => {
-      setCampaigns(c);
-      setInventory(i);
-      setScreens(s);
-      setStandaloneCreatives(sc);
-      setIsLoading(false);
-    });
+    ]);
+    setCampaigns(c);
+    setInventory(i);
+    setScreens(s);
+    setStandaloneCreatives(sc);
+  };
+
+  const syncSelectedCampaign = (updatedCampaigns: Campaign[]) => {
+    if (selectedCampaign) {
+      const next = updatedCampaigns.find(item => item.id === selectedCampaign.id);
+      setSelectedCampaign(next ? { ...next } : null);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      await refreshDashboardData();
+      if (mounted) setIsLoading(false);
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleUpdateCampaignStatus = async (id: string, newStatus: Campaign['status'], notes?: string) => {
     await updateCampaignStatus(id, newStatus, notes);
-    setCampaigns(prev => prev.map(c =>
-      c.id === id ? { ...c, status: newStatus, approvalNotes: notes || c.approvalNotes } : c
-    ));
-    if (selectedCampaign?.id === id) {
-      setSelectedCampaign(prev => prev ? { ...prev, status: newStatus, approvalNotes: notes || prev.approvalNotes } : null);
-    }
+    const updated = await fetchAllCampaigns();
+    setCampaigns(updated);
+    syncSelectedCampaign(updated);
   };
 
   const handleConfirmBooking = async (campaignId: string) => {
     await confirmBooking(campaignId);
-    // Re-fetch to get updated booking_status and launch_readiness from DB
     const updated = await fetchAllCampaigns();
     setCampaigns(updated);
+    syncSelectedCampaign(updated);
   };
 
   const handleUpdateCreativeStatus = async (campaignId: string | null, creativeId: string, newStatus: string) => {
     await updateCreativeApprovalStatus(creativeId, newStatus as 'approved' | 'rejected');
-    if (campaignId) {
-      const updateCreatives = (c: Campaign) =>
-        c.id === campaignId
-          ? { ...c, creatives: c.creatives.map(cr => cr.id === creativeId ? { ...cr, status: newStatus as never } : cr) }
-          : c;
-      setCampaigns(prev => prev.map(updateCreatives));
-      setSelectedCampaign(prev => prev ? updateCreatives(prev) : null);
-    } else {
-      // Standalone creative — remove from queue
-      setStandaloneCreatives(prev => prev.filter(sc => sc.id !== creativeId));
-    }
+    const [updatedCampaigns, updatedCreatives] = await Promise.all([
+      fetchAllCampaigns(),
+      fetchStandaloneCreatives(),
+    ]);
+    setCampaigns(updatedCampaigns);
+    setStandaloneCreatives(updatedCreatives);
+    syncSelectedCampaign(updatedCampaigns);
   };
+
+  // Determine which tabs use the legacy Supabase data vs the new trading iteration data
+  const isLegacyTab = activeTab === 'overview' || activeTab === 'campaigns' || activeTab === 'creative' || activeTab === 'inventory' || activeTab === 'screens';
 
   return (
     <main className="h-screen flex bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans">
@@ -92,13 +129,13 @@ export function AdminDashboardPage() {
           >
             <Menu className="w-4 h-4" />
           </button>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-800 capitalize truncate">
-            {activeTab.replace('-', ' ')}
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-800 truncate">
+            {TAB_LABELS[activeTab] ?? activeTab}
           </h1>
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
-          {isLoading ? (
+          {isLoading && isLegacyTab ? (
             <div className="flex items-center justify-center h-64 text-slate-400 text-sm animate-pulse">
               載入資料中...
             </div>
@@ -106,7 +143,28 @@ export function AdminDashboardPage() {
             <div className="max-w-7xl mx-auto space-y-6">
 
               {activeTab === 'overview' && (
-                <OverviewPanel campaigns={campaigns} inventory={inventory} screens={screens} />
+                <>
+                  <AdminWorkQueuesPanel />
+                  <OverviewPanel campaigns={campaigns} inventory={inventory} screens={screens} />
+                </>
+              )}
+
+              {activeTab === 'proposals' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <AdminProposalsPanel />
+                </div>
+              )}
+
+              {activeTab === 'campaign-drafts' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <AdminCampaignDraftsPanel />
+                </div>
+              )}
+
+              {activeTab === 'bookings' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <AdminBookingsPanel />
+                </div>
               )}
 
               {activeTab === 'campaigns' && (
@@ -129,6 +187,26 @@ export function AdminDashboardPage() {
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                   <InventoryManagementTable inventory={inventory} />
                 </div>
+              )}
+
+              {activeTab === 'pricing' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-5">
+                  <AdminPricingPanel />
+                </div>
+              )}
+
+              {activeTab === 'creative-library' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-5">
+                  <AdminCreativeLibraryPanel />
+                </div>
+              )}
+
+              {activeTab === 'creative-coverage' && (
+                <AdminCreativeCoveragePanel />
+              )}
+
+              {activeTab === 'launch-readiness' && (
+                <AdminLaunchReadinessPanel />
               )}
 
               {activeTab === 'screens' && (

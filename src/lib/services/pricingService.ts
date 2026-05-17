@@ -22,6 +22,7 @@ export interface PriceBookSelectionInput {
   advertiserId: string;
   agencyId?: string;
   inventoryId?: string;
+  inventoryIds?: string[];
   packageId?: string;
 }
 
@@ -95,7 +96,14 @@ export function calculateSelfServicePrice(
   };
 }
 
-export function selectPriceBook({ buyingMethod, advertiserId, agencyId, inventoryId, packageId }: PriceBookSelectionInput): PriceBook {
+export function selectPriceBook({
+  buyingMethod,
+  advertiserId,
+  agencyId,
+  inventoryId,
+  inventoryIds,
+  packageId,
+}: PriceBookSelectionInput): PriceBook {
   const fallbackMap: Record<BuyingMethod, PriceBookType> = {
     self_service: 'self_service_msrp',
     sales_assisted: 'sales_rate_card',
@@ -108,16 +116,28 @@ export function selectPriceBook({ buyingMethod, advertiserId, agencyId, inventor
     throw new Error(`no_price_book_for:${buyingMethod}`);
   }
 
-  if (inventoryId || packageId) {
-    const hasItem = (tradingPriceBookItemsByPriceBook.get(candidate.id) ?? []).some(
-      item => (
-        (item.inventoryLocationId === inventoryId || item.inventoryLocationId == null) &&
-        (item.packageId === packageId || item.packageId == null) &&
-        item.status === 'active'
-      ),
-    );
-    if (!hasItem) {
+  const resolvedInventoryIds = inventoryIds?.length
+    ? [...new Set(inventoryIds.filter((id): id is string => Boolean(id)))]
+    : inventoryId
+      ? [inventoryId]
+      : [];
+  if (resolvedInventoryIds.length || packageId) {
+    const items = tradingPriceBookItemsByPriceBook.get(candidate.id) ?? [];
+    const hasWildcard = items.some(item => item.inventoryLocationId == null && item.status === 'active');
+    const allMatch = resolvedInventoryIds.every(id =>
+      items.some(item =>
+        item.status === 'active' &&
+        (item.inventoryLocationId == null || item.inventoryLocationId === id) &&
+        (item.packageId === packageId || item.packageId == null),
+      ));
+    if (!(hasWildcard || allMatch) && resolvedInventoryIds.length) {
       throw new Error('price_book_no_match_for_selected_scope');
+    }
+    if (!resolvedInventoryIds.length && packageId) {
+      const hasPackage = items.some(item => item.status === 'active' && (item.packageId === packageId || item.packageId == null));
+      if (!hasPackage) {
+        throw new Error('price_book_no_match_for_selected_scope');
+      }
     }
   }
 
@@ -173,7 +193,7 @@ export function calculateProposalPrice(input: ProposalPricingInput): PricingComp
       buyingMethod: 'sales_assisted',
       advertiserId: input.advertiserId,
       agencyId: input.agencyId,
-      inventoryId: input.selectedInventory[0]?.inventoryId,
+      inventoryIds: input.selectedInventory.map(item => item.inventoryId),
     });
 
   const listPriceTotal = sumBy(input.selectedInventory);

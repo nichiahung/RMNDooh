@@ -17,18 +17,24 @@ interface Props {
 
 export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objective }: Props) {
   const { t } = useI18n();
+  const imageSource = item.imageUrl ? imgSrc(item.imageUrl) : null;
+
   return (
     <div className={`bg-white rounded-xl border flex flex-col overflow-hidden transition-all group ${
       isSelected ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-md' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
     }`}>
       {/* Image Header */}
       <div className="h-32 relative overflow-hidden bg-slate-100">
-        <img 
-          src={imgSrc(item.imageUrl)}
-          alt={item.name}
-          className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700"
-          onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}
-        />
+        {imageSource ? (
+          <img 
+            src={imageSource}
+            alt={item.name}
+            className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700"
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300" />
+        )}
         <div className="absolute top-2 left-2 bg-white/95 backdrop-blur px-2 py-1 rounded shadow-sm text-xs font-bold text-slate-800 border border-slate-100/50">
           NT${formatCPM(item.cpm)} CPM
         </div>

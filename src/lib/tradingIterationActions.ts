@@ -62,6 +62,9 @@ import {
   tradingCreativeAssets,
   tradingCreativeAssetVersions,
   tradingCreativeRequirementAssets,
+  tradingSeedProposals,
+  tradingSeedProposalInventory,
+  tradingSeedCampaignDrafts,
 } from '@/data/tradingIterationMockData';
 
 function cloneDeep<T>(value: T): T {
@@ -224,12 +227,14 @@ const state = {
   pricingRules: cloneDeep(tradingPricingRules),
   pricingApprovalRequests: cloneDeep(tradingPricingApprovalRequests),
   pricingSnapshots: cloneDeep(tradingPricingSnapshots),
-  campaignDrafts: [] as CampaignDraftProfile[],
+  campaignDrafts: cloneDeep(tradingSeedCampaignDrafts) as CampaignDraftProfile[],
   campaignDraftInventory: new Map<string, CampaignInventoryItem[]>(),
   campaignDraftPricingSnapshots: new Map<string, PricingSnapshot>(),
-  proposals: [] as Proposal[],
+  proposals: cloneDeep(tradingSeedProposals) as Proposal[],
   proposalVersions: new Map<string, ProposalVersion[]>(),
-  proposalInventory: new Map<string, ProposalInventoryItem[]>(),
+  proposalInventory: new Map<string, ProposalInventoryItem[]>(
+    Object.entries(tradingSeedProposalInventory).map(([k, v]) => [k, cloneDeep(v)]),
+  ),
   proposalPricingSnapshots: new Map<string, PricingSnapshot>(),
   creativeRequirementsByCampaign: new Map<string, CreativeRequirement[]>(),
   creativeRequirementsByProposal: new Map<string, CreativeRequirement[]>(),
@@ -826,13 +831,15 @@ export async function estimateProposalPrice(proposalId: string, options?: { disc
     discountPercent: options?.discountPercent ?? latest.discountPercent,
     manualAdjustment: options?.manualAdjustment ?? latest.manualAdjustment,
   });
+  const requestedPriceBook = latest.requestedPriceBookId ? findPriceBook(latest.requestedPriceBookId) ?? undefined : undefined;
   const snapshot = createPricingSnapshot({
     sourceType: 'proposal',
     sourceId: proposalId,
-    priceBook: selectPriceBook({
+    priceBook: requestedPriceBook ?? selectPriceBook({
       buyingMethod: proposal.buyingMethod,
       advertiserId: proposal.advertiserId,
-      inventoryId: selectedInventory[0]?.inventoryLocationId ?? '',
+      inventoryIds: selectedInventory.map(item => item.inventoryLocationId).filter((id): id is string => Boolean(id)),
+      inventoryId: selectedInventory[0]?.inventoryLocationId ?? undefined,
     }),
     listPriceTotal: pricing.listPriceTotal,
     discountAmount: pricing.discountAmount,
@@ -1205,12 +1212,14 @@ export async function resetTradingIterationState() {
   state.pricingRules = cloneDeep(tradingPricingRules);
   state.pricingApprovalRequests = cloneDeep(tradingPricingApprovalRequests);
   state.pricingSnapshots = cloneDeep(tradingPricingSnapshots);
-  state.campaignDrafts = [];
+  state.campaignDrafts = cloneDeep(tradingSeedCampaignDrafts);
   state.campaignDraftInventory = new Map();
   state.campaignDraftPricingSnapshots = new Map();
-  state.proposals = [];
+  state.proposals = cloneDeep(tradingSeedProposals);
   state.proposalVersions = new Map();
-  state.proposalInventory = new Map();
+  state.proposalInventory = new Map(
+    Object.entries(tradingSeedProposalInventory).map(([k, v]) => [k, cloneDeep(v)]),
+  );
   state.proposalPricingSnapshots = new Map();
   state.creativeRequirementsByCampaign = new Map();
   state.creativeRequirementsByProposal = new Map();
