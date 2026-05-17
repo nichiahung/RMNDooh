@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Monitor, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
@@ -19,6 +20,12 @@ export function AppSidebar() {
 
   const role = currentUser?.role ?? 'advertiser';
   const sections = NAV_CONFIG[role] ?? [];
+  const roleLabel = {
+    advertiser: 'Advertiser',
+    sales: 'Sales',
+    admin: 'Admin',
+  }[role];
+  const accountInitial = currentUser?.email?.trim().charAt(0).toUpperCase() || 'U';
 
   useEffect(() => {
     if (role === 'sales') {
@@ -52,18 +59,42 @@ export function AppSidebar() {
 
   return (
     <aside
-      className={`bg-slate-800 border-r border-slate-700 flex flex-col h-full flex-shrink-0 overflow-hidden transition-[width] duration-200 ease-in-out ${
+      className={`relative bg-slate-700 border-r border-slate-600 flex flex-col h-full flex-shrink-0 overflow-visible transition-[width] duration-200 ease-in-out ${
         collapsed ? 'w-[60px]' : 'w-[220px]'
       }`}
     >
       {/* Brand */}
-      <div className="h-14 flex items-center px-3 border-b border-slate-700 flex-shrink-0">
-        <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Monitor className="w-4 h-4 text-white" />
+      <div className={`h-14 flex items-center border-b border-slate-600 flex-shrink-0 ${
+        collapsed ? 'justify-between gap-1 px-2' : 'justify-between gap-2 px-3'
+      }`}>
+        <div className={`flex h-8 flex-shrink-0 items-center overflow-hidden ${
+          collapsed ? 'w-6' : 'w-[116px]'
+        }`}>
+          <Image
+            src="/drmn-logo-sidebar.png"
+            alt="DRMN"
+            width={120}
+            height={40}
+            className={`h-7 max-w-none object-contain ${collapsed ? 'w-[84px] object-left' : 'w-full'}`}
+            priority
+          />
         </div>
-        {!collapsed && (
-          <span className="ml-3 text-white font-bold text-sm tracking-wide whitespace-nowrap">DRMN</span>
-        )}
+        <button
+          onClick={toggle}
+          className={`group flex h-7 w-7 flex-shrink-0 items-center justify-center text-slate-300 hover:text-white transition-colors ${
+            collapsed
+              ? 'absolute -right-3 top-3.5 z-50 rounded-full border border-slate-500 bg-slate-600 shadow-md hover:bg-slate-500'
+              : 'relative rounded-lg hover:bg-white/10'
+          }`}
+          aria-label={collapsed ? '展開側欄' : '收合側欄'}
+        >
+          {collapsed
+            ? <ChevronRight className="w-4 h-4" />
+            : <ChevronLeft className="w-4 h-4" />}
+          <span className="absolute left-[34px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
+            {collapsed ? '展開側欄' : '收合側欄'}
+          </span>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -71,7 +102,7 @@ export function AppSidebar() {
         {sections.map(section => (
           <div key={section.label}>
             {!collapsed && (
-              <p className="px-2 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              <p className="px-2 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 {section.label}
               </p>
             )}
@@ -86,8 +117,8 @@ export function AppSidebar() {
                       href={item.href}
                       className={`group relative flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
                         active
-                          ? 'bg-indigo-500/20 text-indigo-300'
-                          : 'text-slate-400 hover:bg-white/[0.07] hover:text-slate-200'
+                          ? 'bg-white/15 text-white'
+                          : 'text-slate-300 hover:bg-white/10 hover:text-white'
                       }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -100,7 +131,7 @@ export function AppSidebar() {
                         </span>
                       )}
                       {collapsed && (
-                        <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-900 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+                        <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
                           {item.label}{badgeCount > 0 ? ` (${badgeCount})` : ''}
                         </span>
                       )}
@@ -114,31 +145,36 @@ export function AppSidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-2 border-t border-slate-700 space-y-0.5">
-        <button
-          onClick={toggle}
-          className="group relative w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-slate-400 hover:bg-white/[0.07] hover:text-slate-200 transition-colors text-sm font-medium"
-          aria-label={collapsed ? '展開側欄' : '收合側欄'}
+      <div className="p-2 border-t border-slate-600 space-y-0.5">
+        <div
+          className="group relative mb-2 flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300"
+          aria-label={`目前登入：${currentUser?.email ?? 'Unknown'}`}
         >
-          {collapsed
-            ? <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            : <ChevronLeft className="w-4 h-4 flex-shrink-0" />}
-          {!collapsed && <span className="whitespace-nowrap">收合側欄</span>}
+          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+            {accountInitial}
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">{roleLabel}</div>
+              <div className="truncate text-xs font-medium text-slate-200">{currentUser?.email ?? 'Unknown user'}</div>
+            </div>
+          )}
           {collapsed && (
-            <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-900 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
-              展開側欄
+            <span className="absolute left-[52px] z-50 hidden min-w-[180px] group-hover:block rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-100 shadow-lg pointer-events-none">
+              <span className="block text-[10px] uppercase tracking-wider text-indigo-300">{roleLabel}</span>
+              <span className="block font-medium">{currentUser?.email ?? 'Unknown user'}</span>
             </span>
           )}
-        </button>
+        </div>
         <button
           onClick={handleLogout}
-          className="group relative w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-slate-400 hover:bg-white/[0.07] hover:text-slate-200 transition-colors text-sm font-medium"
+          className="group relative w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium"
           aria-label="登出"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span className="whitespace-nowrap">登出</span>}
           {collapsed && (
-            <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-900 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+            <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
               登出
             </span>
           )}
