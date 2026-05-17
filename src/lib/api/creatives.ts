@@ -5,6 +5,19 @@ const DEFAULT_ADVERTISER_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
 const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000002';
 const BUCKET = 'creative-assets';
 
+export interface MediaAssetSummary {
+  id: string;
+  originalFilename: string;
+  publicUrl: string;
+  fileType: 'image' | 'video';
+  mimeType: string;
+  fileSizeBytes: number;
+  status: string;
+  approvalStatus: string;
+  createdAt: string;
+  isApproved: boolean;
+}
+
 export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
   // Use local objectURL for immediate preview — no dependency on Storage URL loading
   const localPreviewUrl = URL.createObjectURL(file);
@@ -69,17 +82,7 @@ export async function uploadCreativeAsset(file: File): Promise<CreativeAsset> {
   };
 }
 
-export async function listMediaAssets(): Promise<Array<{
-  id: string;
-  originalFilename: string;
-  publicUrl: string;
-  fileType: 'image' | 'video';
-  mimeType: string;
-  fileSizeBytes: number;
-  status: string;
-  createdAt: string;
-  isApproved: boolean;
-}>> {
+export async function listMediaAssets(): Promise<MediaAssetSummary[]> {
   const { data, error } = await supabase
     .from('media_assets')
     .select('*')
@@ -87,6 +90,34 @@ export async function listMediaAssets(): Promise<Array<{
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
+
+  const mediaAssetIds = (data ?? []).map(row => row.id as string);
+  const approvalByMediaAssetId = new Map<string, string>();
+
+  if (mediaAssetIds.length > 0) {
+    const { data: creativeRows, error: creativeError } = await supabase
+      .from('creative_assets')
+      .select('media_asset_id, approval_status')
+      .in('media_asset_id', mediaAssetIds);
+
+    if (creativeError) throw new Error(creativeError.message);
+
+    (creativeRows ?? []).forEach(row => {
+      const mediaAssetId = row.media_asset_id as string | null;
+      const approvalStatus = row.approval_status as string | null;
+      if (!mediaAssetId || !approvalStatus) return;
+
+      const current = approvalByMediaAssetId.get(mediaAssetId);
+      if (
+        !current ||
+        current === 'approved' ||
+        current === 'approved_with_restrictions' ||
+        (current === 'rejected' && approvalStatus === 'pending_review')
+      ) {
+        approvalByMediaAssetId.set(mediaAssetId, approvalStatus);
+      }
+    });
+  }
 
   return (data ?? []).map(row => ({
     id: row.id as string,
@@ -96,8 +127,11 @@ export async function listMediaAssets(): Promise<Array<{
     mimeType: row.mime_type as string,
     fileSizeBytes: row.file_size_bytes as number,
     status: row.status as string,
+    approvalStatus: approvalByMediaAssetId.get(row.id as string) ?? 'pending_review',
     createdAt: row.created_at as string,
-    isApproved: (row.approval_status as string) === 'approved',
+    isApproved: ['approved', 'approved_with_restrictions'].includes(
+      approvalByMediaAssetId.get(row.id as string) ?? '',
+    ),
   }));
 }
 

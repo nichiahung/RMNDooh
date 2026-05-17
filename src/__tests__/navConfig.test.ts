@@ -19,6 +19,12 @@ describe('NAV_CONFIG', () => {
     expect(ids).not.toContain('proposals-pending');
   });
 
+  it('advertiser 素材庫 has creative attention badge', () => {
+    const items = NAV_CONFIG.advertiser.flatMap(s => s.items);
+    const assets = items.find(i => i.id === 'assets');
+    expect(assets?.badge).toBe('creative_attention');
+  });
+
   it('sales has 首頁, 提案跟進, 新增提案, 業績報告', () => {
     const items = NAV_CONFIG.sales.flatMap(s => s.items);
     const labels = items.map(i => i.label);

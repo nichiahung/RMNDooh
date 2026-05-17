@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
 import { NAV_CONFIG, type NavItem } from './navConfig';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
+import { listMediaAssets } from '@/lib/api/creatives';
 
 export function AppSidebar() {
   const { currentUser, logout } = useAuth();
@@ -17,6 +18,7 @@ export function AppSidebar() {
   const { collapsed, toggle } = useSidebarCollapse();
 
   const [pendingProposalCount, setPendingProposalCount] = useState(0);
+  const [creativeAttentionCount, setCreativeAttentionCount] = useState(0);
 
   const role = currentUser?.role ?? 'advertiser';
   const sections = NAV_CONFIG[role] ?? [];
@@ -42,6 +44,19 @@ export function AppSidebar() {
     }
   }, [role]);
 
+  useEffect(() => {
+    if (role === 'advertiser') {
+      listMediaAssets()
+        .then(assets => {
+          const count = assets.filter(asset =>
+            asset.approvalStatus === 'pending_review' || asset.approvalStatus === 'rejected'
+          ).length;
+          setCreativeAttentionCount(count);
+        })
+        .catch(() => setCreativeAttentionCount(0));
+    }
+  }, [role]);
+
   function handleLogout() {
     logout();
     router.push('/login');
@@ -49,6 +64,7 @@ export function AppSidebar() {
 
   function resolveBadge(badge: NavItem['badge']): number {
     if (badge === 'proposals_pending') return pendingProposalCount;
+    if (badge === 'creative_attention') return creativeAttentionCount;
     return 0;
   }
 
@@ -122,6 +138,9 @@ export function AppSidebar() {
                       }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
+                      {collapsed && badgeCount > 0 && (
+                        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-slate-700" />
+                      )}
                       {!collapsed && (
                         <span className="flex-1 whitespace-nowrap">{item.label}</span>
                       )}

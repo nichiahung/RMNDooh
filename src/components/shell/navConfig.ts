@@ -14,7 +14,7 @@ export interface NavItem {
   label: string;
   icon: LucideIcon;
   href: string;
-  badge?: 'proposals_pending';
+  badge?: 'proposals_pending' | 'creative_attention';
 }
 
 export interface NavSection {
@@ -40,7 +40,7 @@ export const NAV_CONFIG: Record<Role, NavSection[]> = {
     {
       label: '素材',
       items: [
-        { id: 'assets', label: '素材庫', icon: ImageIcon, href: '/assets' },
+        { id: 'assets', label: '素材庫', icon: ImageIcon, href: '/assets', badge: 'creative_attention' },
       ],
     },
     {
