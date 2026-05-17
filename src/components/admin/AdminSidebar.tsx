@@ -141,10 +141,10 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
                         : 'hover:bg-slate-800 hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'lg:mr-0' : 'mr-3'} ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'} ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
                     <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
                     {collapsed && (
-                      <span className="absolute left-[52px] z-50 hidden group-hover:lg:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+                      <span className="absolute left-[52px] z-50 hidden lg:group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
                         {item.label}
                       </span>
                     )}
@@ -160,7 +160,7 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
       <div className="p-4 border-t border-slate-800 space-y-1">
         <button
           onClick={toggle}
-          className="group relative w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          className="group relative hidden lg:flex w-full items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
           aria-label={collapsed ? '展開側欄' : '收合側欄'}
         >
           {collapsed
@@ -168,16 +168,18 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
             : <><ChevronLeft className="w-4 h-4 flex-shrink-0 mr-3" /><span>收合側欄</span></>
           }
           {collapsed && (
-            <span className="absolute left-[52px] z-50 hidden group-hover:lg:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+            <span className="absolute left-[52px] z-50 hidden lg:group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
               展開側欄
             </span>
           )}
         </button>
         <button className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
-          <Settings className="w-4 h-4 mr-3" /> {t('admin.nav.settings')}
+          <Settings className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'}`} />
+          <span className={collapsed ? 'lg:hidden' : ''}>{t('admin.nav.settings')}</span>
         </button>
         <button className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
-          <LogOut className="w-4 h-4 mr-3" /> {t('admin.nav.signOut')}
+          <LogOut className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'}`} />
+          <span className={collapsed ? 'lg:hidden' : ''}>{t('admin.nav.signOut')}</span>
         </button>
       </div>
 
