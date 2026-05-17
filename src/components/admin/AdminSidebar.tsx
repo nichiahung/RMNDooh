@@ -20,7 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n/I18nProvider';
+import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
 
 export type AdminTab =
@@ -46,7 +48,14 @@ interface Props {
 
 export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props) {
   const { t } = useI18n();
+  const { logout } = useAuth();
+  const router = useRouter();
   const { collapsed, toggle } = useSidebarCollapse();
+
+  function handleLogout() {
+    logout();
+    router.push('/login');
+  }
 
   const navSections = [
     {
@@ -177,7 +186,7 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
           <Settings className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'}`} />
           <span className={collapsed ? 'lg:hidden' : ''}>{t('admin.nav.settings')}</span>
         </button>
-        <button className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+        <button onClick={handleLogout} className="w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
           <LogOut className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'}`} />
           <span className={collapsed ? 'lg:hidden' : ''}>{t('admin.nav.signOut')}</span>
         </button>
