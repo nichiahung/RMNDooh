@@ -1,9 +1,12 @@
 import { supabase } from '@/lib/supabase';
 import { InventoryLocation, AudienceTag } from '@/types/inventory';
 
+const DEFAULT_INVENTORY_IMAGE_URL = '/images/tpe_main_station.png';
+
 // Maps Supabase snake_case row → frontend camelCase type
 function mapRow(row: Record<string, unknown>): InventoryLocation {
   const dnaData = row.dna as unknown as InventoryLocation['dna'];
+  const imageUrl = typeof row.image_url === 'string' ? row.image_url.trim() : '';
 
   return {
     id: row.id as string,
@@ -20,7 +23,7 @@ function mapRow(row: Record<string, unknown>): InventoryLocation {
     pricePerDay: Number(row.price_per_day),
     availability: Number(row.availability),
     audienceTags: ((row.audience_tags as string[]) ?? []) as AudienceTag[],
-    imageUrl: (row.image_url as string) ?? '',
+    imageUrl: imageUrl || DEFAULT_INVENTORY_IMAGE_URL,
     description: (row.description as string) ?? '',
     dna: dnaData ?? {
       ageBreakdown: [],
