@@ -39,8 +39,15 @@ function AdvertiserHome() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [showAllCampaigns, setShowAllCampaigns] = useState(false);
+
+  const campaignName = (c: CampaignSummary, index: number) =>
+    c.name?.trim() ? c.name : `未命名活動 #${index + 1}`;
+
   const heroCampaign = campaigns[0] ?? null;
   const otherCampaigns = campaigns.slice(1);
+  const CAMPAIGN_LIMIT = 4;
+  const visibleCampaigns = showAllCampaigns ? otherCampaigns : otherCampaigns.slice(0, CAMPAIGN_LIMIT);
   const totalBudgetSpent = mockReportData.reduce((sum, report) => sum + report.budgetSpent, 0);
   const totalPlays = mockReportData.reduce((sum, report) => sum + report.totalPlays, 0);
   const totalCompletedPlays = mockReportData.reduce((sum, report) => sum + report.completedPlays, 0);
@@ -67,7 +74,7 @@ function AdvertiserHome() {
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between shadow-sm">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">上次進行中的活動</p>
-              <h2 className="text-lg font-bold text-slate-900">{heroCampaign.name}</h2>
+              <h2 className="text-lg font-bold text-slate-900">{campaignName(heroCampaign, 0)}</h2>
               <div className="flex items-center gap-3 mt-2">
                 {STATUS_LABEL[heroCampaign.status] && (
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_LABEL[heroCampaign.status].color}`}>
@@ -146,25 +153,36 @@ function AdvertiserHome() {
       {/* Other campaigns */}
       {!loading && otherCampaigns.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-500 mb-3">其他活動</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-slate-500">其他活動</h3>
+            <span className="text-xs text-slate-400">{otherCampaigns.length} 個</span>
+          </div>
           <div className="space-y-2">
-            {otherCampaigns.map(c => {
+            {visibleCampaigns.map((c, i) => {
               const s = STATUS_LABEL[c.status] ?? { label: c.status, color: 'text-slate-500 bg-slate-100' };
               return (
                 <Link
                   key={c.id}
-                  href={`/campaign-planner/new?id=${c.id}`}
+                  href={`/campaign-planner?id=${c.id}`}
                   className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3 hover:border-slate-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
-                    <span className="text-sm font-medium text-slate-800">{c.name}</span>
+                    <span className="text-sm font-medium text-slate-800">{campaignName(c, i + 1)}</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
               );
             })}
           </div>
+          {otherCampaigns.length > CAMPAIGN_LIMIT && (
+            <button
+              onClick={() => setShowAllCampaigns(prev => !prev)}
+              className="mt-2 w-full text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors"
+            >
+              {showAllCampaigns ? '收合' : `查看全部 ${otherCampaigns.length} 個活動`}
+            </button>
+          )}
         </div>
       )}
 
