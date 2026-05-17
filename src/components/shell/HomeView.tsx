@@ -1,3 +1,4 @@
+// src/components/shell/HomeView.tsx
 'use client';
 
 import Link from 'next/link';
@@ -40,7 +41,16 @@ function AdvertiserHome() {
 
   const heroCampaign = campaigns[0] ?? null;
   const otherCampaigns = campaigns.slice(1);
-  const perfReport = mockReportData[0];
+  const totalBudgetSpent = mockReportData.reduce((sum, report) => sum + report.budgetSpent, 0);
+  const totalPlays = mockReportData.reduce((sum, report) => sum + report.totalPlays, 0);
+  const totalCompletedPlays = mockReportData.reduce((sum, report) => sum + report.completedPlays, 0);
+  const totalEstimatedImpressions = mockReportData.reduce((sum, report) => sum + report.estimatedImpressionsDelivered, 0);
+  const averageCpm = totalEstimatedImpressions > 0
+    ? Math.round((totalBudgetSpent / totalEstimatedImpressions) * 1000)
+    : 0;
+  const underDeliveryLocation = mockReportData
+    .flatMap(report => report.locationDelivery)
+    .find(location => location.status === 'under_delivering');
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -51,6 +61,7 @@ function AdvertiserHome() {
         </p>
       </div>
 
+      {/* Hero — last campaign or empty state */}
       {!loading && (
         heroCampaign ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between shadow-sm">
@@ -89,6 +100,7 @@ function AdvertiserHome() {
         )
       )}
 
+      {/* Quick actions */}
       <div>
         <h3 className="text-sm font-semibold text-slate-500 mb-3">快速操作</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -96,7 +108,7 @@ function AdvertiserHome() {
             { href: '/campaign-planner', icon: Megaphone, label: '規劃活動',   color: 'text-indigo-600 bg-indigo-50' },
             { href: '/assets',           icon: ImageIcon,  label: '上傳素材',   color: 'text-purple-600 bg-purple-50' },
             { href: '/reports',          icon: BarChart2,  label: '查看報告',   color: 'text-green-600 bg-green-50' },
-            { href: '/proposal-review',  icon: Sparkles,   label: '我的提案',   color: 'text-amber-600 bg-amber-50' },
+            { href: '/campaign-planner?view=ai', icon: Sparkles, label: 'AI 規劃', color: 'text-amber-600 bg-amber-50' },
           ].map(action => (
             <Link
               key={action.href}
@@ -112,24 +124,26 @@ function AdvertiserHome() {
         </div>
       </div>
 
-      {perfReport && (
-        <div>
-          <h3 className="text-sm font-semibold text-slate-500 mb-3">本月成效（模擬數據）</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: '花費預算',  value: `NT$${(perfReport.budgetSpent / 1000).toFixed(0)}K` },
-              { label: '播放次數',  value: perfReport.totalPlays.toLocaleString() },
-              { label: '預計曝光',  value: `${(perfReport.estimatedImpressionsDelivered / 10000).toFixed(0)}萬` },
-            ].map(m => (
-              <div key={m.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                <p className="text-xs text-slate-400 mb-1">{m.label}</p>
-                <p className="text-xl font-bold text-slate-900">{m.value}</p>
-              </div>
-            ))}
-          </div>
+      {/* Performance summary (mocked) */}
+      <div>
+        <h3 className="text-sm font-semibold text-slate-500 mb-3">目前成效（模擬數據）</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {[
+            { label: '花費預算', value: `NT$${(totalBudgetSpent / 1000).toFixed(0)}K` },
+            { label: '播放次數', value: totalPlays.toLocaleString() },
+            { label: '完成播放', value: totalCompletedPlays.toLocaleString() },
+            { label: '預計曝光', value: `${(totalEstimatedImpressions / 10000).toFixed(0)}萬` },
+            { label: '平均 CPM', value: `NT$${averageCpm}` },
+          ].map(m => (
+            <div key={m.label} className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-xs text-slate-400 mb-1">{m.label}</p>
+              <p className="text-xl font-bold text-slate-900">{m.value}</p>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
 
+      {/* Other campaigns */}
       {!loading && otherCampaigns.length > 0 && (
         <div>
           <h3 className="text-sm font-semibold text-slate-500 mb-3">其他活動</h3>
@@ -153,6 +167,26 @@ function AdvertiserHome() {
           </div>
         </div>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">待處理事項</h3>
+          <div className="space-y-2 text-sm">
+            <p className="text-slate-600">素材待上傳：檢查進行中 Campaign 的 Creative Asset 狀態。</p>
+            <p className="text-slate-600">Booking 待確認：確認 ready_to_confirm Campaign。</p>
+            {underDeliveryLocation && (
+              <p className="text-amber-700">投放風險：{underDeliveryLocation.locationName} under-delivering。</p>
+            )}
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">AI 成效建議</h3>
+          <div className="space-y-2 text-sm text-slate-600">
+            <p>解釋低投放 InventoryLocation 的可能原因。</p>
+            <p>根據已完成 Campaign 推薦可加碼的 InventoryLocations。</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -173,7 +207,10 @@ function SalesHome() {
   }, []);
 
   const followUpQueue = proposals.filter(p =>
-    p.status === 'viewed_by_advertiser' || p.status === 'change_requested',
+    p.status === 'sent_to_advertiser' ||
+    p.status === 'viewed_by_advertiser' ||
+    p.status === 'change_requested' ||
+    p.status === 'revised',
   );
 
   const pipeline: Array<{ label: string; status: ProposalStatus; color: string }> = [
@@ -193,6 +230,7 @@ function SalesHome() {
         </p>
       </div>
 
+      {/* Proposal pipeline */}
       <div>
         <h3 className="text-sm font-semibold text-slate-500 mb-3">提案管線</h3>
         <div className="grid grid-cols-5 gap-2">
@@ -209,6 +247,7 @@ function SalesHome() {
         </div>
       </div>
 
+      {/* Follow-up queue */}
       <div>
         <h3 className="text-sm font-semibold text-slate-500 mb-3">需要跟進</h3>
         {loading ? (
@@ -235,7 +274,13 @@ function SalesHome() {
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     p.status === 'change_requested' ? 'text-red-600 bg-red-50' : 'text-amber-600 bg-amber-50'
                   }`}>
-                    {p.status === 'change_requested' ? '要求修改' : '已查看未回覆'}
+                    {p.status === 'change_requested'
+                      ? '要求修改'
+                      : p.status === 'sent_to_advertiser'
+                        ? '已送出待回覆'
+                        : p.status === 'revised'
+                          ? '新版待回覆'
+                          : '已查看未回覆'}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -243,6 +288,24 @@ function SalesHome() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Client performance signals + AI actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">客戶成效訊號</h3>
+          <div className="space-y-2 text-sm text-slate-600">
+            <p>Taipei Retail Launch 已交付 1.25M 預估曝光，可作為續約素材。</p>
+            <p>Airport Traveler Promotion 有 failed plays，需主動準備說明。</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">AI 業務動作</h3>
+          <div className="space-y-2 text-sm text-slate-600">
+            <p>產生 Proposal follow-up email。</p>
+            <p>根據成效報告產生 renewal / upsell Proposal 建議。</p>
+          </div>
+        </div>
       </div>
 
       <Link
