@@ -134,15 +134,20 @@ export async function confirmBinding(token: string): Promise<{ clientName: strin
 
   if (error || !binding) return null;
 
-  await supabase
+  // TODO: replace with a Supabase RPC for atomic update (binding + client in one transaction)
+  const { error: bindErr } = await supabase
     .from('sales_client_bindings')
     .update({ status: 'active', confirmed_at: new Date().toISOString() })
     .eq('id', binding.id);
 
-  await supabase
+  if (bindErr) throw new Error(bindErr.message);
+
+  const { error: clientErr } = await supabase
     .from('clients')
     .update({ status: 'active' })
     .eq('id', binding.client_id);
+
+  if (clientErr) throw new Error(clientErr.message);
 
   return { clientName: binding.clients.name, salesEmail: binding.sales_email };
 }
