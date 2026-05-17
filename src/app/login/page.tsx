@@ -13,14 +13,22 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (currentUser) router.replace('/');
+    if (currentUser) {
+      router.replace(currentUser.role === 'admin' ? '/admin' : '/');
+    }
   }, [currentUser, router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const ok = login(email, password);
     if (ok) {
-      router.push('/');
+      try {
+        const stored = localStorage.getItem('dooh_mock_user');
+        const user = stored ? JSON.parse(stored) as { role: string } : null;
+        router.push(user?.role === 'admin' ? '/admin' : '/');
+      } catch {
+        router.push('/');
+      }
     } else {
       setError('帳號或密碼錯誤');
     }
