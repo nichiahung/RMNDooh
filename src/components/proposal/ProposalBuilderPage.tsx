@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Send, CheckCircle, ChevronRight, MapPin, Trash2, Loader2, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle, ChevronRight, MapPin, Trash2, Loader2, Plus, Minus, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 import { FilterSidebar } from '@/components/campaign-planner/FilterSidebar';
 import { InventoryDiscovery } from '@/components/campaign-planner/InventoryDiscovery';
@@ -38,6 +39,9 @@ export function ProposalBuilderPage() {
 
 function ProposalBuilderPageContent() {
   const router = useRouter();
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = () => { logout(); router.push('/login'); };
 
   // Step state
   const [step, setStep] = useState<Step>('setup');
@@ -206,7 +210,15 @@ function ProposalBuilderPageContent() {
             <span className={`px-3 py-1 rounded-full ${step === 'sent' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400'}`}>3. 送出確認</span>
           </div>
 
-          <div className="w-32" /> {/* spacer */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-400 hidden sm:inline">{currentUser?.email}</span>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" /> 登出
+            </button>
+          </div>
         </div>
       </header>
 
