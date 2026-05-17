@@ -41,9 +41,6 @@ function AdvertiserHome() {
 
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
 
-  const campaignName = (c: CampaignSummary, index: number) =>
-    c.name?.trim() ? c.name : `未命名活動 #${index + 1}`;
-
   const heroCampaign = campaigns[0] ?? null;
   const otherCampaigns = campaigns.slice(1);
   const CAMPAIGN_LIMIT = 4;
@@ -74,7 +71,12 @@ function AdvertiserHome() {
           <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center justify-between shadow-sm">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">上次進行中的活動</p>
-              <h2 className="text-lg font-bold text-slate-900">{campaignName(heroCampaign, 0)}</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-slate-300">#1</span>
+                <h2 className="text-lg font-bold text-slate-900">
+                  {heroCampaign.name?.trim() || '未命名活動'}
+                </h2>
+              </div>
               <div className="flex items-center gap-3 mt-2">
                 {STATUS_LABEL[heroCampaign.status] && (
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_LABEL[heroCampaign.status].color}`}>
@@ -160,6 +162,7 @@ function AdvertiserHome() {
           <div className="space-y-2">
             {visibleCampaigns.map((c, i) => {
               const s = STATUS_LABEL[c.status] ?? { label: c.status, color: 'text-slate-500 bg-slate-100' };
+              const seq = i + 2; // hero is #1, others start at #2
               return (
                 <Link
                   key={c.id}
@@ -167,8 +170,11 @@ function AdvertiserHome() {
                   className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-4 py-3 hover:border-slate-300 hover:shadow-sm transition-all"
                 >
                   <div className="flex items-center gap-3">
+                    <span className="text-xs font-mono text-slate-300 w-6 text-right flex-shrink-0">#{seq}</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${s.color}`}>{s.label}</span>
-                    <span className="text-sm font-medium text-slate-800">{campaignName(c, i + 1)}</span>
+                    <span className="text-sm font-medium text-slate-800">
+                      {c.name?.trim() || `未命名活動`}
+                    </span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
