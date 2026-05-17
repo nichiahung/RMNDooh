@@ -11,6 +11,7 @@ import {
   type AiPlannerInput,
 } from '@/lib/aiMediaPlanner';
 import type { InventoryLocation, MediaPlanAddOptions, MediaPlanItem } from '@/types/inventory';
+import { AiPlanMiniMap } from './AiPlanMiniMap';
 
 interface Props {
   allInventory: InventoryLocation[];
@@ -235,6 +236,10 @@ function PlanOptionCard({
   isApplied: boolean;
   onApply: () => void;
 }) {
+  const mapLocations = option.items
+    .map(item => inventoryById.get(item.inventoryId))
+    .filter((location): location is InventoryLocation => Boolean(location));
+
   return (
     <article className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
       <div>
@@ -249,6 +254,16 @@ function PlanOptionCard({
         <Metric label="預算" value={`NT$${option.totalBudget.toLocaleString()}`} />
         <Metric label="曝光" value={option.estimatedImpressions.toLocaleString()} />
         <Metric label="CPM" value={`NT$${option.averageCpm.toFixed(1)}`} />
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-white/90 px-3 py-2">
+          <span className="text-xs font-semibold text-slate-700">方案地圖</span>
+          <span className="text-[11px] text-slate-500">{mapLocations.length} 個版位</span>
+        </div>
+        <div className="h-32">
+          <AiPlanMiniMap locations={mapLocations} />
+        </div>
       </div>
 
       <div className="space-y-2">
