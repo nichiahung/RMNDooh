@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { getLoginRedirect } from '@/utils/authRedirect';
 
 export default function LoginPage() {
-  const { currentUser, login } = useAuth();
+  const { currentUser, isAuthInitialized, login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (currentUser) {
-      router.replace(currentUser.role === 'admin' ? '/admin' : '/');
-    }
-  }, [currentUser, router]);
+    const redirectTo = getLoginRedirect({ currentUser, isAuthInitialized });
+    if (redirectTo) router.replace(redirectTo);
+  }, [currentUser, isAuthInitialized, router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

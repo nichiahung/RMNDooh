@@ -7,6 +7,7 @@ const STORAGE_KEY = 'dooh_mock_user';
 
 interface AuthContextValue {
   currentUser: AuthUser | null;
+  isAuthInitialized: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
 }
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
 
   useEffect(() => {
     try {
@@ -22,6 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (stored) setCurrentUser(JSON.parse(stored));
     } catch {
       localStorage.removeItem(STORAGE_KEY);
+    } finally {
+      setIsAuthInitialized(true);
     }
   }, []);
 
@@ -39,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, isAuthInitialized, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
