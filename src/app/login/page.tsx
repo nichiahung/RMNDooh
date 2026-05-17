@@ -21,15 +21,8 @@ export default function LoginPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const ok = login(email, password);
-    if (ok) {
-      try {
-        const stored = localStorage.getItem('dooh_mock_user');
-        const user = stored ? JSON.parse(stored) as { role: string } : null;
-        router.push(user?.role === 'admin' ? '/admin' : '/');
-      } catch {
-        router.push('/');
-      }
-    } else {
+    // redirect is handled by the useEffect watching currentUser
+    if (!ok) {
       setError('帳號或密碼錯誤');
     }
   }
