@@ -16,7 +16,6 @@ import {
   addInventoryItem,
   removeInventoryItem,
   submitCreativesForReview,
-  listCampaignSummaries,
   getInventoryItems,
   getStoredCreativeRequirements,
   getCampaign,
@@ -26,13 +25,12 @@ import { listMediaAssets, deleteMediaAsset, renameMediaAsset, uploadCreativeAsse
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { flightDays } from '@/utils/dates';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check, Globe, ImageIcon, Film, CheckCircle2, FileText, Plus, ChevronRight, Loader2, AlertCircle, Clock, Pencil, Trash2, X as XIcon } from 'lucide-react';
+import { Check, Globe, ImageIcon, Film, CheckCircle2, Plus, Loader2, AlertCircle, Pencil, Trash2, X as XIcon } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { usePlannerStore } from '@/store/usePlannerStore';
 
 // --- Types ---
 type MediaAsset = Awaited<ReturnType<typeof listMediaAssets>>[number];
-type CampaignSummary = Awaited<ReturnType<typeof listCampaignSummaries>>[number];
 
 // --- LibraryTabContent ---
 function LibraryTabContent() {
@@ -271,109 +269,6 @@ function LibraryAssetCard({
   );
 }
 
-// --- CampaignsTabContent ---
-function campaignStatusBadge(status: string, uploadedCount: number, totalCount: number) {
-  if (status === 'draft' && totalCount === 0) return { label: '草稿', color: 'bg-slate-100 text-slate-600' };
-  if (uploadedCount < totalCount) return { label: '素材未完整', color: 'bg-amber-100 text-amber-700' };
-  if (status === 'pending_creative_review' || status === 'pending_review') return { label: '審核中', color: 'bg-blue-100 text-blue-700' };
-  if (status === 'ready_to_book') return { label: '可下單', color: 'bg-emerald-100 text-emerald-700' };
-  return { label: status, color: 'bg-slate-100 text-slate-600' };
-}
-
-function CampaignsTabContent({ setActiveTab, onResume }: { setActiveTab: (tab: 'planner' | 'library' | 'campaigns') => void; onResume: (campaignId: string) => Promise<void> }) {
-  const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    listCampaignSummaries()
-      .then(setCampaigns)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
-      <div className="max-w-5xl mx-auto w-full px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-slate-900">我的活動</h2>
-          <button
-            onClick={() => setActiveTab('planner')}
-            className="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700"
-          >
-            <Plus className="w-4 h-4" /> 新增活動
-          </button>
-        </div>
-
-        {loading && (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
-          </div>
-        )}
-
-        {!loading && !error && campaigns.length === 0 && (
-          <div className="bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
-            <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-700 mb-1">還沒有活動</p>
-            <p className="text-xs text-slate-400 mb-4">點擊新增活動開始規劃你的第一個 DOOH 廣告活動</p>
-            <button
-              onClick={() => setActiveTab('planner')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" /> 新增活動
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && campaigns.length > 0 && (
-          <div className="space-y-3">
-            {campaigns.map(c => {
-              const badge = campaignStatusBadge(c.status, c.uploadedCount, c.totalCount);
-              return (
-                <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 hover:border-indigo-200 hover:shadow-sm transition-all">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-indigo-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold text-slate-900 truncate">{c.name}</span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${badge.color}`}>{badge.label}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-400">
-                      <span>{c.inventoryCount} 個版位</span>
-                      {c.totalCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          {c.uploadedCount === c.totalCount
-                            ? <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                            : <Clock className="w-3 h-3 text-amber-500" />}
-                          素材 {c.uploadedCount}/{c.totalCount}
-                        </span>
-                      )}
-                      <span>{new Date(c.createdAt).toLocaleDateString('zh-TW')}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onResume(c.id).then(() => setActiveTab('planner'))}
-                    className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 flex-shrink-0"
-                  >
-                    繼續規劃 <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // --- Main CampaignPlannerPage Wrapper ---
 export function CampaignPlannerPage() {
   return (
@@ -395,7 +290,7 @@ function CampaignPlannerPageContent() {
   }, [fetchInventory]);
 
   // --- Tab State ---
-  const [activeTab, setActiveTab] = useState<'planner' | 'library' | 'campaigns'>('planner');
+  const [activeTab, setActiveTab] = useState<'planner' | 'library'>('planner');
 
   // --- Step Flow State ---
   const [step, setStep] = useState<'inventory' | 'review'>('inventory');
@@ -652,7 +547,7 @@ function CampaignPlannerPageContent() {
 
           {/* Tab switcher — desktop */}
           <div className="hidden md:flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
-            {(['planner', 'library', 'campaigns'] as const).map(tab => (
+            {(['planner', 'library'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -662,7 +557,7 @@ function CampaignPlannerPageContent() {
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                {tab === 'planner' ? '規劃版位' : tab === 'library' ? '素材庫' : '我的活動'}
+                {tab === 'planner' ? '規劃版位' : '素材庫'}
               </button>
             ))}
           </div>
@@ -672,7 +567,7 @@ function CampaignPlannerPageContent() {
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Mobile tab buttons */}
           <div className="flex md:hidden items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
-            {(['planner', 'library', 'campaigns'] as const).map(tab => (
+            {(['planner', 'library'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -680,7 +575,7 @@ function CampaignPlannerPageContent() {
                   activeTab === tab ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'
                 }`}
               >
-                {tab === 'planner' ? '規劃' : tab === 'library' ? '素材' : '活動'}
+                {tab === 'planner' ? '規劃' : '素材'}
               </button>
             ))}
           </div>
@@ -795,9 +690,6 @@ function CampaignPlannerPageContent() {
           <LibraryTabContent />
         )}
 
-        {activeTab === 'campaigns' && (
-          <CampaignsTabContent setActiveTab={setActiveTab} onResume={handleResumeCampaign} />
-        )}
 
       </div>
     </main>
