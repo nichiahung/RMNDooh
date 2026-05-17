@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AppNav } from './AppNav';
 import { listMediaAssets } from '@/lib/api/creatives';
 import { ImageIcon, Loader2, AlertCircle, Film, CheckCircle2 } from 'lucide-react';
 
@@ -23,10 +22,7 @@ export function AssetsPage() {
   const videos = assets.filter(a => a.fileType === 'video');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <AppNav />
-
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-8">
+    <div className="p-6 max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-xl font-bold text-slate-900">素材庫</h1>
@@ -83,7 +79,6 @@ export function AssetsPage() {
             )}
           </div>
         )}
-      </main>
     </div>
   );
 }

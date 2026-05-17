@@ -13,15 +13,16 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (currentUser) router.replace('/');
+    if (currentUser) {
+      router.replace(currentUser.role === 'admin' ? '/admin' : '/');
+    }
   }, [currentUser, router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const ok = login(email, password);
-    if (ok) {
-      router.push('/');
-    } else {
+    // redirect is handled by the useEffect watching currentUser
+    if (!ok) {
       setError('帳號或密碼錯誤');
     }
   }
@@ -41,7 +42,7 @@ export default function LoginPage() {
               onChange={e => { setEmail(e.target.value); setError(''); }}
               placeholder="advertiser@demo.com"
               required
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 caret-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
           <div>
@@ -52,7 +53,7 @@ export default function LoginPage() {
               onChange={e => { setPassword(e.target.value); setError(''); }}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 caret-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
