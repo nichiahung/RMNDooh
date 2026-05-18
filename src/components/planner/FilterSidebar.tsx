@@ -1,128 +1,40 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { usePlannerStore } from '@/store/usePlannerStore';
-import { VenueType, ScreenType, AudienceTag } from '@/types/inventory';
-import { Filter } from 'lucide-react';
-import { useI18n } from '@/i18n/I18nProvider';
-import { DISTRICT_KEY, VENUE_KEY, SCREEN_KEY, AUDIENCE_KEY } from '@/i18n/filterLabels';
-
-const ALL_DISTRICTS = ['Xinyi', "Zhongzheng", "Da'an", 'Wanhua', 'Nangang', 'Songshan', 'Banqiao', 'Neihu', 'Shilin'];
-const ALL_VENUE_TYPES: VenueType[] = ['Mall', 'Subway', 'Highway', 'Street', 'Airport', 'Night Market', 'Office Building', 'Station'];
-const ALL_SCREEN_TYPES: ScreenType[] = ['Billboard', 'Transit', 'Street Furniture', 'Indoor', 'Kiosk', 'Mega Screen'];
-const ALL_AUDIENCE_TAGS: AudienceTag[] = ['Professionals', 'Students', 'Shoppers', 'Tourists', 'Commuters', 'Tech Workers', 'Foodies'];
+import { FilterSidebar as BaseFilterSidebar } from '@/components/campaign-planner/FilterSidebar';
 
 export function FilterSidebar() {
-  const { filters, setFilters } = usePlannerStore();
-  const { t } = useI18n();
+  const { filters, setFilters, allInventory } = usePlannerStore();
+  const [isOpen, setIsOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const toggleArrayFilter = (field: keyof typeof filters, value: string) => {
-    // @ts-ignore
-    const currentValues = (filters[field] || []) as string[];
-    if (currentValues.includes(value)) {
-      setFilters({ [field]: currentValues.filter((v) => v !== value) });
-    } else {
-      setFilters({ [field]: [...currentValues, value] });
-    }
-  };
-
-  const clearFilters = () => {
-    setFilters({ districts: [], venueTypes: [], screenTypes: [], audienceTags: [] });
-  };
-
-  const activeFilterCount = (filters.districts?.length || 0) + (filters.venueTypes?.length || 0) + (filters.screenTypes?.length || 0) + (filters.audienceTags?.length || 0);
+  const activeFilterCount = useMemo(() =>
+    (filters.districts?.length ?? 0) +
+    (filters.venueTypes?.length ?? 0) +
+    (filters.screenTypes?.length ?? 0) +
+    (filters.audienceTags?.length ?? 0) +
+    (filters.cities?.length ?? 0) +
+    (filters.campaignObjectives?.length ?? 0) +
+    (filters.availabilityStatus?.length ?? 0) +
+    (filters.minBudget !== undefined || filters.maxBudget !== undefined ? 1 : 0) +
+    (filters.minImpressions !== undefined || filters.maxImpressions !== undefined ? 1 : 0),
+    [filters],
+  );
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-full flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-      <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-800 flex items-center">
-          <Filter className="w-4 h-4 mr-2 text-slate-500" /> {t('filter.title')}
-        </h2>
-        {activeFilterCount > 0 && (
-          <button onClick={clearFilters} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-            {t('filter.clearAll')}
-          </button>
-        )}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-5 space-y-8 custom-scrollbar">
-
-        <div>
-          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('filter.district')}</h3>
-          <div className="space-y-2.5">
-            {ALL_DISTRICTS.map((district) => (
-              <label key={district} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.districts?.includes(district) ?? false}
-                  onChange={() => toggleArrayFilter('districts', district)}
-                />
-                <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {t(DISTRICT_KEY[district] ?? district)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('filter.venueType')}</h3>
-          <div className="space-y-2.5">
-            {ALL_VENUE_TYPES.map((venue) => (
-              <label key={venue} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.venueTypes?.includes(venue) ?? false}
-                  onChange={() => toggleArrayFilter('venueTypes', venue)}
-                />
-                <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {t(VENUE_KEY[venue] ?? venue)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('filter.screenType')}</h3>
-          <div className="space-y-2.5">
-            {ALL_SCREEN_TYPES.map((screen) => (
-              <label key={screen} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.screenTypes?.includes(screen) ?? false}
-                  onChange={() => toggleArrayFilter('screenTypes', screen)}
-                />
-                <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {t(SCREEN_KEY[screen] ?? screen)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('filter.audience')}</h3>
-          <div className="space-y-2.5">
-            {ALL_AUDIENCE_TAGS.map((audience) => (
-              <label key={audience} className="flex items-center cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 transition-colors"
-                  checked={filters.audienceTags?.includes(audience) ?? false}
-                  onChange={() => toggleArrayFilter('audienceTags', audience)}
-                />
-                <span className="ml-3 text-sm text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {t(AUDIENCE_KEY[audience] ?? audience)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </aside>
+    <BaseFilterSidebar
+      filters={filters}
+      onFilterChange={partial => setFilters(partial)}
+      onClearFilters={() => setFilters({ districts: [], venueTypes: [], screenTypes: [], audienceTags: [], cities: [], campaignObjectives: [] })}
+      activeFilterCount={activeFilterCount}
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      searchQuery={searchQuery}
+      onSearchChange={q => {
+        setSearchQuery(q);
+        setFilters({ searchQuery: q });
+      }}
+    />
   );
 }
