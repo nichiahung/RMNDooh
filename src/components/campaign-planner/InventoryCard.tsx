@@ -1,7 +1,7 @@
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatCompact, formatCPM } from '@/utils/formatters';
 import { getSpecChip } from '@/utils/creativeRequirements';
-import { MapPin, Users, Monitor, Check, Plus, Info } from 'lucide-react';
+import { MapPin, Users, Monitor, Check, Plus, Info, Minus } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { imgSrc } from '@/utils/imgSrc';
 import { AUDIENCE_KEY } from '@/i18n/filterLabels';
@@ -12,10 +12,11 @@ interface Props {
   isSelected: boolean;
   onViewDetails: () => void;
   onAdd: () => void;
+  onRemove?: () => void;
   objective?: string;
 }
 
-export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objective }: Props) {
+export function InventoryCard({ item, isSelected, onViewDetails, onAdd, onRemove, objective }: Props) {
   const { t } = useI18n();
   const imageSource = item.imageUrl ? imgSrc(item.imageUrl) : null;
 
@@ -122,21 +123,24 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
               <Info className="w-4 h-4" />
             </button>
           </div>
-          <button
-            onClick={onAdd}
-            disabled={isSelected}
-            className={`w-full flex items-center justify-center py-1.5 text-sm font-medium rounded transition-colors ${
-              isSelected
-                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-default'
-                : 'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300'
-            }`}
-          >
-            {isSelected ? (
-              <><Check className="w-4 h-4 mr-1" />{t('planner.inPlan')}</>
-            ) : (
-              <><Plus className="w-4 h-4 mr-1" />{t('planner.addToPlan')}</>
-            )}
-          </button>
+          {isSelected && onRemove ? (
+            <button
+              onClick={onRemove}
+              className="w-full group flex items-center justify-center py-1.5 text-sm font-medium rounded transition-colors bg-emerald-50 hover:bg-red-50 text-emerald-600 hover:text-red-600 border border-emerald-200 hover:border-red-200"
+            >
+              <Check className="w-4 h-4 mr-1 group-hover:hidden" />
+              <Minus className="w-4 h-4 mr-1 hidden group-hover:block" />
+              <span className="group-hover:hidden">{t('planner.inPlan')}</span>
+              <span className="hidden group-hover:inline">{t('planner.remove')}</span>
+            </button>
+          ) : (
+            <button
+              onClick={onAdd}
+              className="w-full flex items-center justify-center py-1.5 text-sm font-medium rounded transition-colors bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300"
+            >
+              <Plus className="w-4 h-4 mr-1" />{t('planner.addToPlan')}
+            </button>
+          )}
         </div>
       </div>
     </div>

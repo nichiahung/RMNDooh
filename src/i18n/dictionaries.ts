@@ -17,6 +17,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'planner.viewDetails': 'View Details',
     'planner.addToPlan': 'Add to Plan',
     'planner.inPlan': 'In Plan',
+    'planner.remove': 'Remove',
     'planner.exit': 'Exit Planner',
 
     // Filter Sidebar
@@ -458,6 +459,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'planner.viewDetails': '查看版位詳情',
     'planner.addToPlan': '加入排期',
     'planner.inPlan': '已排入',
+    'planner.remove': '移除',
     'planner.exit': '離開規劃工具',
 
     // Filter Sidebar

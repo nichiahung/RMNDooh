@@ -89,6 +89,7 @@ export function InventoryDiscovery({
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}
+            onRemove={onRemove}
             objective={objective}
             reserveFilterSpace={showFloatingFilterButton}
           />

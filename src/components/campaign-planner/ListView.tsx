@@ -10,11 +10,12 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
+  onRemove?: (inventoryId: string) => void;
   objective?: string;
   reserveFilterSpace?: boolean;
 }
 
-export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objective, reserveFilterSpace = false }: Props) {
+export function ListView({ inventory, selectedItems, onViewDetails, onAdd, onRemove, objective, reserveFilterSpace = false }: Props) {
   const { t } = useI18n();
 
   if (inventory.length === 0) {
@@ -38,6 +39,7 @@ export function ListView({ inventory, selectedItems, onViewDetails, onAdd, objec
             isSelected={isInMediaPlan(selectedItems, item.id)}
             onViewDetails={() => onViewDetails(item)}
             onAdd={() => onAdd(item)}
+            onRemove={onRemove ? () => onRemove(item.id) : undefined}
             objective={objective}
           />
         ))}
