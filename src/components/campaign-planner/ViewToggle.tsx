@@ -15,7 +15,7 @@ export function ViewToggle({ currentView, onViewChange }: Props) {
 
   const activeClass = 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200/50';
   const inactiveClass = 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50';
-  const buttonClass = 'flex h-8 w-9 items-center justify-center rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500';
+  const buttonClass = 'flex h-8 w-8 items-center justify-center rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
     <div className="bg-slate-100 p-1 rounded-lg flex items-center shadow-inner flex-shrink-0" aria-label="View mode">
