@@ -31,6 +31,7 @@ import { mockReportData } from '@/data/mockReportData';
 import { imgSrc } from '@/utils/imgSrc';
 import { buildCampaignPlannerExploreHref } from '@/utils/plannerRoutes';
 import type { ProposalStatus } from '@/types/trading-models';
+import type { AuthUser } from '@/utils/mockAuth';
 
 type CampaignSummary = Awaited<ReturnType<typeof listCampaignSummaries>>[number];
 
@@ -108,6 +109,33 @@ function campaignDisplayName(campaign: CampaignSummary, seq: number): string {
   const d = new Date(campaign.createdAt);
   const yyyymmdd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
   return `Campaign_${yyyymmdd}_${String(seq).padStart(3, '0')}`;
+}
+
+function userDisplayName(user: AuthUser): string {
+  const name = user.email.split('@')[0] ?? 'Advertiser';
+  return name
+    .split(/[._-]/)
+    .filter(Boolean)
+    .map(part => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ') || 'Advertiser';
+}
+
+function greetingLabel(): string {
+  const hour = new Date().getHours();
+  if (hour < 11) return '早安';
+  if (hour < 18) return '午安';
+  return '晚安';
+}
+
+function todayLabel(): string {
+  return new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' });
+}
+
+function campaignNextAction(campaign: CampaignSummary | null): string {
+  if (!campaign) return '建立第一個投放草稿';
+  if (campaign.totalCount > 0 && campaign.uploadedCount < campaign.totalCount) return '補齊素材';
+  if (campaign.status === 'ready_to_confirm') return '確認 booking';
+  return '繼續規劃';
 }
 
 function Badge({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -219,16 +247,70 @@ function MarketplacePreview() {
   );
 }
 
-function AdvertiserHome() {
+function NextBestActions({ campaign }: { campaign: CampaignSummary | null }) {
+  const action = campaignNextAction(campaign);
+
+  const actions = campaign
+    ? [
+        { label: action, helper: campaignDisplayName(campaign, 1), icon: Sparkles, href: `/campaign-planner/new?id=${campaign.id}` },
+        { label: '查看地圖版位', helper: '用地圖檢查可投放 InventoryLocation', icon: MapPinned, href: buildCampaignPlannerExploreHref() },
+        { label: '檢視成效報告', helper: 'POP、完播率與地點交付', icon: BarChart2, href: '/reports' },
+      ]
+    : [
+        { label: '查看 AI 推薦', helper: '先用目標與預算產生組合', icon: Sparkles, href: '/campaign-planner/new?view=ai' },
+        { label: '探索地圖版位', helper: '搜尋、比較並加入 Media Plan', icon: MapPinned, href: buildCampaignPlannerExploreHref() },
+        { label: '建立 Campaign', helper: '從空白規劃開始', icon: Plus, href: '/campaign-planner/new' },
+      ];
+
+  return (
+    <div className="order-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm xl:order-3">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-bold text-slate-950">Next best actions</h2>
+          <p className="text-xs text-slate-500">依目前 Campaign 狀態排序</p>
+        </div>
+        <Sparkles className="h-4 w-4 text-indigo-600" />
+      </div>
+      <div className="space-y-2">
+        {actions.map(item => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 transition hover:border-indigo-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-800 shadow-sm">
+              <item.icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-slate-950">{item.label}</span>
+              <span className="mt-0.5 block truncate text-xs text-slate-500">{item.helper}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdvertiserHome({ currentUser }: { currentUser: AuthUser }) {
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
+  const [timeContext, setTimeContext] = useState({ greeting: '你好', date: '今日' });
 
   useEffect(() => {
     listCampaignSummaries()
       .then(c => setCampaigns(c))
       .catch(() => setCampaigns([]))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setTimeContext({ greeting: greetingLabel(), date: todayLabel() });
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   const metrics = useMemo(() => {
@@ -250,32 +332,67 @@ function AdvertiserHome() {
   const activeCampaignStatus = heroCampaign
     ? STATUS_LABEL[heroCampaign.status] ?? { label: heroCampaign.status, color: 'border-slate-200 bg-slate-100 text-slate-600' }
     : null;
+  const primaryHref = heroCampaign ? `/campaign-planner/new?id=${heroCampaign.id}` : '/campaign-planner/new?view=ai';
+  const displayName = userDisplayName(currentUser);
+  const nextAction = campaignNextAction(heroCampaign);
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-5">
-      <section className="grid items-stretch gap-4 lg:grid-cols-[minmax(360px,0.72fr)_minmax(520px,1fr)]">
-        <div className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Badge className="border-cyan-200 bg-cyan-50 text-cyan-700">Self-service DOOH</Badge>
+              <Badge className="border-slate-200 bg-slate-50 text-slate-600">{timeContext.date}</Badge>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              {timeContext.greeting}，{displayName}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">
+              {heroCampaign
+                ? `你有 1 個未完成規劃，下一步是「${nextAction}」。AI 已根據去年同期與近期投放訊號產生建議地點組合。`
+                : '從 AI 推薦或地圖探索開始，建立第一個 DOOH Media Plan。'}
+            </p>
+          </div>
+          <div className="grid gap-2 sm:flex sm:items-center">
+            <Link
+              href={primaryHref}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-bold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <Sparkles className="h-4 w-4" />
+              {heroCampaign ? '繼續規劃' : '查看 AI 推薦'}
+            </Link>
+            <Link
+              href={buildCampaignPlannerExploreHref()}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <MapPinned className="h-4 w-4" />
+              探索地圖
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid items-stretch gap-4 xl:grid-cols-[minmax(300px,0.72fr)_minmax(520px,1fr)_minmax(260px,0.62fr)]">
+        <div className="order-2 flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm xl:order-1">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <p className="text-xs font-semibold uppercase text-slate-500">Self-service DOOH</p>
-              <h1 className="mt-1 text-lg font-bold text-slate-950">投放工作台</h1>
+              <p className="text-xs font-semibold uppercase text-slate-500">Resume planning</p>
+              <h2 className="mt-1 text-base font-bold text-slate-950">上次未完成活動規劃</h2>
             </div>
-            <Badge className="border-slate-200 bg-slate-50 text-slate-600">
-              {new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' })}
-            </Badge>
+            {activeCampaignStatus && (
+              <Badge className={activeCampaignStatus.color}>{activeCampaignStatus.label}</Badge>
+            )}
           </div>
 
           <div className="mt-4 flex-1 rounded-lg border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-500">上次未完成活動規劃</p>
+                <p className="text-xs font-semibold text-slate-500">Campaign</p>
                 <p className="mt-1 truncate text-base font-bold text-slate-950">
                   {heroCampaign ? campaignDisplayName(heroCampaign, 1) : '尚未建立 Campaign'}
                 </p>
               </div>
-              {activeCampaignStatus && (
-                <Badge className={activeCampaignStatus.color}>{activeCampaignStatus.label}</Badge>
-              )}
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
               <div className="rounded-md bg-white p-2">
@@ -290,7 +407,7 @@ function AdvertiserHome() {
               </div>
               <div className="rounded-md bg-white p-2">
                 <p className="text-slate-500">下一步</p>
-                <p className="mt-1 text-sm font-bold text-slate-950">{heroCampaign ? '繼續編輯' : '建立規劃'}</p>
+                <p className="mt-1 truncate text-sm font-bold text-slate-950">{nextAction}</p>
               </div>
             </div>
           </div>
@@ -301,7 +418,7 @@ function AdvertiserHome() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-950 px-5 text-sm font-bold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <Sparkles className="h-4 w-4" />
-              {heroCampaign ? '繼續規劃' : '查看 AI 推薦'}
+              {heroCampaign ? '繼續編輯' : '查看 AI 推薦'}
             </Link>
             <Link
               href={buildCampaignPlannerExploreHref()}
@@ -313,7 +430,10 @@ function AdvertiserHome() {
           </div>
         </div>
 
-        <MarketplacePreview />
+        <div className="order-1 xl:order-2">
+          <MarketplacePreview />
+        </div>
+        <NextBestActions campaign={heroCampaign} />
       </section>
 
       <section className="grid gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm md:grid-cols-4">
@@ -423,6 +543,7 @@ function SalesHome() {
   const [countsByStatus, setCountsByStatus] = useState<Record<ProposalStatus, number> | null>(null);
   const [proposals, setProposals] = useState<Awaited<ReturnType<typeof listAdminProposalsApi>>['proposals']>([]);
   const [loading, setLoading] = useState(true);
+  const [dateLabel, setDateLabel] = useState('今日');
 
   useEffect(() => {
     listAdminProposalsApi()
@@ -432,6 +553,13 @@ function SalesHome() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setDateLabel(todayLabel());
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   const followUpQueue = proposals.filter(p =>
@@ -458,7 +586,7 @@ function SalesHome() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700">Sales-assisted DOOH</Badge>
               <Badge className="border-slate-200 bg-slate-50 text-slate-600">
-                {new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' })}
+                {dateLabel}
               </Badge>
             </div>
             <h1 className="mt-6 text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
@@ -581,5 +709,5 @@ export function HomeView() {
   if (!currentUser) return null;
   if (currentUser.role === 'admin') return null;
   if (currentUser.role === 'sales') return <SalesHome />;
-  return <AdvertiserHome />;
+  return <AdvertiserHome currentUser={currentUser} />;
 }

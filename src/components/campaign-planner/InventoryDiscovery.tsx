@@ -17,9 +17,11 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation, options?: MediaPlanAddOptions) => void;
+  onAddAll?: () => void;
   onRemove: (inventoryId: string) => void;
   objective?: string;
   activeFilterCount?: number;
+  addAllCount?: number;
   onOpenFilters?: () => void;
   showTopbar?: boolean;
   flightStart: string | null;
@@ -37,9 +39,11 @@ export function InventoryDiscovery({
   selectedItems,
   onViewDetails,
   onAdd,
+  onAddAll,
   onRemove,
   objective,
   activeFilterCount,
+  addAllCount = 0,
   onOpenFilters,
   showTopbar = true,
   flightStart,
@@ -56,6 +60,8 @@ export function InventoryDiscovery({
           currentView={currentView}
           onViewChange={onViewChange}
           activeFilterCount={activeFilterCount}
+          addAllCount={addAllCount}
+          onAddAll={currentView !== 'ai' ? onAddAll : undefined}
           onOpenFilters={currentView !== 'ai' ? onOpenFilters : undefined}
         />
       )}

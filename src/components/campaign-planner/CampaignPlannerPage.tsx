@@ -159,6 +159,12 @@ function CampaignPlannerPageContent() {
   }, [filters]);
 
   const selectedObjective = filters.campaignObjectives?.[0] ?? filters.campaignObjective;
+  const addableFilteredInventory = useMemo(() => {
+    const selectedIds = new Set(selectedItems.map(item => item.inventoryId));
+    return filteredAndSortedInventory.filter(item =>
+      item.availability >= 0.3 && !selectedIds.has(item.id)
+    );
+  }, [filteredAndSortedInventory, selectedItems]);
 
   // --- Handlers ---
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
@@ -259,6 +265,70 @@ function CampaignPlannerPageContent() {
         dbItemIdMap.current.set(item.id, dbRow.id);
       } catch (err) {
         console.error('Failed to persist inventory item:', err);
+      }
+    }
+  };
+
+  const handleAddAllFiltered = async () => {
+    if (addableFilteredInventory.length === 0) return;
+
+    const itemsToAdd = addableFilteredInventory;
+    const resolvedItems = itemsToAdd.map(item => ({
+      item,
+      resolved: resolveAddOptions(),
+    }));
+
+    setSelectedItems(prev =>
+      resolvedItems.reduce(
+        (next, { item, resolved }) =>
+          addToMediaPlan(next, item, resolved.days, resolved.startDate, resolved.endDate),
+        prev,
+      )
+    );
+
+    let cId = campaignId;
+
+    if (!cId) {
+      if (isCreatingDraft.current) {
+        pendingItemsRef.current.push(...itemsToAdd.map(item => ({ item })));
+        return;
+      }
+
+      isCreatingDraft.current = true;
+      try {
+        const draft = await createDraftCampaign({
+          startDate: flightStart,
+          endDate: flightEnd,
+          campaignDays: flightStart && flightEnd ? flightDays(flightStart, flightEnd) : undefined,
+        });
+        cId = draft.id;
+        setCampaignId(draft.id);
+        router.replace(`/campaign-planner/new?id=${draft.id}`, { scroll: false });
+      } catch (err) {
+        console.error('Failed to create campaign draft:', err);
+        isCreatingDraft.current = false;
+        return;
+      }
+      isCreatingDraft.current = false;
+    }
+
+    if (!cId) return;
+
+    for (const { item, resolved } of resolvedItems) {
+      if (dbItemIdMap.current.has(item.id)) continue;
+      try {
+        const dbRow = await addInventoryItem(
+          cId,
+          item.id,
+          resolved.days,
+          item.pricePerDay,
+          item.dailyImpressions,
+          resolved.startDate,
+          resolved.endDate,
+        );
+        dbItemIdMap.current.set(item.id, dbRow.id);
+      } catch (err) {
+        console.error('Failed to persist filtered inventory item:', err);
       }
     }
   };
@@ -448,8 +518,6 @@ function CampaignPlannerPageContent() {
                     <FilterSidebar
                       filters={filters}
                       onFilterChange={handleFilterChange}
-                      onClearFilters={handleClearFilters}
-                      activeFilterCount={activeFilterCount}
                       isOpen={isFilterOpen}
                       onClose={() => setIsFilterOpen(false)}
                       searchQuery={searchQuery}
@@ -466,7 +534,6 @@ function CampaignPlannerPageContent() {
                       filters={filters}
                       onFilterChange={handleFilterChange}
                       onClearFilters={handleClearFilters}
-                      activeFilterCount={activeFilterCount}
                       resultCount={filteredAndSortedInventory.length}
                       searchQuery={searchQuery}
                       onSearchChange={setSearchQuery}
@@ -484,9 +551,11 @@ function CampaignPlannerPageContent() {
                   selectedItems={selectedItems}
                   onViewDetails={setSelectedInventoryForDetail}
                   onAdd={handleAdd}
+                  onAddAll={handleAddAllFiltered}
                   onRemove={handleRemove}
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
+                  addAllCount={addableFilteredInventory.length}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
                   showTopbar
                   flightStart={flightStart}

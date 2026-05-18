@@ -15,8 +15,8 @@ type SectionId = 'objective' | 'location' | 'venueType' | 'screenType' | 'audien
 export interface FilterSidebarProps {
   filters: FilterState;
   onFilterChange: (newFilters: Partial<FilterState>) => void;
-  onClearFilters: () => void;
-  activeFilterCount: number;
+  onClearFilters?: () => void;
+  activeFilterCount?: number;
   isOpen: boolean;
   onClose: () => void;
   searchQuery: string;
@@ -147,8 +147,6 @@ function ChipGroup({
 export function FilterSidebar({
   filters,
   onFilterChange,
-  onClearFilters,
-  activeFilterCount,
   isOpen,
   onClose,
   searchQuery,
@@ -170,7 +168,7 @@ export function FilterSidebar({
     () => filters.campaignObjectives ?? (filters.campaignObjective ? [filters.campaignObjective] : []),
     [filters.campaignObjectives, filters.campaignObjective],
   );
-  const selectedDistricts = filters.districts ?? [];
+  const selectedDistricts = useMemo(() => filters.districts ?? [], [filters.districts]);
 
   // ── Available options from live inventory ───────────────────────────────────
   const availableCities      = useMemo(() => Array.from(new Set(allInventory.map(i => i.city))).sort(), [allInventory]);
@@ -249,14 +247,22 @@ export function FilterSidebar({
   const toggleSection = (id: SectionId) =>
     setCollapsedSections(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
 
   const toggleExpand = (key: string) =>
     setExpandedChipGroups(prev => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
       return next;
     });
 
@@ -339,21 +345,8 @@ export function FilterSidebar({
           <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-500" />
             {t('filter.searchAndFilter')}
-            {activeFilterCount > 0 && (
-              <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-[10px] font-bold">
-                {activeFilterCount}
-              </span>
-            )}
           </h2>
           <div className="flex items-center gap-2">
-            {activeFilterCount > 0 && (
-              <button
-                onClick={onClearFilters}
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-              >
-                {t('filter.clearAll')}
-              </button>
-            )}
             <button
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"

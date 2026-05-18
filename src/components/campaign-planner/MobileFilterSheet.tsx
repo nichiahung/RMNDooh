@@ -28,7 +28,6 @@ export interface MobileFilterSheetProps {
   filters: FilterState;
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   onClearFilters: () => void;
-  activeFilterCount: number;
   resultCount: number;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -40,7 +39,6 @@ export function MobileFilterSheet({
   filters,
   onFilterChange,
   onClearFilters,
-  activeFilterCount,
   resultCount,
   searchQuery,
   onSearchChange,
@@ -412,14 +410,9 @@ export function MobileFilterSheet({
           <button
             type="button"
             onClick={onClose}
-            className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1"
+            className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1"
           >
             {formatMobileFilterResultCta(resultCount)}
-            {activeFilterCount > 0 && (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[10px] font-bold leading-none text-indigo-600">
-                {activeFilterCount}
-              </span>
-            )}
           </button>
         </div>
       </div>
