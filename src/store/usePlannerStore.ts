@@ -6,6 +6,7 @@ interface PlannerState {
   // Inventory Data
   allInventory: InventoryLocation[];
   isLoadingInventory: boolean;
+  inventoryError: string | null;
   fetchInventory: () => Promise<void>;
 
   // UI State
@@ -26,11 +27,19 @@ interface PlannerState {
 export const usePlannerStore = create<PlannerState>((set) => ({
   allInventory: [],
   isLoadingInventory: false,
+  inventoryError: null,
 
   fetchInventory: async () => {
-    set({ isLoadingInventory: true });
-    const inventory = await fetchInventoryLocations();
-    set({ allInventory: inventory, isLoadingInventory: false });
+    set({ isLoadingInventory: true, inventoryError: null });
+    try {
+      const inventory = await fetchInventoryLocations();
+      set({ allInventory: inventory, isLoadingInventory: false });
+    } catch (err) {
+      set({
+        isLoadingInventory: false,
+        inventoryError: err instanceof Error ? err.message : 'Failed to load inventory',
+      });
+    }
   },
 
   viewMode: 'map',
