@@ -140,6 +140,7 @@ function ProposalBuilderPageContent() {
     if (selectedVenueIds.length === 0) return;
     setIsSending(true);
     try {
+      // TODO: replace hardcoded advertiserId with selectedClientId once proposals migrate to Supabase
       const created = proposal ?? await createProposalApi({
         advertiserId: 'adv-01',
         ownerUserId: 'user-sales-01',
