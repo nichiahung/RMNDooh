@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDownUp, ChevronDown, Filter, ClipboardList } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, Filter } from 'lucide-react';
 import { ViewToggle, ViewMode } from './ViewToggle';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -12,8 +12,6 @@ interface Props {
   onViewChange: (view: ViewMode) => void;
   activeFilterCount?: number;
   onOpenFilters?: () => void;
-  onOpenSummary?: () => void;
-  selectedCount?: number;
 }
 
 const SORT_OPTIONS = [
@@ -33,8 +31,6 @@ export function PlannerTopbar({
   onViewChange,
   activeFilterCount = 0,
   onOpenFilters,
-  onOpenSummary,
-  selectedCount = 0,
 }: Props) {
   const { t } = useI18n();
 
@@ -91,7 +87,7 @@ export function PlannerTopbar({
           </div>
         )}
 
-        {/* View toggle + mobile media plan button — pinned right */}
+        {/* View toggle — pinned right */}
         <div className="ml-auto flex items-center gap-2 flex-shrink-0">
           {(showFilters || showSort) && <div className="hidden sm:block h-4 w-px bg-slate-200" />}
           <ViewToggle currentView={currentView} onViewChange={onViewChange} />

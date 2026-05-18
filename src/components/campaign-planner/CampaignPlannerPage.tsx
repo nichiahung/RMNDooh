@@ -26,32 +26,59 @@ import {
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addDays, flightDays } from '@/utils/dates';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check } from 'lucide-react';
+import { Check, ClipboardList } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { usePlannerStore } from '@/store/usePlannerStore';
 
 // --- Types ---
 type PlannerStep = 'inventory' | 'review';
 
-function StepProgress({ step, onBackToInventory }: { step: PlannerStep; onBackToInventory: () => void }) {
+function StepProgress({
+  step,
+  onBackToInventory,
+  selectedCount,
+  isSummaryOpen,
+  onOpenSummary,
+}: {
+  step: PlannerStep;
+  onBackToInventory: () => void;
+  selectedCount: number;
+  isSummaryOpen: boolean;
+  onOpenSummary: () => void;
+}) {
   return (
-    <div className="flex items-center space-x-2 text-sm">
-      <div
-        className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
-        onClick={() => step === 'review' ? onBackToInventory() : undefined}
-      >
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'inventory' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-          {step === 'review' ? <Check className="w-3 h-3" /> : '1'}
+    <div className="flex items-center w-full">
+      <div className="flex items-center space-x-2 text-sm">
+        <div
+          className={`flex items-center ${step === 'inventory' ? 'text-indigo-600 font-bold' : 'text-slate-500 font-medium cursor-pointer'}`}
+          onClick={() => step === 'review' ? onBackToInventory() : undefined}
+        >
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'inventory' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
+            {step === 'review' ? <Check className="w-3 h-3" /> : '1'}
+          </div>
+          選擇版位
         </div>
-        選擇版位
-      </div>
-      <div className="w-6 h-px bg-slate-300"></div>
-      <div className={`flex items-center ${step === 'review' ? 'text-indigo-600 font-bold' : 'text-slate-400 font-medium'}`}>
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-          2
+        <div className="w-6 h-px bg-slate-300"></div>
+        <div className={`flex items-center ${step === 'review' ? 'text-indigo-600 font-bold' : 'text-slate-400 font-medium'}`}>
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] mr-1.5 ${step === 'review' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+            2
+          </div>
+          確認送審
         </div>
-        確認送審
       </div>
+      {step === 'inventory' && !isSummaryOpen && (
+        <button
+          type="button"
+          onClick={onOpenSummary}
+          className="lg:hidden ml-auto inline-flex items-center gap-1.5 h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-700 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+          aria-label="開啟媒體計劃"
+        >
+          <ClipboardList className="w-3.5 h-3.5 flex-shrink-0" />
+          {selectedCount > 0 && (
+            <span className="font-bold">{selectedCount}</span>
+          )}
+        </button>
+      )}
     </div>
   );
 }
@@ -403,7 +430,13 @@ function CampaignPlannerPageContent() {
       <h1 className="sr-only">{t('planner.title')}</h1>
 
       <div className="h-10 bg-white border-b border-slate-100 flex items-center px-6 flex-shrink-0">
-        <StepProgress step={step} onBackToInventory={() => setStep('inventory')} />
+        <StepProgress
+          step={step}
+          onBackToInventory={() => setStep('inventory')}
+          selectedCount={selectedItems.length}
+          isSummaryOpen={isSummaryOpen}
+          onOpenSummary={() => setIsSummaryOpen(true)}
+        />
       </div>
 
       {/* Main Content Area */}
@@ -455,7 +488,6 @@ function CampaignPlannerPageContent() {
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
-                  onOpenSummary={() => setIsSummaryOpen(true)}
                   showTopbar
                   flightStart={flightStart}
                   flightEnd={flightEnd}
