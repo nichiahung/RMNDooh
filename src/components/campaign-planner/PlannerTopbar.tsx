@@ -49,16 +49,15 @@ export function PlannerTopbar({
           <button
             type="button"
             onClick={onOpenFilters}
-            className="relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border bg-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              activeFilterCount > 0
+                ? 'border-indigo-500 text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50'
+                : 'border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700'
+            }`}
             aria-label={t('filter.open')}
             title={t('filter.open')}
           >
             <Filter className="h-4 w-4 flex-shrink-0" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
-                {activeFilterCount}
-              </span>
-            )}
           </button>
         )}
 
