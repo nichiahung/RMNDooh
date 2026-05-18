@@ -117,7 +117,7 @@ export function MobileFilterSheet({
           <button
             type="button"
             onClick={onClearFilters}
-            className="text-xs text-slate-500 hover:text-slate-700 underline"
+            className="px-2 py-2 text-xs text-slate-500 hover:text-slate-700 underline"
           >
             清除全部
           </button>
