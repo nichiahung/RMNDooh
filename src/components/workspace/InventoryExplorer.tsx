@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { useRouter } from 'next/navigation';
 import type { InventoryLocation } from '@/types/inventory';
+import { buildCampaignPlannerExploreHref } from '@/utils/plannerRoutes';
 
 interface InventoryExplorerProps {
   inventory: InventoryLocation[];
@@ -65,7 +66,7 @@ function buildPopupHtml(item: InventoryLocation, isUsed: boolean): string {
       </div>
       ${tags ? `<div style="font-size:10px;color:#6366f1;margin-bottom:8px">${tags}</div>` : ''}
       ${usedBadge}
-      <a href="/campaign-planner?inventoryId=${item.id}" style="display:block;margin-top:8px;text-align:center;background:#4f46e5;color:white;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;text-decoration:none">開始規劃 →</a>
+      <a href="${buildCampaignPlannerExploreHref({ inventoryId: item.id })}" style="display:block;margin-top:8px;text-align:center;background:#4f46e5;color:white;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;text-decoration:none">開始規劃 →</a>
     </div>
   `;
 }
@@ -218,7 +219,7 @@ export function InventoryExplorer({ inventory, usedInventoryIds }: InventoryExpl
         {/* CTA */}
         <div className="absolute top-4 right-4 z-[500]">
           <button
-            onClick={() => router.push('/campaign-planner')}
+            onClick={() => router.push(buildCampaignPlannerExploreHref())}
             className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-md transition-colors"
           >
             + 開始規劃

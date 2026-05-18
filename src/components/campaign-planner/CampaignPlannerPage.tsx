@@ -23,17 +23,14 @@ import {
   updateDraftCampaign,
   updateInventoryItemDays,
 } from '@/lib/api/campaign-draft';
-import { listMediaAssets, deleteMediaAsset, renameMediaAsset, uploadCreativeAsset } from '@/lib/api/creatives';
 import { searchInventory, sortInventory, filterInventory } from '@/utils/inventoryFilters';
 import { addDays, flightDays } from '@/utils/dates';
 import { addToMediaPlan, removeFromMediaPlan } from '@/utils/mediaPlanCalculations';
-import { Check, Globe, ImageIcon, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { usePlannerStore } from '@/store/usePlannerStore';
-import { AssetLibraryGrid } from '@/components/assets/AssetLibraryGrid';
 
 // --- Types ---
-type MediaAsset = Awaited<ReturnType<typeof listMediaAssets>>[number];
 type PlannerStep = 'inventory' | 'review';
 
 function StepProgress({ step, onBackToInventory }: { step: PlannerStep; onBackToInventory: () => void }) {
@@ -59,116 +56,6 @@ function StepProgress({ step, onBackToInventory }: { step: PlannerStep; onBackTo
   );
 }
 
-// --- LibraryTabContent ---
-function LibraryTabContent() {
-  const [assets, setAssets] = useState<MediaAsset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    listMediaAssets()
-      .then(setAssets)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleDelete = async (id: string) => {
-    await deleteMediaAsset(id);
-    setAssets(prev => prev.filter(a => a.id !== id));
-  };
-
-  const handleRename = async (id: string, newName: string) => {
-    await renameMediaAsset(id, newName);
-    setAssets(prev => prev.map(a => a.id === id ? { ...a, originalFilename: newName } : a));
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-    setUploading(true);
-    try {
-      const asset = await uploadCreativeAsset(file);
-      const newAsset: MediaAsset = {
-        id: asset.id,
-        originalFilename: asset.name,
-        publicUrl: asset.previewUrl ?? '',
-        fileType: asset.type.startsWith('video') ? 'video' : 'image',
-        mimeType: asset.type,
-        fileSizeBytes: asset.fileSize,
-        status: 'ready',
-        approvalStatus: 'pending_review',
-        createdAt: asset.uploadedAt,
-        isApproved: false,
-      };
-      setAssets(prev => [newAsset, ...prev]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '上傳失敗');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
-      <div className="max-w-5xl mx-auto w-full px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">素材庫</h2>
-            <p className="text-sm text-slate-500 mt-0.5">所有上傳過的廣告素材</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400">{assets.length} 個素材</span>
-            <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileChange} />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {uploading ? '上傳中…' : '新增素材'}
-            </button>
-          </div>
-        </div>
-
-        {loading && (
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
-          </div>
-        )}
-
-        {!loading && !error && assets.length === 0 && (
-          <div className="bg-white border border-dashed border-slate-300 rounded-xl p-16 text-center">
-            <ImageIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-sm font-medium text-slate-700 mb-1">素材庫是空的</p>
-            <p className="text-xs text-slate-400 mb-4">在活動規劃中上傳素材後，會自動收錄在這裡。</p>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {uploading ? '上傳中…' : '新增素材'}
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && assets.length > 0 && (
-          <AssetLibraryGrid assets={assets} onDelete={handleDelete} onRename={handleRename} />
-        )}
-      </div>
-    </div>
-  );
-}
-
 // --- Main CampaignPlannerPage Wrapper ---
 export function CampaignPlannerPage() {
   return (
@@ -188,9 +75,6 @@ function CampaignPlannerPageContent() {
   useEffect(() => {
     fetchInventory();
   }, [fetchInventory]);
-
-  // --- Tab State ---
-  const [activeTab, setActiveTab] = useState<'planner' | 'library'>('planner');
 
   // --- Step Flow State ---
   const [step, setStep] = useState<PlannerStep>('inventory');
@@ -352,14 +236,6 @@ function CampaignPlannerPageContent() {
     }
   };
 
-  const handleAddAll = () => {
-    filteredAndSortedInventory.forEach(item => {
-      if (!selectedItems.some(s => s.inventoryId === item.id)) {
-        handleAdd(item);
-      }
-    });
-  };
-
   const handleRemove = (inventoryId: string) => {
     setSelectedItems(prev => removeFromMediaPlan(prev, inventoryId));
     if (campaignId) {
@@ -519,76 +395,19 @@ function CampaignPlannerPageContent() {
     }
   }, [queryId, campaignId]);
 
-  const { t, toggleLocale } = useI18n();
+  const { t } = useI18n();
 
   return (
     <main className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
 
-      {/* Top Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 flex-shrink-0 z-30 shadow-sm gap-3">
-        {/* Left: title + tabs */}
-        <div className="flex items-center gap-6 min-w-0">
-          <h1 className="text-base font-bold tracking-tight text-slate-800 whitespace-nowrap">Campaign Planner</h1>
+      <h1 className="sr-only">{t('planner.title')}</h1>
 
-          {/* Tab switcher — desktop */}
-          <div className="hidden md:flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
-            {(['planner', 'library'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                  activeTab === tab
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {tab === 'planner' ? '規劃版位' : '素材庫'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Right: actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Mobile tab buttons */}
-          <div className="flex md:hidden items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
-            {(['planner', 'library'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-2 py-1.5 rounded-md text-[10px] font-semibold transition-colors ${
-                  activeTab === tab ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500'
-                }`}
-              >
-                {tab === 'planner' ? '規劃' : '素材'}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={toggleLocale}
-            className="hidden sm:flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-          >
-            <Globe className="w-4 h-4 sm:mr-1.5" />
-            <span className="hidden sm:inline">{t('common.langToggle')}</span>
-          </button>
-          <button className="px-3 sm:px-4 py-2 text-sm font-semibold text-white bg-slate-800 rounded-lg hover:bg-slate-900 transition-colors shadow-sm">
-            {t('planner.exit')}
-          </button>
-        </div>
-      </header>
-
-      {/* Step progress sub-bar — only in Planner tab */}
-      {activeTab === 'planner' && (
-        <div className="h-10 bg-white border-b border-slate-100 flex items-center px-6 flex-shrink-0">
-          <StepProgress step={step} onBackToInventory={() => setStep('inventory')} />
-        </div>
-      )}
+      <div className="h-10 bg-white border-b border-slate-100 flex items-center px-6 flex-shrink-0">
+        <StepProgress step={step} onBackToInventory={() => setStep('inventory')} />
+      </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex overflow-hidden relative${activeTab === 'planner' && step === 'inventory' ? ' pb-16 lg:pb-14' : ''}`}>
-
-        {activeTab === 'planner' && (
-          <>
+      <div className={`flex-1 flex overflow-hidden relative${step === 'inventory' ? ' pb-16 md:pb-0' : ''}`}>
             {step === 'inventory' && (
               <>
                 {currentView !== 'ai' && (
@@ -615,6 +434,9 @@ function CampaignPlannerPageContent() {
                       onFilterChange={handleFilterChange}
                       onClearFilters={handleClearFilters}
                       activeFilterCount={activeFilterCount}
+                      resultCount={filteredAndSortedInventory.length}
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
                     />
                   </div>
                 )}
@@ -630,10 +452,10 @@ function CampaignPlannerPageContent() {
                   onViewDetails={setSelectedInventoryForDetail}
                   onAdd={handleAdd}
                   onRemove={handleRemove}
-                  onAddAll={handleAddAll}
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
+                  showTopbar
                   flightStart={flightStart}
                   flightEnd={flightEnd}
                   onFlightDateChange={handleFlightDateChange}
@@ -693,14 +515,6 @@ function CampaignPlannerPageContent() {
                 onFlightDateChange={handleFlightDateChange}
               />
             )}
-          </>
-        )}
-
-        {activeTab === 'library' && (
-          <LibraryTabContent />
-        )}
-
-
       </div>
     </main>
   );

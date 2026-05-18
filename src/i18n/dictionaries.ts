@@ -4,6 +4,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
   'en': {
     // Campaign Planner
     'planner.title': 'Campaign Planner',
+    'planner.subtitle': 'Select inventory, confirm flight dates, and submit for review',
     'planner.saveDraft': 'Save Draft',
     'planner.continue': 'Continue',
     'planner.searchPlaceholder': 'Search locations...',
@@ -28,6 +29,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.selectCityFirst': 'Select city first',
     'filter.city.Taipei': 'Taipei',
     'filter.city.NewTaipei': 'New Taipei',
+    'filter.city.Taoyuan': 'Taoyuan',
     'filter.district': 'District',
     'filter.venueType': 'Venue Type',
     'filter.screenType': 'Screen Type',
@@ -122,6 +124,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     // Common
     'common.langToggle': '中文',
+    'common.language': 'Language',
+    'common.switchLanguage': 'Switch language',
 
     // Review step — submitted confirmation
     'review.submitted.title': 'Campaign Submitted!',
@@ -241,6 +245,10 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.district.Banqiao': 'Banqiao',
     'filter.district.Neihu': 'Neihu',
     'filter.district.Shilin': 'Shilin',
+    'filter.district.Dayuan': 'Dayuan',
+    'filter.district.Luzhu': 'Luzhu',
+    'filter.district.Taoyuan': 'Taoyuan',
+    'filter.district.Zhongli': 'Zhongli',
 
     // Filter option labels — venue types
     'filter.venue.Mall': 'Mall',
@@ -268,6 +276,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.audience.Commuters': 'Commuters',
     'filter.audience.TechWorkers': 'Tech Workers',
     'filter.audience.Foodies': 'Foodies',
+    'filter.audience.BusinessTravelers': 'Business Travelers',
+    'filter.audience.Families': 'Families',
+    'filter.audience.SportsFans': 'Sports Fans',
 
     // ── Admin ──────────────────────────────────────────────────────────────
 
@@ -446,6 +457,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
   'zh-TW': {
     // Campaign Planner
     'planner.title': '媒體投放規劃',
+    'planner.subtitle': '選擇版位、確認檔期與送審內容',
     'planner.saveDraft': '儲存草稿',
     'planner.continue': '繼續',
     'planner.searchPlaceholder': '搜尋刊播版位...',
@@ -470,6 +482,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.selectCityFirst': '先選擇城市',
     'filter.city.Taipei': '台北市',
     'filter.city.NewTaipei': '新北市',
+    'filter.city.Taoyuan': '桃園市',
     'filter.district': '行政區',
     'filter.venueType': '刊播場域',
     'filter.screenType': '版面規格',
@@ -564,6 +577,8 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
 
     // Common
     'common.langToggle': 'EN',
+    'common.language': '語言',
+    'common.switchLanguage': '切換語言',
 
     // Review step — submitted confirmation
     'review.submitted.title': '廣告活動已送出！',
@@ -683,6 +698,10 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.district.Banqiao': '板橋區',
     'filter.district.Neihu': '內湖區',
     'filter.district.Shilin': '士林區',
+    'filter.district.Dayuan': '大園區',
+    'filter.district.Luzhu': '蘆竹區',
+    'filter.district.Taoyuan': '桃園區',
+    'filter.district.Zhongli': '中壢區',
 
     // Filter option labels — venue types
     'filter.venue.Mall': '購物中心',
@@ -710,6 +729,9 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'filter.audience.Commuters': '通勤族',
     'filter.audience.TechWorkers': '科技業從業者',
     'filter.audience.Foodies': '美食愛好者',
+    'filter.audience.BusinessTravelers': '商務旅客',
+    'filter.audience.Families': '親子家庭',
+    'filter.audience.SportsFans': '運動族群',
 
     // ── 媒體後台管理 ─────────────────────────────────────────────────────────
 

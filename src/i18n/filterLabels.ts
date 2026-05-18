@@ -11,6 +11,10 @@ export const DISTRICT_KEY: Record<string, string> = {
   'Banqiao':     'filter.district.Banqiao',
   'Neihu':       'filter.district.Neihu',
   'Shilin':      'filter.district.Shilin',
+  'Dayuan':      'filter.district.Dayuan',
+  'Luzhu':       'filter.district.Luzhu',
+  'Taoyuan':     'filter.district.Taoyuan',
+  'Zhongli':     'filter.district.Zhongli',
 };
 
 export const VENUE_KEY: Record<string, string> = {
@@ -41,11 +45,15 @@ export const AUDIENCE_KEY: Record<string, string> = {
   'Commuters':     'filter.audience.Commuters',
   'Tech Workers':  'filter.audience.TechWorkers',
   'Foodies':       'filter.audience.Foodies',
+  'Business Travelers': 'filter.audience.BusinessTravelers',
+  'Families':      'filter.audience.Families',
+  'Sports Fans':   'filter.audience.SportsFans',
 };
 
 export const CITY_KEY: Record<string, string> = {
   'Taipei':     'filter.city.Taipei',
   'New Taipei': 'filter.city.NewTaipei',
+  'Taoyuan':    'filter.city.Taoyuan',
 };
 
 export const AVAILABILITY_KEY: Record<string, string> = {

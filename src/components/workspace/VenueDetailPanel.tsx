@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, TrendingUp, Clock, Star } from 'lucide-react';
 import type { InventoryLocation } from '@/types/inventory';
+import { buildCampaignPlannerExploreHref } from '@/utils/plannerRoutes';
 
 interface VenueDetailPanelProps {
   venue: InventoryLocation | null;
@@ -29,8 +29,7 @@ function topPeakHours(peakHours: number[]): string {
 
 export function VenueDetailPanel({ venue, isUsed, onClose }: VenueDetailPanelProps) {
   const router = useRouter();
-  const [displayedVenue, setDisplayedVenue] = useState<InventoryLocation | null>(null);
-  useEffect(() => { if (venue) setDisplayedVenue(venue); }, [venue]);
+  const displayedVenue = venue;
 
   const avail = displayedVenue ? availabilityLabel(displayedVenue.availability) : { label: '', color: '' };
 
@@ -122,7 +121,7 @@ export function VenueDetailPanel({ venue, isUsed, onClose }: VenueDetailPanelPro
           {/* CTA */}
           <div className="p-4 border-t border-slate-100">
             <button
-              onClick={() => router.push(`/campaign-planner?inventoryId=${displayedVenue.id}`)}
+              onClick={() => router.push(buildCampaignPlannerExploreHref({ inventoryId: displayedVenue.id }))}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
             >
               開始規劃此版位 <span>→</span>

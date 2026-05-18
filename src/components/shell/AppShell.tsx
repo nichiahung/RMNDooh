@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
-import { Menu } from 'lucide-react';
 import { AppSidebar } from './AppSidebar';
-import { imgSrc } from '@/utils/imgSrc';
+import { MobileTabBar } from './MobileTabBar';
 
 interface Props {
   children: React.ReactNode;
@@ -15,28 +13,6 @@ export function AppShell({ children }: Props) {
 
   return (
     <div className="h-screen flex flex-col bg-slate-50">
-
-      {/* Mobile header — hidden on md+ */}
-      <header className="md:hidden h-14 flex-shrink-0 flex items-center gap-3 bg-slate-700 border-b border-slate-600 px-4 z-30">
-        <button
-          type="button"
-          onClick={() => setIsMobileNavOpen(true)}
-          className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-          aria-label="開啟導覽選單"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <div className="flex items-center h-8 w-[116px]">
-          <Image
-            src={imgSrc('/drmn-logo-sidebar.png')}
-            alt="DRMN"
-            width={120}
-            height={40}
-            className="h-7 w-full object-contain object-left"
-            priority
-          />
-        </div>
-      </header>
 
       {/* Backdrop — shown behind drawer on mobile */}
       <div
@@ -49,21 +25,20 @@ export function AppShell({ children }: Props) {
         aria-hidden="true"
       />
 
-      {/* Body row: sidebar + main */}
+      {/* Body row: sidebar (desktop) + main */}
       <div className="flex flex-1 min-h-0">
         <AppSidebar
           mobileOpen={isMobileNavOpen}
           onMobileClose={() => setIsMobileNavOpen(false)}
         />
-        {/*
-          overflow-hidden moved from outer div to main.
-          The outer div must NOT have overflow-hidden so AppSidebar's
-          absolute collapse toggle button (-right-3) is not clipped.
-        */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        {/* pb-16 md:pb-0: reserve space for the mobile tab bar */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-16 md:pb-0">
           {children}
         </main>
       </div>
+
+      {/* Bottom tab bar — mobile only */}
+      <MobileTabBar onMoreClick={() => setIsMobileNavOpen(true)} />
 
     </div>
   );

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebarCollapse } from '@/hooks/useSidebarCollapse';
@@ -11,6 +11,7 @@ import { imgSrc } from '@/utils/imgSrc';
 import { NAV_CONFIG, type NavItem } from './navConfig';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
 import { listMediaAssets } from '@/lib/api/creatives';
+import { useI18n } from '@/i18n/I18nProvider';
 
 interface AppSidebarProps {
   mobileOpen?: boolean;
@@ -19,14 +20,14 @@ interface AppSidebarProps {
 
 export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) {
   const { currentUser, logout } = useAuth();
+  const { t, toggleLocale } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebarCollapse();
 
-  // On mobile drawer mode (mobileOpen is defined), always show expanded layout.
-  // On desktop, respect the collapsed state.
-  const isMobileDrawer = mobileOpen !== undefined;
-  const showExpanded = isMobileDrawer || !collapsed;
+  // When the mobile drawer is actively open, always show expanded layout.
+  // On desktop (mobileOpen=false), respect the collapsed state.
+  const showExpanded = mobileOpen === true || !collapsed;
 
   const [pendingProposalCount, setPendingProposalCount] = useState(0);
   const [creativeAttentionCount, setCreativeAttentionCount] = useState(0);
@@ -98,45 +99,29 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
         'md:h-full md:flex-shrink-0',
         'md:translate-x-0',
         'md:transition-[width] md:duration-200 md:ease-in-out',
-        collapsed ? 'md:w-[60px]' : 'md:w-[220px]',
+        collapsed ? 'md:w-[72px]' : 'md:w-[220px]',
       ].join(' ')}
     >
       {/* Brand */}
-      <div className={`h-14 flex items-center border-b border-slate-600 flex-shrink-0 ${
-        showExpanded ? 'justify-between gap-2 px-3' : 'justify-between gap-1 px-2'
+      <div className={`h-16 flex items-center border-b border-slate-600 flex-shrink-0 ${
+        showExpanded ? 'px-4' : 'justify-center px-2'
       }`}>
         <div className={`flex h-8 flex-shrink-0 items-center overflow-hidden ${
-          showExpanded ? 'w-[116px]' : 'w-6'
+          showExpanded ? 'w-[116px]' : 'w-9'
         }`}>
           <Image
             src={imgSrc('/drmn-logo-sidebar.png')}
             alt="DRMN"
             width={120}
             height={40}
-            className={`h-7 max-w-none object-contain ${showExpanded ? 'w-full' : 'w-[84px] object-left'}`}
+            className={`max-w-none object-contain ${showExpanded ? 'h-7 w-full' : 'h-8 w-[96px] object-left'}`}
             priority
           />
         </div>
-        <button
-          onClick={toggle}
-          className={`group hidden md:flex h-7 w-7 flex-shrink-0 items-center justify-center text-slate-300 hover:text-white transition-colors ${
-            collapsed
-              ? 'absolute -right-3 top-3.5 z-50 rounded-full border border-slate-500 bg-slate-600 shadow-md hover:bg-slate-500'
-              : 'relative rounded-lg hover:bg-white/10'
-          }`}
-          aria-label={collapsed ? '展開側欄' : '收合側欄'}
-        >
-          {collapsed
-            ? <ChevronRight className="w-4 h-4" />
-            : <ChevronLeft className="w-4 h-4" />}
-          <span className="absolute left-[34px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
-            {collapsed ? '展開側欄' : '收合側欄'}
-          </span>
-        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+      <nav className={`flex-1 overflow-y-auto py-3 ${showExpanded ? 'px-2 space-y-4' : 'px-3 space-y-3'}`}>
         {sections.map(section => (
           <div key={section.label}>
             {showExpanded && (
@@ -154,15 +139,15 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
                     <Link
                       href={item.href}
                       onClick={onMobileClose}
-                      className={`group relative flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`group relative flex rounded-xl text-sm font-medium transition-colors ${
                         active
                           ? 'bg-white/15 text-white'
                           : 'text-slate-300 hover:bg-white/10 hover:text-white'
-                      }`}
+                      } ${showExpanded ? 'items-center gap-2.5 px-2 py-2' : 'h-12 items-center justify-center px-0'}`}
                     >
-                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <Icon className={`${showExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
                       {!showExpanded && badgeCount > 0 && (
-                        <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-slate-700" />
+                        <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-amber-400 ring-2 ring-slate-700" />
                       )}
                       {showExpanded && (
                         <span className="flex-1 whitespace-nowrap">{item.label}</span>
@@ -173,7 +158,7 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
                         </span>
                       )}
                       {!showExpanded && (
-                        <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
+                        <span className="absolute left-full ml-2 z-[1300] hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
                           {item.label}{badgeCount > 0 ? ` (${badgeCount})` : ''}
                         </span>
                       )}
@@ -187,12 +172,34 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-2 border-t border-slate-600 space-y-0.5">
+      <div className={`border-t border-slate-600 ${showExpanded ? 'p-2 space-y-0.5' : 'p-3 space-y-2'}`}>
+        {/* Collapse toggle — desktop only, always inside sidebar */}
+        <button
+          onClick={toggle}
+          className={`group hidden md:flex w-full rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-colors ${
+            showExpanded
+              ? 'items-center gap-2.5 px-2 py-2 text-sm font-medium'
+              : 'h-12 items-center justify-center'
+          }`}
+          aria-label={collapsed ? '展開側欄' : '收合側欄'}
+        >
+          {collapsed
+            ? <ChevronRight className="w-4 h-4 flex-shrink-0" />
+            : <ChevronLeft className="w-4 h-4 flex-shrink-0" />}
+          {showExpanded && <span className="whitespace-nowrap text-xs">收合側欄</span>}
+          {!showExpanded && (
+            <span className="absolute left-full ml-2 z-[1300] hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
+              展開側欄
+            </span>
+          )}
+        </button>
         <div
-          className="group relative mb-2 flex items-center gap-2.5 rounded-lg px-2 py-2 text-slate-300"
+          className={`group relative flex items-center rounded-xl text-slate-300 ${
+            showExpanded ? 'mb-2 gap-2.5 px-2 py-2' : 'h-12 justify-center px-0'
+          }`}
           aria-label={`目前登入：${currentUser?.email ?? 'Unknown'}`}
         >
-          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+          <div className={`${showExpanded ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-sm'} flex flex-shrink-0 items-center justify-center rounded-full bg-indigo-500 font-bold text-white`}>
             {accountInitial}
           </div>
           {showExpanded && (
@@ -202,21 +209,45 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
             </div>
           )}
           {!showExpanded && (
-            <span className="absolute left-[52px] z-50 hidden min-w-[180px] group-hover:block rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-100 shadow-lg pointer-events-none">
+            <span className="absolute left-full ml-2 z-[1300] hidden min-w-[180px] group-hover:block rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-100 shadow-lg pointer-events-none">
               <span className="block text-[10px] uppercase tracking-wider text-indigo-300">{roleLabel}</span>
               <span className="block font-medium">{currentUser?.email ?? 'Unknown user'}</span>
             </span>
           )}
         </div>
         <button
+          onClick={toggleLocale}
+          className={`group relative flex w-full rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium ${
+            showExpanded ? 'items-center gap-2.5 px-2 py-2' : 'h-12 items-center justify-center px-0'
+          }`}
+          aria-label={`${t('common.switchLanguage')}: ${t('common.langToggle')}`}
+        >
+          <Globe className={`${showExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
+          {showExpanded && (
+            <>
+              <span className="flex-1 whitespace-nowrap">{t('common.language')}</span>
+              <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-slate-100">
+                {t('common.langToggle')}
+              </span>
+            </>
+          )}
+          {!showExpanded && (
+            <span className="absolute left-full ml-2 z-[1300] hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
+              {t('common.switchLanguage')}: {t('common.langToggle')}
+            </span>
+          )}
+        </button>
+        <button
           onClick={handleLogout}
-          className="group relative w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-slate-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium"
+          className={`group relative flex w-full rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium ${
+            showExpanded ? 'items-center gap-2.5 px-2 py-2' : 'h-12 items-center justify-center px-0'
+          }`}
           aria-label="登出"
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <LogOut className={`${showExpanded ? 'w-4 h-4' : 'w-5 h-5'} flex-shrink-0`} />
           {showExpanded && <span className="whitespace-nowrap">登出</span>}
           {!showExpanded && (
-            <span className="absolute left-[52px] z-50 hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
+            <span className="absolute left-full ml-2 z-[1300] hidden group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-600 whitespace-nowrap shadow-lg pointer-events-none">
               登出
             </span>
           )}

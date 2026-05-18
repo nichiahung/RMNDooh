@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Send, Sparkles } from 'lucide-react';
 import type { InventoryLocation } from '@/types/inventory';
 import { queryInventory, buildResponseText } from '@/lib/mockAI';
+import { buildCampaignPlannerExploreHref } from '@/utils/plannerRoutes';
 
 interface Message {
   id: string;
@@ -149,7 +150,7 @@ export function AIAssistant({ inventory }: AIAssistantProps) {
                               </p>
                             </div>
                             <button
-                              onClick={() => router.push(`/campaign-planner?inventoryId=${v.id}`)}
+                              onClick={() => router.push(buildCampaignPlannerExploreHref({ inventoryId: v.id }))}
                               className="flex-shrink-0 text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition-colors"
                             >
                               規劃

@@ -15,26 +15,36 @@ export function ViewToggle({ currentView, onViewChange }: Props) {
 
   const activeClass = 'bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200/50';
   const inactiveClass = 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50';
+  const buttonClass = 'flex h-8 w-9 items-center justify-center rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
-    <div className="bg-slate-100 p-1 rounded-lg flex items-center shadow-inner flex-shrink-0">
+    <div className="bg-slate-100 p-1 rounded-lg flex items-center shadow-inner flex-shrink-0" aria-label="View mode">
       <button
+        type="button"
         onClick={() => onViewChange('list')}
-        className={`flex items-center px-2 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'list' ? activeClass : inactiveClass}`}
+        className={`${buttonClass} ${currentView === 'list' ? activeClass : inactiveClass}`}
+        aria-label={t('planner.listView')}
+        title={t('planner.listView')}
       >
-        <List className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">{t('planner.listView')}</span>
+        <List className="h-4 w-4" />
       </button>
       <button
+        type="button"
         onClick={() => onViewChange('map')}
-        className={`flex items-center px-2 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'map' ? activeClass : inactiveClass}`}
+        className={`${buttonClass} ${currentView === 'map' ? activeClass : inactiveClass}`}
+        aria-label={t('planner.mapView')}
+        title={t('planner.mapView')}
       >
-        <Map className="w-4 h-4 sm:mr-2" /><span className="hidden sm:inline">{t('planner.mapView')}</span>
+        <Map className="h-4 w-4" />
       </button>
       <button
+        type="button"
         onClick={() => onViewChange('ai')}
-        className={`flex items-center px-2 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${currentView === 'ai' ? 'bg-indigo-600 text-white shadow-sm' : inactiveClass}`}
+        className={`${buttonClass} ${currentView === 'ai' ? 'bg-indigo-600 text-white shadow-sm' : inactiveClass}`}
+        aria-label="AI 建議"
+        title="AI 建議"
       >
-        <Sparkles className="w-4 h-4 sm:mr-1.5" /><span className="hidden sm:inline">AI 建議</span>
+        <Sparkles className="h-4 w-4" />
       </button>
     </div>
   );
