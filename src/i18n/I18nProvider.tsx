@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { Locale, dictionaries } from './dictionaries';
 
 interface I18nContextType {
@@ -17,13 +17,14 @@ const I18nContext = createContext<I18nContextType>({
 
 const STORAGE_KEY = 'dooh-locale';
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('en');
+function readStoredLocale(): Locale {
+  if (typeof window === 'undefined') return 'en';
+  const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
+  return saved === 'en' || saved === 'zh-TW' ? saved : 'en';
+}
 
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as Locale | null;
-    if (saved && (saved === 'en' || saved === 'zh-TW')) setLocale(saved);
-  }, []);
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [locale, setLocale] = useState<Locale>(() => readStoredLocale());
 
   const t = useCallback((key: string): string => {
     return dictionaries[locale][key] || key;

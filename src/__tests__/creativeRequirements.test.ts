@@ -4,7 +4,7 @@ import {
   deriveRequiredFormats,
   validateAsset,
 } from '@/utils/creativeRequirements';
-import type { MediaPlanItem } from '@/types/inventory';
+import type { InventoryLocation, MediaPlanItem } from '@/types/inventory';
 
 const makePlanItem = (id: string): MediaPlanItem => ({
   inventoryId: id,
@@ -17,7 +17,7 @@ const mockInventory = [
   { id: 'c', screenType: 'Billboard' },
   { id: 'd', screenType: 'Street Furniture' },
   { id: 'e', screenType: 'UnknownType' },
-] as any[];
+] as Pick<InventoryLocation, 'id' | 'screenType'>[];
 
 describe('FORMAT_SPECS', () => {
   it('has exactly 4 entries', () => {

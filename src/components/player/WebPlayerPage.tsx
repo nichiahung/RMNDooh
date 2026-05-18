@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { mockScreens } from '@/data/mockScreens';
 import { mockPlaylists } from '@/data/mockPlaylists';
 import { ProofOfPlayLog } from '@/types/inventory';
@@ -13,24 +13,20 @@ interface Props {
   screenId: string;
 }
 
+function popLogReducer(state: ProofOfPlayLog[], log: ProofOfPlayLog) {
+  return [...state, log].slice(-20);
+}
+
 export function WebPlayerPage({ screenId }: Props) {
-  const [isReady, setIsReady] = useState(false);
-  
   // Lookups
   const screen = mockScreens.find(s => s.screenId === screenId);
-  const rawPlaylist = mockPlaylists[screenId] || [];
-  const playlist = rawPlaylist.length > 0 ? rawPlaylist : [];
+  const playlist = useMemo(() => mockPlaylists[screenId] ?? [], [screenId]);
 
   // Playback State
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDebug, setShowDebug] = useState(false);
-  const [lastHeartbeat, setLastHeartbeat] = useState<string>(new Date().toISOString());
-  const [popLogs, setPopLogs] = useState<ProofOfPlayLog[]>([]);
-
-  // Initialization
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
+  const [lastHeartbeat, setLastHeartbeat] = useState<string>(screen?.lastHeartbeatAt ?? '');
+  const [popLogs, appendPopLog] = useReducer(popLogReducer, []);
 
   // Heartbeat Loop (every 10 seconds)
   useEffect(() => {
@@ -51,20 +47,12 @@ export function WebPlayerPage({ screenId }: Props) {
     const currentItem = playlist[currentIndex];
     
     // Log 'started' when item begins
-    setPopLogs(prev => {
-      const newLog = createProofOfPlayLog(screen, currentItem, currentIndex, 'started', 'online');
-      const updated = [...prev, newLog];
-      return updated.slice(-20); // Keep last 20 logs
-    });
+    appendPopLog(createProofOfPlayLog(screen, currentItem, currentIndex, 'started', 'online'));
 
     // Advance to next item after duration
     const timer = setTimeout(() => {
       // Log 'completed' when item finishes
-      setPopLogs(prev => {
-        const newLog = createProofOfPlayLog(screen, currentItem, currentIndex, 'completed', 'online');
-        const updated = [...prev, newLog];
-        return updated.slice(-20);
-      });
+      appendPopLog(createProofOfPlayLog(screen, currentItem, currentIndex, 'completed', 'online'));
       
       setCurrentIndex((prev) => (prev + 1) % playlist.length);
     }, currentItem.durationSeconds * 1000);
@@ -82,8 +70,6 @@ export function WebPlayerPage({ screenId }: Props) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  if (!isReady) return null; // Avoid hydration mismatch on initial render
 
   if (!screen) {
     return (

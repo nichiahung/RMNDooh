@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Calendar, CheckCircle, Loader2, Sparkles, WandSparkles } from 'lucide-react';
 import { generateAiMediaPlans } from '@/lib/googleAiMediaPlanner';
 import { addDays, flightDays } from '@/utils/dates';
@@ -38,6 +38,7 @@ export function AiMediaPlannerView({
     startDate: today,
     days: 14,
   });
+  const [syncedFlightKey, setSyncedFlightKey] = useState<string | null>(null);
   const [result, setResult] = useState<AiMediaPlanResponse | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,14 +49,17 @@ export function AiMediaPlannerView({
     [allInventory],
   );
 
-  useEffect(() => {
-    if (!flightStart || !flightEnd) return;
+  const currentFlightKey = flightStart && flightEnd ? `${flightStart}|${flightEnd}` : null;
+  if (flightStart && flightEnd && currentFlightKey !== syncedFlightKey) {
+    const nextFlightStart = flightStart;
+    const nextFlightEnd = flightEnd;
+    setSyncedFlightKey(currentFlightKey);
     setInput(prev => ({
       ...prev,
-      startDate: flightStart,
-      days: flightDays(flightStart, flightEnd),
+      startDate: nextFlightStart,
+      days: flightDays(nextFlightStart, nextFlightEnd),
     }));
-  }, [flightStart, flightEnd]);
+  }
 
   async function handleGenerate() {
     const nextErrors = validateAiPlannerInput(input);

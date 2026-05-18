@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { validateCredentials, AuthUser } from '@/utils/mockAuth';
 
 const STORAGE_KEY = 'dooh_mock_user';
@@ -14,20 +14,20 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [isAuthInitialized, setIsAuthInitialized] = useState(false);
+function readStoredUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setCurrentUser(JSON.parse(stored));
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setIsAuthInitialized(true);
-    }
-  }, []);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => readStoredUser());
+  const [isAuthInitialized] = useState(() => typeof window !== 'undefined');
 
   function login(email: string, password: string): boolean {
     const user = validateCredentials(email, password);

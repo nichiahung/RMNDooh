@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Calculator, Eye, TrendingUp, MapPin, X, Calendar, ChevronRight, ImageIcon, CheckCircle2, Loader2, AlertTriangle, Save } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation, CreativeAsset } from '@/types/inventory';
 import { deriveGroupedRequirements, FORMAT_SPECS } from '@/utils/creativeRequirements';
@@ -60,18 +60,15 @@ export function MediaPlanSummary({
 }: Props) {
   const { t } = useI18n();
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
-  const [uploadedFormats, setUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
+  const [localUploadedFormats, setLocalUploadedFormats] = useState<Set<CanonicalFormat>>(new Set());
 
-  // Seed uploadedFormats from stored requirements (handles resume + draft reload)
-  useEffect(() => {
-    if (!storedRequirements) return;
-    const seeded = new Set<CanonicalFormat>(
-      storedRequirements
-        .filter(r => r.status === 'uploaded' || r.status === 'approved')
-        .map(r => r.canonicalFormat as CanonicalFormat)
-    );
-    setUploadedFormats(seeded);
-  }, [storedRequirements]);
+  const uploadedFormats = useMemo(() => {
+    const storedUploaded = storedRequirements
+      ?.filter(r => r.status === 'uploaded' || r.status === 'approved')
+      .map(r => r.canonicalFormat as CanonicalFormat) ?? [];
+
+    return new Set<CanonicalFormat>([...storedUploaded, ...localUploadedFormats]);
+  }, [storedRequirements, localUploadedFormats]);
   const [isEnsuring, setIsEnsuring] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
@@ -142,7 +139,7 @@ export function MediaPlanSummary({
   const handleUploadSuccess = useCallback(async (asset: CreativeAsset, format: CanonicalFormat) => {
     onCreativeUploaded(asset, format);
     if (!campaignId) {
-      setUploadedFormats(prev => new Set([...prev, format]));
+      setLocalUploadedFormats(prev => new Set([...prev, format]));
       return;
     }
     try {
@@ -150,10 +147,10 @@ export function MediaPlanSummary({
       const seeded = new Set<CanonicalFormat>(
         reqs.filter(r => r.status === 'uploaded' || r.status === 'approved').map(r => r.canonicalFormat as CanonicalFormat)
       );
-      setUploadedFormats(seeded);
+      setLocalUploadedFormats(seeded);
       onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })));
     } catch {
-      setUploadedFormats(prev => new Set([...prev, format]));
+      setLocalUploadedFormats(prev => new Set([...prev, format]));
     }
   }, [campaignId, onCreativeUploaded, onStoredRequirementsChange]);
 
@@ -162,11 +159,18 @@ export function MediaPlanSummary({
     if (!req) return;
     try {
       await unlinkAssetFromRequirement(req.id);
-      setUploadedFormats(prev => { const next = new Set(prev); next.delete(format); return next; });
+      setLocalUploadedFormats(prev => { const next = new Set(prev); next.delete(format); return next; });
+      if (storedRequirements) {
+        onStoredRequirementsChange(
+          storedRequirements.map(r =>
+            r.canonicalFormat === format ? { ...r, status: 'pending' } : r
+          )
+        );
+      }
     } catch (err) {
       console.error('Failed to unlink asset:', err);
     }
-  }, [storedRequirements]);
+  }, [storedRequirements, onStoredRequirementsChange]);
 
   const footerButtonLabel = isSaving
     ? '儲存中...'
@@ -211,12 +215,13 @@ export function MediaPlanSummary({
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 right-0 w-full sm:w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex flex-col h-full flex-shrink-0 z-[52] lg:z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
+        className={`fixed lg:static inset-y-0 right-0 w-full sm:w-[88vw] max-w-[340px] lg:w-[340px] bg-white border-l border-slate-200 flex h-dvh lg:h-full min-h-0 flex-col flex-shrink-0 z-[52] lg:z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] transform transition-transform duration-200 lg:transform-none ${isOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}
       >
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="px-4 py-3 border-b border-slate-100 flex flex-shrink-0 items-center justify-between bg-white">
           <h2 className="text-base font-semibold text-slate-900 flex items-center">
-            <Calculator className="w-4 h-4 mr-2 text-indigo-600" /> {t('mediaPlan.title')}
+            <Calculator className="w-4 h-4 mr-2 text-indigo-600" />
+            {t('mediaPlan.title')}
           </h2>
           <div className="flex items-center gap-3">
             <span className="bg-indigo-100 text-indigo-700 py-0.5 px-2 rounded-full text-xs font-semibold">
@@ -233,8 +238,8 @@ export function MediaPlanSummary({
         </div>
 
         {/* Main flight date picker */}
-        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/30">
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+        <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/40 flex-shrink-0">
+          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
             <Calendar className="w-3 h-3" /> 主要走期
           </div>
           <div className="flex items-center gap-2">
@@ -243,7 +248,7 @@ export function MediaPlanSummary({
               value={flightStart ?? ''}
               min={new Date().toISOString().slice(0, 10)}
               onChange={e => onFlightDateChange(e.target.value || null, flightEnd)}
-              className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
             />
             <span className="text-[10px] text-slate-400 flex-shrink-0">至</span>
             <input
@@ -251,7 +256,7 @@ export function MediaPlanSummary({
               value={flightEnd ?? ''}
               min={flightStart ?? new Date().toISOString().slice(0, 10)}
               onChange={e => onFlightDateChange(flightStart, e.target.value || null)}
-              className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
             />
           </div>
           {flightStart && flightEnd && (
@@ -276,14 +281,14 @@ export function MediaPlanSummary({
         )}
 
         {/* Selected Items Area */}
-        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar bg-slate-50/30">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar bg-slate-50/30">
           {selectedDetails.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center mb-4">
-                <MapPin className="w-8 h-8 text-slate-300" />
+            <div className="min-h-full flex flex-col items-center justify-center text-center py-8">
+              <div className="w-12 h-12 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center mb-3">
+                <MapPin className="w-6 h-6 text-slate-300" />
               </div>
               <p className="text-sm font-medium text-slate-900 mb-1">{t('mediaPlan.empty')}</p>
-              <p className="text-xs text-slate-500 px-4">{t('mediaPlan.emptyDesc')}</p>
+              <p className="max-w-[220px] text-xs leading-relaxed text-slate-500">{t('mediaPlan.emptyDesc')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -374,9 +379,9 @@ export function MediaPlanSummary({
         </div>
 
         {/* Footer */}
-        <div className="p-5 border-t border-slate-200 bg-white">
-          <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-4">{t('mediaPlan.campaignEstimate')}</h3>
-          <div className="space-y-3 mb-6">
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-8px_24px_rgba(15,23,42,0.04)]">
+          <h3 className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider mb-3">{t('mediaPlan.campaignEstimate')}</h3>
+          <div className="space-y-2.5 mb-4">
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-500 flex items-center"><Eye className="w-4 h-4 mr-2 text-slate-400" /> {t('mediaPlan.totalImpressions')}</span>
               <span className="font-semibold text-slate-900">{exactTotalImpressions.toLocaleString()}</span>
@@ -385,7 +390,7 @@ export function MediaPlanSummary({
               <span className="text-slate-500 flex items-center"><TrendingUp className="w-4 h-4 mr-2 text-slate-400" /> {t('mediaPlan.avgCpm')}</span>
               <span className="font-semibold text-slate-900">NT${formatCPM(exactAvgCpm)}</span>
             </div>
-            <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+            <div className="pt-2.5 border-t border-slate-100 flex justify-between items-center">
               <span className="text-slate-700 font-medium">{t('mediaPlan.totalBudget')}</span>
               <span className="font-bold text-lg text-indigo-600">{formatCurrency(exactTotalBudget)}</span>
             </div>

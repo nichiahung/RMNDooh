@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local agent/plugin artifacts and generated browser automation output.
+    ".agent/**",
+    ".claude/**",
+    ".playwright-cli/**",
   ]),
 ]);
 

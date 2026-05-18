@@ -1,23 +1,19 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { confirmBinding, rejectBinding } from '@/lib/api/clientApi';
 
-type PageState = 'loading' | 'confirm_prompt' | 'confirmed' | 'rejected' | 'invalid';
+type PageState = 'confirm_prompt' | 'confirmed' | 'rejected' | 'invalid';
 
 function ConfirmClientContent() {
   const params = useSearchParams();
   const token = params.get('token');
 
-  const [state, setState] = useState<PageState>('loading');
+  const [actionState, setActionState] = useState<PageState | null>(null);
   const [details, setDetails] = useState<{ clientName: string; salesEmail: string } | null>(null);
   const [acting, setActing] = useState(false);
-
-  useEffect(() => {
-    if (!token) { setState('invalid'); return; }
-    setState('confirm_prompt');
-  }, [token]);
+  const state: PageState = actionState ?? (token ? 'confirm_prompt' : 'invalid');
 
   async function handleConfirm() {
     if (!token) return;
@@ -26,9 +22,9 @@ function ConfirmClientContent() {
       const result = await confirmBinding(token);
       if (result) {
         setDetails(result);
-        setState('confirmed');
+        setActionState('confirmed');
       } else {
-        setState('invalid');
+        setActionState('invalid');
       }
     } finally {
       setActing(false);
@@ -40,18 +36,10 @@ function ConfirmClientContent() {
     setActing(true);
     try {
       await rejectBinding(token);
-      setState('rejected');
+      setActionState('rejected');
     } finally {
       setActing(false);
     }
-  }
-
-  if (state === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
   }
 
   return (

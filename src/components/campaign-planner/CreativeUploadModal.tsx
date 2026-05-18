@@ -44,17 +44,33 @@ export function CreativeUploadModal({ spec, venueCount, requirementId, onSuccess
 
   useEffect(() => {
     if (tab !== 'library') return;
-    setLibraryLoading(true);
-    setLibraryError(null);
+    let cancelled = false;
     listMediaAssets()
       .then(assets => {
+        if (cancelled) return;
         // Filter to compatible file types
         const acceptedTypes = spec.acceptedMimeTypes;
         setLibraryAssets(assets.filter(a => acceptedTypes.includes(a.mimeType)));
       })
-      .catch(err => setLibraryError(err.message))
-      .finally(() => setLibraryLoading(false));
+      .catch(err => {
+        if (!cancelled) setLibraryError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLibraryLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [tab, spec.acceptedMimeTypes]);
+
+  const openLibraryTab = () => {
+    if (tab === 'library') return;
+    setLibraryLoading(true);
+    setLibraryError(null);
+    setSelectedAssetId(null);
+    setTab('library');
+  };
 
   const handleFile = useCallback(async (file: File) => {
     if (state?.previewUrl) URL.revokeObjectURL(state.previewUrl);
@@ -147,7 +163,7 @@ export function CreativeUploadModal({ spec, venueCount, requirementId, onSuccess
             上傳新素材
           </button>
           <button
-            onClick={() => setTab('library')}
+            onClick={openLibraryTab}
             className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${tab === 'library' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
           >
             從素材庫選取
