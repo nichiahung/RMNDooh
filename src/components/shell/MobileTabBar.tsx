@@ -53,7 +53,7 @@ export function MobileTabBar({ onMoreClick, visible = true }: Props) {
 
   return (
     <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch bg-white border-t border-slate-200 motion-safe:transition-transform motion-safe:duration-200 ${
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-stretch bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)] motion-safe:transition-transform motion-safe:duration-200 ${
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >

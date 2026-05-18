@@ -15,7 +15,10 @@ export function AppShell({ children }: Props) {
   const prevScrollTop = useRef(0);
   const prevVisible = useRef(true);
   const isMobileNavOpenRef = useRef(false);
-  isMobileNavOpenRef.current = isMobileNavOpen;
+
+  useEffect(() => {
+    isMobileNavOpenRef.current = isMobileNavOpen;
+  }, [isMobileNavOpen]);
 
   // Show tab bar immediately when drawer opens, regardless of scroll state.
   useEffect(() => {
@@ -54,7 +57,7 @@ export function AppShell({ children }: Props) {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-dvh min-h-svh flex flex-col bg-slate-50">
 
       {/* Backdrop — shown behind drawer on mobile */}
       <div
@@ -74,7 +77,7 @@ export function AppShell({ children }: Props) {
           onMobileClose={() => setIsMobileNavOpen(false)}
         />
         <main
-          className={`flex-1 overflow-y-auto overflow-x-hidden md:pb-0 transition-[padding-bottom] duration-200 ${isTabBarVisible ? 'pb-16' : 'pb-0'}`}
+          className={`flex-1 overflow-y-auto overflow-x-hidden md:pb-0 transition-[padding-bottom] duration-200 ${isTabBarVisible ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : 'pb-0'}`}
         >
           {children}
         </main>
