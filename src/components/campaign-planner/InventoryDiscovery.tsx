@@ -1,5 +1,6 @@
 'use client';
 
+import { ClipboardList } from 'lucide-react';
 import { InventoryLocation, MediaPlanAddOptions, MediaPlanItem } from '@/types/inventory';
 import { ListView } from './ListView';
 import { MapWrapper } from './MapWrapper';
@@ -63,6 +64,21 @@ export function InventoryDiscovery({
           selectedCount={selectedItems.length}
         />
       )}
+      {/* Mobile FAB: open Media Plan — hidden on lg+ where panel is always visible */}
+      {onOpenSummary && (
+        <button
+          type="button"
+          onClick={onOpenSummary}
+          className="lg:hidden absolute bottom-4 right-4 z-[1100] flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-3 text-white shadow-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+          aria-label="開啟媒體計劃"
+        >
+          <ClipboardList className="w-5 h-5 flex-shrink-0" />
+          {selectedItems.length > 0 && (
+            <span className="text-sm font-bold leading-none">{selectedItems.length}</span>
+          )}
+        </button>
+      )}
+
       <div className="relative flex-1 overflow-y-auto custom-scrollbar">
         {currentView === 'list' ? (
           <ListView
