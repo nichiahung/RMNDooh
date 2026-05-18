@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { listAdminCampaignDraftsApi } from '@/lib/api/tradingIterationApi';
 import type { CampaignDraftProfile, CampaignDraftStatus } from '@/types/trading-models';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
-const STATUS_BADGE: Record<CampaignDraftStatus, { label: string; cls: string }> = {
+const DRAFT_STATUS_MAP: Record<CampaignDraftStatus, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-slate-100 text-slate-600' },
   in_progress: { label: 'In Progress', cls: 'bg-blue-100 text-blue-700' },
   submitted_for_review: { label: 'Submitted', cls: 'bg-purple-100 text-purple-700' },
@@ -12,6 +13,10 @@ const STATUS_BADGE: Record<CampaignDraftStatus, { label: string; cls: string }> 
   confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-800' },
   cancelled: { label: 'Cancelled', cls: 'bg-slate-200 text-slate-500' },
 };
+
+const DRAFT_STATUS_CLS: Record<CampaignDraftStatus, string> = Object.fromEntries(
+  Object.entries(DRAFT_STATUS_MAP).map(([k, v]) => [k, v.cls])
+) as Record<CampaignDraftStatus, string>;
 
 export function AdminCampaignDraftsPanel() {
   const [drafts, setDrafts] = useState<CampaignDraftProfile[] | null>(null);
@@ -44,14 +49,12 @@ export function AdminCampaignDraftsPanel() {
           </tr>
         </thead>
         <tbody>
-          {drafts.map((d) => {
-            const badge = STATUS_BADGE[d.status] ?? { label: d.status, cls: 'bg-slate-100 text-slate-600' };
-            return (
+          {drafts.map((d) => (
               <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{d.name}</td>
                 <td className="px-4 py-3 text-slate-500">{d.advertiserId}</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${badge.cls}`}>{badge.label}</span>
+                  <StatusBadge value={d.status} map={DRAFT_STATUS_CLS} label={DRAFT_STATUS_MAP[d.status]?.label} shape="pill" />
                 </td>
                 <td className="px-4 py-3 text-slate-500 capitalize">{d.buyingMethod?.replace('_', ' ')}</td>
                 <td className="px-4 py-3 text-slate-500 text-xs">
@@ -62,8 +65,7 @@ export function AdminCampaignDraftsPanel() {
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-xs">{new Date(d.updatedAt).toLocaleDateString()}</td>
               </tr>
-            );
-          })}
+          ))}
         </tbody>
       </table>
     </div>

@@ -2,10 +2,11 @@
 
 import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber, formatCPM } from '@/utils/formatters';
-import { X, MapPin, Users, Monitor, Clock, Calendar, Check } from 'lucide-react';
+import { MapPin, Users, Monitor, Clock, Calendar, Check } from 'lucide-react';
 import { imgSrc } from '@/utils/imgSrc';
 import { useI18n } from '@/i18n/I18nProvider';
 import { computeMatchScore } from '@/utils/matchScore';
+import { Modal } from '@/components/ui/Modal';
 
 interface Props {
   item: InventoryLocation;
@@ -19,9 +20,7 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
   const { t } = useI18n();
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
+    <Modal onClose={onClose} maxWidth="max-w-3xl">
         <div className="h-44 sm:h-64 relative bg-slate-100 flex-shrink-0">
           <img
             src={imgSrc(item.imageUrl)}
@@ -29,12 +28,6 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
             className="w-full h-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579548485295-e2336336e8b4?auto=format&fit=crop&q=80&w=800'; }}
           />
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 bg-slate-900/50 hover:bg-slate-900/80 text-white p-2 rounded-full backdrop-blur transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
@@ -290,8 +283,7 @@ export function InventoryDetailCard({ item, isSelected, onClose, onAdd, objectiv
           </button>
         </div>
 
-      </div>
-    </div>
+    </Modal>
   );
 }
 

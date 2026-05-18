@@ -4,6 +4,7 @@ import { Campaign } from '@/types/inventory';
 import { formatCurrency } from '@/utils/formatters';
 import { Search } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface Props {
   campaigns: Campaign[];
@@ -43,15 +44,6 @@ const LAUNCH_BADGE: Record<string, string> = {
   blocked_by_payment:     'bg-purple-100 text-purple-700',
   blocked_by_policy:      'bg-red-200 text-red-800',
 };
-
-function StatusBadge({ value, map }: { value: string; map: Record<string, string> }) {
-  const cls = map[value] ?? 'bg-slate-100 text-slate-500';
-  return (
-    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${cls}`}>
-      {value.replace(/_/g, ' ')}
-    </span>
-  );
-}
 
 export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Props) {
   const { t } = useI18n();
