@@ -54,25 +54,30 @@ const createIcon = (color: string, isSelected: boolean) => {
   });
 };
 
-function FitBounds({ inventory }: { inventory: InventoryLocation[] }) {
+function FitBounds({ inventory, allInventory }: { inventory: InventoryLocation[]; allInventory: InventoryLocation[] }) {
   const map = useMap();
+
+  // Fit to all locations (filtered + dimmed) so dimmed pins are always visible.
+  // Fall back to filtered-only when allInventory is empty.
+  const boundsSource = allInventory.length > 0 ? allInventory : inventory;
+
   const locationKey = React.useMemo(
-    () => inventory.map(i => `${i.id}:${i.latitude},${i.longitude}`).sort().join('|'),
+    () => inventory.map(i => i.id).sort().join('|'),
     [inventory]
   );
 
   React.useEffect(() => {
-    if (inventory.length === 0) return;
+    if (boundsSource.length === 0) return;
 
-    if (inventory.length === 1) {
-      const [item] = inventory;
+    if (boundsSource.length === 1) {
+      const [item] = boundsSource;
       map.setView([item.latitude, item.longitude], Math.max(map.getZoom(), 15), { animate: true });
       return;
     }
 
-    const bounds = L.latLngBounds(inventory.map(i => [i.latitude, i.longitude]));
+    const bounds = L.latLngBounds(boundsSource.map(i => [i.latitude, i.longitude]));
     map.fitBounds(bounds.pad(0.18), { maxZoom: 15, animate: true });
-  }, [inventory, locationKey, map]);
+  }, [locationKey, map]);
 
   return null;
 }
@@ -160,7 +165,7 @@ export function MapView({ inventory, allInventory, selectedItems, onViewDetails,
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <FitBounds inventory={inventory} />
+        <FitBounds inventory={inventory} allInventory={allInventory} />
         <MapZoomControls />
 
         {/* Dimmed pins — filtered-out locations, still clickable to add to plan */}
