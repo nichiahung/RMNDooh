@@ -87,22 +87,24 @@ export function InventoryCard({ item, isSelected, onViewDetails, onAdd, objectiv
           )}
         </div>
 
-        {/* Stats — single compact row */}
-        <div className="flex items-center justify-between border-t border-slate-100 pt-2 mb-3 text-xs text-slate-600">
-          <span className="flex items-center gap-1 min-w-0">
-            <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
-            <span className="truncate">{item.screenType}</span>
-            {getSpecChip(item.screenType) && (
-              <span className="text-[10px] text-slate-400 bg-slate-100 border border-slate-200 px-1 rounded font-mono leading-tight flex-shrink-0">
-                {getSpecChip(item.screenType)}
-              </span>
-            )}
-          </span>
-          <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">
-            <Users className="w-3 h-3 text-slate-400" />
-            {formatCompact(item.dailyImpressions)}
-            <span className="font-normal text-slate-400">/day</span>
-          </span>
+        {/* Stats */}
+        <div className="border-t border-slate-100 pt-2 mb-3 text-xs text-slate-600">
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1 min-w-0">
+              <Monitor className="w-3 h-3 text-slate-400 flex-shrink-0" />
+              <span className="truncate">{item.screenType}</span>
+            </span>
+            <span className="flex items-center gap-1 flex-shrink-0 font-semibold text-slate-900">
+              <Users className="w-3 h-3 text-slate-400" />
+              {formatCompact(item.dailyImpressions)}
+              <span className="font-normal text-slate-400">/day</span>
+            </span>
+          </div>
+          {getSpecChip(item.screenType) && (
+            <span className="mt-1 inline-block text-[10px] text-slate-400 bg-slate-100 border border-slate-200 px-1 rounded font-mono leading-tight">
+              {getSpecChip(item.screenType)}
+            </span>
+          )}
         </div>
 
         {/* Footer — price row + full-width action button */}
