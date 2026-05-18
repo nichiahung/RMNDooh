@@ -103,17 +103,17 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
     >
       {/* Brand */}
       <div className={`h-14 flex items-center border-b border-slate-600 flex-shrink-0 ${
-        collapsed ? 'justify-between gap-1 px-2' : 'justify-between gap-2 px-3'
+        showExpanded ? 'justify-between gap-2 px-3' : 'justify-between gap-1 px-2'
       }`}>
         <div className={`flex h-8 flex-shrink-0 items-center overflow-hidden ${
-          collapsed ? 'w-6' : 'w-[116px]'
+          showExpanded ? 'w-[116px]' : 'w-6'
         }`}>
           <Image
             src={imgSrc('/drmn-logo-sidebar.png')}
             alt="DRMN"
             width={120}
             height={40}
-            className={`h-7 max-w-none object-contain ${collapsed ? 'w-[84px] object-left' : 'w-full'}`}
+            className={`h-7 max-w-none object-contain ${showExpanded ? 'w-full' : 'w-[84px] object-left'}`}
             priority
           />
         </div>
