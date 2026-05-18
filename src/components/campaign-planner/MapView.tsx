@@ -230,7 +230,7 @@ export function MapView({ inventory, allInventory, selectedItems, onViewDetails,
       </MapContainer>
 
       {/* Legend */}
-      <div className="absolute bottom-24 left-4 max-w-[calc(100%-2rem)] bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-slate-200 z-[1000] md:bottom-6 md:left-6 md:max-w-none">
+      <div className="absolute bottom-[calc(4rem+env(safe-area-inset-bottom)+0.75rem)] left-4 max-w-[calc(100%-2rem)] bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-slate-200 z-[1000] md:bottom-6 md:left-6 md:max-w-none">
         <h4 className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">Availability</h4>
         <div className="space-y-2">
           <div className="flex items-center text-xs text-slate-700 font-medium">
