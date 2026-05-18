@@ -398,7 +398,7 @@ function CampaignPlannerPageContent() {
   const { t } = useI18n();
 
   return (
-    <main className="h-screen flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
+    <main className="h-full flex flex-col bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans relative">
 
       <h1 className="sr-only">{t('planner.title')}</h1>
 

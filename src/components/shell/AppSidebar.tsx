@@ -104,7 +104,7 @@ export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps = {}) 
     >
       {/* Brand */}
       <div className={`h-16 flex items-center border-b border-slate-600 flex-shrink-0 ${
-        showExpanded ? 'px-4' : 'justify-center px-2'
+        showExpanded ? 'px-3' : 'justify-center px-2'
       }`}>
         <div className={`flex h-8 flex-shrink-0 items-center overflow-hidden ${
           showExpanded ? 'w-[116px]' : 'w-9'

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import { MapPin, Eye, TrendingUp, DollarSign, Target, ChevronRight } from 'lucide-react';
+import { MapPin, Eye, TrendingUp, DollarSign, Target } from 'lucide-react';
 import { MediaPlanItem, InventoryLocation } from '@/types/inventory';
 import { computeMatchScore } from '@/utils/matchScore';
 import { formatCPM, formatCurrency, formatCompact } from '@/utils/formatters';
@@ -58,7 +58,7 @@ export function PerformanceBar({ selectedItems, allInventory, objective, onOpenS
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      {/* Desktop */}
+      {/* Desktop only — mobile uses the tab bar + drawer instead */}
       <div className="hidden lg:flex items-center justify-between bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-4 xl:px-8 py-3">
         <div className="flex items-center gap-4 xl:gap-8">
           <Metric icon={<MapPin className="w-3.5 h-3.5" />} label="版位">
@@ -80,18 +80,6 @@ export function PerformanceBar({ selectedItems, allInventory, objective, onOpenS
           )}
         </div>
       </div>
-
-      {/* Mobile */}
-      <button
-        onClick={onOpenSummary}
-        className="lg:hidden w-full flex items-center justify-between bg-slate-900/95 backdrop-blur-md border-t border-slate-700 px-5 py-3"
-      >
-        <span className="text-sm text-slate-300">
-          <span className="font-bold text-white">{selectedItems.length}</span> 個版位・
-          <span className="font-bold text-white">{formatCurrency(totalBudget)}</span>
-        </span>
-        <ChevronRight className="w-4 h-4 text-slate-400" />
-      </button>
     </div>
   );
 }
