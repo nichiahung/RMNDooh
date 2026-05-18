@@ -42,5 +42,4 @@ yarn-error.log*
 next-env.d.ts
 .superpowers/
 .claude/worktrees/
-!public/images/generated/
-!public/images/generated/**
+public/images/generated/
