@@ -67,13 +67,13 @@ export function PlannerTopbar({
             type="button"
             onClick={onAddAll}
             disabled={addAllCount === 0}
-            className="inline-flex h-9 flex-shrink-0 items-center justify-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 text-xs font-bold text-indigo-700 transition-colors hover:border-indigo-300 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="inline-flex h-9 flex-shrink-0 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 text-xs font-bold text-indigo-700 transition-colors hover:border-indigo-300 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             aria-label={addAllCount > 0 ? `加入 ${addAllCount} 個版位` : '目前篩選結果都已加入'}
             title={resultCount > addAllCount ? `${resultCount} 個篩選結果，其中 ${addAllCount} 個可加入` : `${resultCount} 個篩選結果`}
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="mr-0.5 h-3.5 w-3.5" />
             <span className="whitespace-nowrap">
-              {addAllCount > 0 ? `加入 ${addAllCount} 個版位` : '全部已加入'}
+              {addAllCount > 0 ? `${addAllCount}個版位` : '全部已加入'}
             </span>
           </button>
         )}
