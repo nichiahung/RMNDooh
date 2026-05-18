@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { FilterSidebar } from './FilterSidebar';
+import { MobileFilterSheet } from './MobileFilterSheet';
 import { InventoryDiscovery } from './InventoryDiscovery';
 import type { ViewMode } from './ViewToggle';
 import { MediaPlanSummary } from './MediaPlanSummary';
@@ -591,17 +592,30 @@ function CampaignPlannerPageContent() {
             {step === 'inventory' && (
               <>
                 {currentView !== 'ai' && (
-                  <FilterSidebar
+                  <div className="hidden md:block">
+                    <FilterSidebar
+                      filters={filters}
+                      onFilterChange={handleFilterChange}
+                      onClearFilters={handleClearFilters}
+                      activeFilterCount={activeFilterCount}
+                      isOpen={isFilterOpen}
+                      onClose={() => setIsFilterOpen(false)}
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                    />
+                  </div>
+                )}
+
+                <div className="md:hidden">
+                  <MobileFilterSheet
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
                     filters={filters}
                     onFilterChange={handleFilterChange}
-                  onClearFilters={handleClearFilters}
-                  activeFilterCount={activeFilterCount}
-                  isOpen={isFilterOpen}
-                  onClose={() => setIsFilterOpen(false)}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
+                    onClearFilters={handleClearFilters}
+                    activeFilterCount={activeFilterCount}
                   />
-                )}
+                </div>
 
                 <InventoryDiscovery
                   inventory={filteredAndSortedInventory}
