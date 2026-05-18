@@ -391,6 +391,7 @@ function ProposalBuilderPageContent() {
                   setProposal(null);
                   setProposalName('');
                   setClientName('');
+                  setSelectedClientId('');
                   setSelectedVenueIds([]);
                   setDiscount(0);
                 }}
