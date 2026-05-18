@@ -37,10 +37,9 @@ const SALES_TABS: TabItem[] = [
 
 interface Props {
   onMoreClick: () => void;
-  visible?: boolean;
 }
 
-export function MobileTabBar({ onMoreClick, visible = true }: Props) {
+export function MobileTabBar({ onMoreClick }: Props) {
   const pathname = usePathname();
   const { currentUser } = useAuth();
   const role = currentUser?.role ?? 'advertiser';
@@ -52,12 +51,7 @@ export function MobileTabBar({ onMoreClick, visible = true }: Props) {
   }
 
   return (
-    <nav
-      className={`md:hidden fixed bottom-0 left-0 right-0 z-30 flex h-16 items-stretch bg-white border-t border-slate-200 safe-area-inset-bottom transform transition-[transform,opacity] duration-200 ease-out motion-reduce:transition-none ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
-      }`}
-      aria-hidden={!visible}
-    >
+    <nav className="md:hidden flex-shrink-0 flex h-16 items-stretch bg-white border-t border-slate-200">
       {tabs.map(tab => {
         const Icon = tab.icon;
         const active = isActive(tab.href);
