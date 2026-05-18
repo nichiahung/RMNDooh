@@ -23,9 +23,9 @@ const dimmedIcon = L.divIcon({
   iconSize: [24, 31],
   iconAnchor: [12, 31],
   popupAnchor: [0, -27],
-  html: `<div style="width:24px;height:31px;opacity:0.5;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));">
+  html: `<div style="width:24px;height:31px;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
     <svg viewBox="0 0 40 52" width="24" height="31" xmlns="http://www.w3.org/2000/svg">
-      <path d="M20 0C9 0 0 9 0 20c0 14 20 32 20 32s20-18 20-32C40 9 31 0 20 0z" fill="#64748b" stroke="white" stroke-width="3"/>
+      <path d="M20 0C9 0 0 9 0 20c0 14 20 32 20 32s20-18 20-32C40 9 31 0 20 0z" fill="#94a3b8" stroke="white" stroke-width="3"/>
     </svg>
   </div>`
 });
