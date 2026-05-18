@@ -606,16 +606,18 @@ function CampaignPlannerPageContent() {
                   </div>
                 )}
 
-                <div className="md:hidden">
-                  <MobileFilterSheet
-                    isOpen={isFilterOpen}
-                    onClose={() => setIsFilterOpen(false)}
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    onClearFilters={handleClearFilters}
-                    activeFilterCount={activeFilterCount}
-                  />
-                </div>
+                {currentView !== 'ai' && (
+                  <div className="md:hidden">
+                    <MobileFilterSheet
+                      isOpen={isFilterOpen}
+                      onClose={() => setIsFilterOpen(false)}
+                      filters={filters}
+                      onFilterChange={handleFilterChange}
+                      onClearFilters={handleClearFilters}
+                      activeFilterCount={activeFilterCount}
+                    />
+                  </div>
+                )}
 
                 <InventoryDiscovery
                   inventory={filteredAndSortedInventory}
