@@ -71,8 +71,9 @@ function BudgetPage({
     <div className="p-4 space-y-4 overflow-y-auto h-full">
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <label className="block text-[10px] text-slate-500 mb-1">最低 (NT$)</label>
+          <label htmlFor="mobile-filter-budget-min" className="block text-[10px] text-slate-500 mb-1">最低 (NT$)</label>
           <input
+            id="mobile-filter-budget-min"
             type="number"
             min={0}
             value={min === 0 ? '' : min}
@@ -85,8 +86,9 @@ function BudgetPage({
         </div>
         <span className="text-slate-400 pb-2">–</span>
         <div className="flex-1">
-          <label className="block text-[10px] text-slate-500 mb-1">最高 (NT$)</label>
+          <label htmlFor="mobile-filter-budget-max" className="block text-[10px] text-slate-500 mb-1">最高 (NT$)</label>
           <input
+            id="mobile-filter-budget-max"
             type="number"
             min={0}
             value={max === 100000 ? '' : max}
@@ -104,7 +106,10 @@ function BudgetPage({
         max={100000}
         step={1000}
         value={max}
-        onChange={(e) => onFilterChange({ maxBudget: Number(e.target.value) || undefined })}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          onFilterChange({ maxBudget: v === 0 ? undefined : v });
+        }}
         className="w-full accent-indigo-600"
       />
       <p className="text-[10px] text-slate-400 text-center">
@@ -128,7 +133,7 @@ export const FilterTabContent = forwardRef<FilterTabContentHandle, FilterTabCont
     ref
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const pageRefs = useRef<(HTMLDivElement | null)[]>(Array(5).fill(null));
 
     useImperativeHandle(ref, () => ({
       scrollToTab(index: number) {
@@ -138,7 +143,7 @@ export const FilterTabContent = forwardRef<FilterTabContentHandle, FilterTabCont
           inline: 'start',
         });
       },
-    }));
+    }), []);
 
     const handleScroll = () => {
       const container = containerRef.current;
