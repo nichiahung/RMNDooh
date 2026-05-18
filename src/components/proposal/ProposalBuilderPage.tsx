@@ -18,6 +18,7 @@ import {
   sendProposalToAdvertiserApi,
 } from '@/lib/api/tradingIterationApi';
 import type { PriceBook, Proposal, ProposalInventoryItem } from '@/types/trading-models';
+import { ClientSelect } from '@/components/clients/ClientSelect';
 
 type Step = 'setup' | 'inventory' | 'sent';
 
@@ -49,6 +50,7 @@ function ProposalBuilderPageContent() {
   // Setup form
   const [proposalName, setProposalName] = useState('');
   const [clientName, setClientName] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [startDate, setStartDate] = useState('2026-06-01');
   const [endDate, setEndDate] = useState('2026-06-30');
   const [selectedPriceBook, setSelectedPriceBook] = useState('');
@@ -117,7 +119,7 @@ function ProposalBuilderPageContent() {
   );
   const finalQuote = Math.max(0, totalListPrice * (1 - discount / 100));
 
-  const canProceed = proposalName.trim() !== '' && clientName.trim() !== '' && isDateValid;
+  const canProceed = proposalName.trim() !== '' && selectedClientId !== '' && isDateValid;
 
   const handleAdd = (item: InventoryLocation) => {
     setSelectedVenueIds(prev => prev.includes(item.id) ? prev : [...prev, item.id]);
@@ -236,17 +238,15 @@ function ProposalBuilderPageContent() {
                   value={proposalName}
                   onChange={e => setProposalName(e.target.value)}
                   placeholder="例：夏季品牌曝光提案"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">客戶名稱</label>
-                <input
-                  value={clientName}
-                  onChange={e => setClientName(e.target.value)}
-                  placeholder="例：台灣大哥大"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                <ClientSelect
+                  value={selectedClientId}
+                  onChange={(id, name) => { setSelectedClientId(id); setClientName(name); }}
                 />
               </div>
 
@@ -256,7 +256,7 @@ function ProposalBuilderPageContent() {
                   <input
                     type="date" value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                   />
                 </div>
                 <div>
@@ -264,7 +264,7 @@ function ProposalBuilderPageContent() {
                   <input
                     type="date" value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                   />
                 </div>
               </div>
@@ -278,7 +278,7 @@ function ProposalBuilderPageContent() {
                 <select
                   value={selectedPriceBook}
                   onChange={e => setSelectedPriceBook(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
                   <option value="">自動選擇</option>
                   {priceBooks.filter(pb => pb.visibility !== 'internal_only').map(pb => (
