@@ -19,6 +19,7 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation, options?: MediaPlanAddOptions) => void;
+  onAddAll?: () => void;
   objective?: string;
   activeFilterCount?: number;
   onOpenFilters?: () => void;
@@ -37,6 +38,7 @@ export function InventoryDiscovery({
   selectedItems,
   onViewDetails,
   onAdd,
+  onAddAll,
   objective,
   activeFilterCount,
   onOpenFilters,
@@ -47,6 +49,9 @@ export function InventoryDiscovery({
   const { t } = useI18n();
   const showFloatingFilterButton = currentView !== 'ai' && Boolean(onOpenFilters);
 
+  const selectedIds = new Set(selectedItems.map(s => s.inventoryId));
+  const addableCount = inventory.filter(i => !selectedIds.has(i.id)).length;
+
   return (
     <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-slate-50 relative">
       <PlannerTopbar
@@ -55,6 +60,8 @@ export function InventoryDiscovery({
         onSortChange={onSortChange}
         currentView={currentView}
         onViewChange={onViewChange}
+        addableCount={addableCount}
+        onAddAll={onAddAll}
       />
       <div className="relative flex-1 overflow-y-auto custom-scrollbar">
         {showFloatingFilterButton && (

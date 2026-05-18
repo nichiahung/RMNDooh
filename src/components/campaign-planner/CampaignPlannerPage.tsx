@@ -351,6 +351,14 @@ function CampaignPlannerPageContent() {
     }
   };
 
+  const handleAddAll = () => {
+    filteredAndSortedInventory.forEach(item => {
+      if (!selectedItems.some(s => s.inventoryId === item.id)) {
+        handleAdd(item);
+      }
+    });
+  };
+
   const handleRemove = (inventoryId: string) => {
     setSelectedItems(prev => removeFromMediaPlan(prev, inventoryId));
     if (campaignId) {
@@ -605,6 +613,7 @@ function CampaignPlannerPageContent() {
                   selectedItems={selectedItems}
                   onViewDetails={setSelectedInventoryForDetail}
                   onAdd={handleAdd}
+                  onAddAll={handleAddAll}
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
