@@ -60,20 +60,22 @@ export function MobileFilterSheet({
     contentRef.current?.scrollToTab(index);
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
       {/* Backdrop — tapping dismisses sheet */}
       <div
-        className="fixed inset-0 z-40"
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white rounded-t-2xl shadow-2xl"
+        className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col bg-white rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
+        }`}
         style={{ height: '35vh' }}
       >
         {/* Drag handle (visual only) */}
