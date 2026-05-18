@@ -331,6 +331,7 @@ function ProposalBuilderPageContent() {
               selectedItems={selectedItems}
               onViewDetails={() => {}}
               onAdd={handleAdd}
+              onRemove={handleRemove}
               activeFilterCount={activeFilterCount}
               onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
               flightStart={startDate}

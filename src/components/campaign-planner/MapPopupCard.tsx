@@ -4,17 +4,18 @@ import { InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatCompact, formatCPM } from '@/utils/formatters';
 import { availabilityLabel } from '@/utils/availabilityLabel';
 import { imgSrc } from '@/utils/imgSrc';
-import { X, Check } from 'lucide-react';
+import { X, Check, Minus } from 'lucide-react';
 
 export interface MapPopupCardProps {
   item: InventoryLocation;
   isSelected: boolean;
   onAdd: () => void;
+  onRemove?: () => void;
   onViewDetail: () => void;
   onClose: () => void;
 }
 
-export function MapPopupCard({ item, isSelected, onAdd, onViewDetail, onClose }: MapPopupCardProps) {
+export function MapPopupCard({ item, isSelected, onAdd, onRemove, onViewDetail, onClose }: MapPopupCardProps) {
   const avail = availabilityLabel(item.availability);
   const canAdd = item.availability >= 0.3;
 
@@ -87,25 +88,29 @@ export function MapPopupCard({ item, isSelected, onAdd, onViewDetail, onClose }:
 
         {/* Actions */}
         <div className="flex gap-2">
-          <button
-            onClick={onAdd}
-            disabled={isSelected || !canAdd}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${
-              isSelected
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
-                : !canAdd
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            }`}
-          >
-            {isSelected ? (
-              <><Check className="w-3.5 h-3.5" /> 已加入</>
-            ) : !canAdd ? (
-              '無庫存'
-            ) : (
-              '＋ 加入計畫'
-            )}
-          </button>
+          {isSelected && onRemove ? (
+            <button
+              onClick={onRemove}
+              className="flex-1 group flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors bg-emerald-50 hover:bg-red-50 text-emerald-700 hover:text-red-600 border border-emerald-200 hover:border-red-200"
+            >
+              <Check className="w-3.5 h-3.5 group-hover:hidden" />
+              <Minus className="w-3.5 h-3.5 hidden group-hover:block" />
+              <span className="group-hover:hidden">已加入</span>
+              <span className="hidden group-hover:inline">移除</span>
+            </button>
+          ) : (
+            <button
+              onClick={onAdd}
+              disabled={isSelected || !canAdd}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${
+                !canAdd
+                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+            >
+              {!canAdd ? '無庫存' : '＋ 加入計畫'}
+            </button>
+          )}
           <button
             onClick={onViewDetail}
             className="px-3 py-2 rounded-lg text-xs font-semibold text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition-colors whitespace-nowrap"

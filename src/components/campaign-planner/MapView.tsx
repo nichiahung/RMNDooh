@@ -16,6 +16,7 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
+  onRemove: (inventoryId: string) => void;
 }
 
 const dimmedIcon = L.divIcon({
@@ -127,7 +128,7 @@ function MapZoomControls() {
   );
 }
 
-export function MapView({ inventory, allInventory, selectedItems, onViewDetails, onAdd }: Props) {
+export function MapView({ inventory, allInventory, selectedItems, onViewDetails, onAdd, onRemove }: Props) {
   const { t } = useI18n();
   const center: [number, number] = [25.042, 121.565];
 
@@ -188,6 +189,7 @@ export function MapView({ inventory, allInventory, selectedItems, onViewDetails,
                   item={item}
                   isSelected={isSelected}
                   onAdd={() => onAdd(item)}
+                  onRemove={() => onRemove(item.id)}
                   onViewDetail={() => onViewDetails(item)}
                 />
               </Popup>
@@ -218,6 +220,7 @@ export function MapView({ inventory, allInventory, selectedItems, onViewDetails,
                   item={item}
                   isSelected={isSelected}
                   onAdd={() => onAdd(item)}
+                  onRemove={() => onRemove(item.id)}
                   onViewDetail={() => onViewDetails(item)}
                 />
               </Popup>

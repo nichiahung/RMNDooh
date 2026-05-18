@@ -613,6 +613,7 @@ function CampaignPlannerPageContent() {
                   selectedItems={selectedItems}
                   onViewDetails={setSelectedInventoryForDetail}
                   onAdd={handleAdd}
+                  onRemove={handleRemove}
                   onAddAll={handleAddAll}
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}

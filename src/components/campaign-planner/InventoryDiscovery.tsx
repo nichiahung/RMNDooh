@@ -19,6 +19,7 @@ interface Props {
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation, options?: MediaPlanAddOptions) => void;
+  onRemove: (inventoryId: string) => void;
   onAddAll?: () => void;
   objective?: string;
   activeFilterCount?: number;
@@ -38,6 +39,7 @@ export function InventoryDiscovery({
   selectedItems,
   onViewDetails,
   onAdd,
+  onRemove,
   onAddAll,
   objective,
   activeFilterCount,
@@ -97,6 +99,7 @@ export function InventoryDiscovery({
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}
+            onRemove={onRemove}
           />
         ) : (
           <AiMediaPlannerView
