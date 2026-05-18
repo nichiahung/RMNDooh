@@ -10,9 +10,11 @@ interface Props {
   maxWidth?: string;
   /** Optional accessible title shown in the header bar */
   title?: string;
+  /** Tailwind z-index class. Defaults to 'z-[60]' */
+  zIndex?: string;
 }
 
-export function Modal({ onClose, children, maxWidth = 'max-w-2xl', title }: Props) {
+export function Modal({ onClose, children, maxWidth = 'max-w-2xl', title, zIndex = 'z-[60]' }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -21,7 +23,7 @@ export function Modal({ onClose, children, maxWidth = 'max-w-2xl', title }: Prop
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm"
+      className={`fixed inset-0 ${zIndex} flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className={`bg-white rounded-2xl shadow-xl w-full ${maxWidth} max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200`}>

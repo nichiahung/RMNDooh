@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { X, UploadCloud, CheckCircle2, AlertCircle, Loader2, ImageIcon, Film, ShieldCheck } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
 import { FormatSpec, CanonicalFormat, AssetStatus } from '@/types/creative';
 import { validateAsset } from '@/utils/creativeRequirements';
 import { uploadCreativeAsset, listMediaAssets } from '@/lib/api/creatives';
@@ -123,9 +124,7 @@ export function CreativeUploadModal({ spec, venueCount, requirementId, onSuccess
     'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30';
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <Modal onClose={onClose} maxWidth="max-w-md" zIndex="z-[200]">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div>
@@ -286,7 +285,6 @@ export function CreativeUploadModal({ spec, venueCount, requirementId, onSuccess
             )}
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

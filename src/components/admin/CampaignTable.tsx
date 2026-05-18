@@ -5,6 +5,7 @@ import { formatCurrency } from '@/utils/formatters';
 import { Search } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   campaigns: Campaign[];
@@ -109,12 +110,9 @@ export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Pr
                       確認訂單
                     </button>
                   )}
-                  <button
-                    onClick={() => onViewDetails(campaign)}
-                    className="text-indigo-600 hover:text-indigo-900 font-medium text-xs px-3 py-1.5 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => onViewDetails(campaign)}>
                     {t('admin.campaigns.viewDetails')}
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))}

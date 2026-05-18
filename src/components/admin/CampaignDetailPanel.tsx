@@ -4,6 +4,8 @@ import { Campaign, InventoryLocation } from '@/types/inventory';
 import { formatCurrency, formatNumber } from '@/utils/formatters';
 import { X, Check, AlertTriangle, FileVideo, FileImage } from 'lucide-react';
 import { useI18n } from '@/i18n/I18nProvider';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   campaign: Campaign;
@@ -22,10 +24,8 @@ export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStat
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
+    <Modal onClose={onClose} maxWidth="max-w-4xl" zIndex="z-50">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50 flex-shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900">{campaign.name}</h2>
             <p className="text-sm text-slate-500 mt-1">{t('admin.detail.advertiser')} {campaign.advertiserName}</p>
@@ -121,25 +121,19 @@ export function CampaignDetailPanel({ campaign, inventory, onClose, onUpdateStat
           </div>
         </div>
 
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3">
+        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3 flex-shrink-0">
           {campaign.status === 'pending_review' && (
             <>
-              <button onClick={handleReject} className="px-6 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors">
-                {t('admin.detail.reject')}
-              </button>
-              <button onClick={handleApprove} className="flex items-center px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+              <Button variant="ghost" onClick={handleReject}>{t('admin.detail.reject')}</Button>
+              <Button variant="primary" onClick={handleApprove}>
                 <Check className="w-4 h-4 mr-2" /> {t('admin.detail.approve')}
-              </button>
+              </Button>
             </>
           )}
           {campaign.status !== 'pending_review' && (
-            <button onClick={onClose} className="px-6 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-colors">
-              {t('admin.detail.close')}
-            </button>
+            <Button variant="ghost" onClick={onClose}>{t('admin.detail.close')}</Button>
           )}
         </div>
-
-      </div>
-    </div>
+    </Modal>
   );
 }
