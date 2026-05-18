@@ -60,10 +60,12 @@ The system supports a hybrid playback model for every screen loop (e.g., a 5-min
 └── src/
     ├── app/           # Next.js App Router entry points
     ├── components/    # React Components
-    │   ├── admin/     # CMS & Approval workflows
-    │   ├── planner/   # Advertiser Campaign Planner (MVP)
-    │   ├── player/    # Web Player Simulator
-    │   └── reports/   # Analytics & Proof of Play
+    │   ├── ui/            # Shared primitives: Button, Modal, StatusBadge
+    │   ├── admin/         # CMS & Approval workflows
+    │   ├── campaign-planner/ # Active advertiser planning flow
+    │   ├── planner/       # Store-connected wrappers (delegate to campaign-planner)
+    │   ├── player/        # Web Player Simulator
+    │   └── reports/       # Analytics & Proof of Play
     ├── data/          # Mock JSON data (used in MVP)
     ├── i18n/          # Lightweight multi-language context
     ├── store/         # Zustand or Context states

@@ -56,12 +56,14 @@ Player:
 - `src/data/mockScreens.ts`
 - `src/data/mockPlaylists.ts`
 
-Legacy/parallel planner components:
+Planner component structure (post-refactor):
 
-- `src/components/planner/*`
-- `src/components/campaign-planner/*`
+- `src/components/campaign-planner/*` — canonical implementations (InventoryCard, ListView, FilterSidebar, etc.)
+- `src/components/planner/*` — store-connected wrappers; delegate to `campaign-planner` for rendering
+- `src/components/ui/*` — shared primitives (Button, Modal, StatusBadge)
 
-The active route imports `src/components/campaign-planner/CampaignPlannerPage.tsx`. Check imports before editing duplicated components.
+The active route imports `src/components/campaign-planner/CampaignPlannerPage.tsx`.
+`planner/` files are no longer independent duplicates — they are intentional thin wrappers.
 
 ## Placeholder Or Partial Features
 

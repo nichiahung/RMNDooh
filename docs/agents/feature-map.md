@@ -120,11 +120,25 @@ Business behavior:
 - Heartbeat logs to browser console every 10 seconds.
 - `Shift + D` toggles debug panel.
 
-## Duplicate Or Legacy Areas
+## Shared UI Primitives
 
-There are both:
+`src/components/ui/` contains design-system-level components. Use these instead of writing inline styles:
 
-- `src/components/campaign-planner/*`
-- `src/components/planner/*`
+| Component | File | Usage |
+| --- | --- | --- |
+| `Button` | `ui/Button.tsx` | Variants: `primary` (indigo fill) · `secondary` (white + indigo border) · `ghost` (transparent) · `danger` (white + red border). Sizes: `sm` · `md`. |
+| `Modal` | `ui/Modal.tsx` | Props: `onClose`, `maxWidth`, `title?`, `zIndex?`. Escape key + backdrop-click close built in. Use `zIndex="z-[200]"` for modals that must stack above others. |
+| `StatusBadge` | `ui/StatusBadge.tsx` | Props: `value`, `map` (Record of status → Tailwind class), `label?`, `shape?: 'tag' \| 'pill'`. |
 
-The active route currently uses `campaign-planner`. Do not edit `planner` unless a route or import proves it is used.
+## planner/ vs campaign-planner/
+
+`src/components/campaign-planner/` holds the canonical, feature-complete implementations.
+`src/components/planner/` contains **thin store-connected wrappers** that delegate rendering to `campaign-planner`:
+
+| planner/ file | Role |
+| --- | --- |
+| `InventoryCard.tsx` | Reads `usePlannerStore` (isSelected, add/remove), renders `campaign-planner/InventoryCard` |
+| `ListView.tsx` | Grid wrapper aligned with campaign-planner breakpoints, uses i18n empty state |
+| `FilterSidebar.tsx` | Manages `isOpen` + `searchQuery` local state, delegates to `campaign-planner/FilterSidebar` |
+
+**Rule**: Edit `campaign-planner/` components for feature changes. Edit `planner/` wrappers only to adjust store wiring.
