@@ -20,11 +20,12 @@ const MapView = dynamic(
 
 interface Props {
   inventory: InventoryLocation[];
+  allInventory: InventoryLocation[];
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
 }
 
-export function MapWrapper({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
-  return <MapView inventory={inventory} selectedItems={selectedItems} onViewDetails={onViewDetails} onAdd={onAdd} />;
+export function MapWrapper({ inventory, allInventory, selectedItems, onViewDetails, onAdd }: Props) {
+  return <MapView inventory={inventory} allInventory={allInventory} selectedItems={selectedItems} onViewDetails={onViewDetails} onAdd={onAdd} />;
 }

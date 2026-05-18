@@ -88,6 +88,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'map.limited': 'Limited',
     'map.unavailable': 'Unavailable',
     'map.selectedInPlan': 'Selected in Plan',
+    'map.filteredOut': 'Filtered out',
     'map.zoomIn': 'Zoom in',
     'map.zoomOut': 'Zoom out',
 
@@ -528,6 +529,7 @@ export const dictionaries: Record<Locale, Record<string, string>> = {
     'map.limited': '檔期有限',
     'map.unavailable': '已售罄',
     'map.selectedInPlan': '已排入排期',
+    'map.filteredOut': '已被篩選',
     'map.zoomIn': '放大地圖',
     'map.zoomOut': '縮小地圖',
 

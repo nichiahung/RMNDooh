@@ -86,6 +86,7 @@ export function InventoryDiscovery({
         ) : currentView === 'map' ? (
           <MapWrapper
             inventory={inventory}
+            allInventory={allInventory}
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}

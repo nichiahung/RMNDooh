@@ -12,10 +12,23 @@ import { MapPopupCard, MapPopupCardProps } from './MapPopupCard';
 
 interface Props {
   inventory: InventoryLocation[];
+  allInventory: InventoryLocation[];
   selectedItems: MediaPlanItem[];
   onViewDetails: (item: InventoryLocation) => void;
   onAdd: (item: InventoryLocation) => void;
 }
+
+const dimmedIcon = L.divIcon({
+  className: '',
+  iconSize: [24, 31],
+  iconAnchor: [12, 31],
+  popupAnchor: [0, -27],
+  html: `<div style="width:24px;height:31px;opacity:0.35;cursor:pointer;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.25));">
+    <svg viewBox="0 0 40 52" width="24" height="31" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 0C9 0 0 9 0 20c0 14 20 32 20 32s20-18 20-32C40 9 31 0 20 0z" fill="#64748b" stroke="white" stroke-width="3"/>
+    </svg>
+  </div>`
+});
 
 const createIcon = (color: string, isSelected: boolean) => {
   const w = 40;
@@ -109,9 +122,15 @@ function MapZoomControls() {
   );
 }
 
-export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Props) {
+export function MapView({ inventory, allInventory, selectedItems, onViewDetails, onAdd }: Props) {
   const { t } = useI18n();
   const center: [number, number] = [25.042, 121.565];
+
+  const filteredIds = React.useMemo(() => new Set(inventory.map(i => i.id)), [inventory]);
+  const dimmedInventory = React.useMemo(
+    () => allInventory.filter(i => !filteredIds.has(i.id)),
+    [allInventory, filteredIds]
+  );
 
   if (inventory.length === 0) {
     return (
@@ -143,6 +162,33 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
 
         <FitBounds inventory={inventory} />
         <MapZoomControls />
+
+        {/* Dimmed pins — filtered-out locations, still clickable to add to plan */}
+        {dimmedInventory.map(item => {
+          const isSelected = isInMediaPlan(selectedItems, item.id);
+          return (
+            <Marker
+              key={`dimmed-${item.id}`}
+              position={[item.latitude, item.longitude]}
+              icon={isSelected ? createIcon('#10b981', true) : dimmedIcon}
+              zIndexOffset={-1000}
+            >
+              <Popup
+                closeButton={false}
+                className="map-popup-clean"
+                minWidth={240}
+                maxWidth={240}
+              >
+                <CloseablePopupCard
+                  item={item}
+                  isSelected={isSelected}
+                  onAdd={() => onAdd(item)}
+                  onViewDetail={() => onViewDetails(item)}
+                />
+              </Popup>
+            </Marker>
+          );
+        })}
 
         {inventory.map(item => {
           const isSelected = isInMediaPlan(selectedItems, item.id);
@@ -191,6 +237,11 @@ export function MapView({ inventory, selectedItems, onViewDetails, onAdd }: Prop
           <div className="flex items-center text-xs text-slate-700 font-medium pt-1 border-t border-slate-100">
             <span className="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-200 mr-2"></span> {t('map.selectedInPlan')}
           </div>
+          {dimmedInventory.length > 0 && (
+            <div className="flex items-center text-xs text-slate-400 pt-1 border-t border-slate-100">
+              <span className="w-3 h-3 rounded-full bg-slate-400 opacity-30 ring-2 ring-slate-200 mr-2"></span> {t('map.filteredOut')} ({dimmedInventory.length})
+            </div>
+          )}
         </div>
       </div>
 
