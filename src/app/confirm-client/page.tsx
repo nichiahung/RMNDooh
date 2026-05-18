@@ -22,22 +22,28 @@ function ConfirmClientContent() {
   async function handleConfirm() {
     if (!token) return;
     setActing(true);
-    const result = await confirmBinding(token);
-    if (result) {
-      setDetails(result);
-      setState('confirmed');
-    } else {
-      setState('invalid');
+    try {
+      const result = await confirmBinding(token);
+      if (result) {
+        setDetails(result);
+        setState('confirmed');
+      } else {
+        setState('invalid');
+      }
+    } finally {
+      setActing(false);
     }
-    setActing(false);
   }
 
   async function handleReject() {
     if (!token) return;
     setActing(true);
-    await rejectBinding(token);
-    setState('rejected');
-    setActing(false);
+    try {
+      await rejectBinding(token);
+      setState('rejected');
+    } finally {
+      setActing(false);
+    }
   }
 
   if (state === 'loading') {

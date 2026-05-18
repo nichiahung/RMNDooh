@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { createClientWithBinding } from '@/lib/api/clientApi';
+import { AuthGuard } from '@/components/AuthGuard';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
-export default function NewClientPage() {
+function NewClientPageContent() {
   const router = useRouter();
   const { currentUser } = useAuth();
 
@@ -126,5 +127,13 @@ export default function NewClientPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewClientPage() {
+  return (
+    <AuthGuard requiredRole="sales">
+      <NewClientPageContent />
+    </AuthGuard>
   );
 }

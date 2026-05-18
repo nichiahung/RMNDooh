@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Users, Plus, Copy, Check, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getMyClients, findClientByEmail, requestBinding } from '@/lib/api/clientApi';
+import { AuthGuard } from '@/components/AuthGuard';
 import type { ClientWithBinding } from '@/types/client';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
@@ -17,7 +18,7 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   rejected: { label: '已拒絕', className: 'bg-red-100 text-red-600' },
 };
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const { currentUser } = useAuth();
   const router = useRouter();
   const [clients, setClients] = useState<ClientWithBinding[]>([]);
@@ -223,5 +224,13 @@ export default function ClientsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <AuthGuard requiredRole="sales">
+      <ClientsPageContent />
+    </AuthGuard>
   );
 }

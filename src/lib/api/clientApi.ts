@@ -135,16 +135,17 @@ export async function confirmBinding(token: string): Promise<{ clientName: strin
   if (error || !binding) return null;
 
   // TODO: replace with a Supabase RPC for atomic update (binding + client in one transaction)
+  const now = new Date().toISOString();
   const { error: bindErr } = await supabase
     .from('sales_client_bindings')
-    .update({ status: 'active', confirmed_at: new Date().toISOString() })
+    .update({ status: 'active', confirmed_at: now, updated_at: now })
     .eq('id', binding.id);
 
   if (bindErr) throw new Error(bindErr.message);
 
   const { error: clientErr } = await supabase
     .from('clients')
-    .update({ status: 'active' })
+    .update({ status: 'active', updated_at: now })
     .eq('id', binding.client_id);
 
   if (clientErr) throw new Error(clientErr.message);
@@ -156,7 +157,7 @@ export async function confirmBinding(token: string): Promise<{ clientName: strin
 export async function rejectBinding(token: string): Promise<void> {
   await supabase
     .from('sales_client_bindings')
-    .update({ status: 'rejected' })
+    .update({ status: 'rejected', updated_at: new Date().toISOString() })
     .eq('confirm_token', token)
     .eq('status', 'pending');
 }
