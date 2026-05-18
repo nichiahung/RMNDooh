@@ -440,7 +440,7 @@ function CampaignPlannerPageContent() {
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex overflow-hidden relative${step === 'inventory' ? ' pb-16 md:pb-0' : ''}`}>
+      <div className="flex-1 flex overflow-hidden relative">
             {step === 'inventory' && (
               <>
                 {currentView !== 'ai' && (

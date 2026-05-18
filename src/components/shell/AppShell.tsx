@@ -12,7 +12,6 @@ interface Props {
 export function AppShell({ children }: Props) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isTabBarVisible, setIsTabBarVisible] = useState(true);
-  const mainRef = useRef<HTMLElement>(null);
   const prevScrollTop = useRef(0);
   const prevVisible = useRef(true);
   const isMobileNavOpenRef = useRef(false);
@@ -26,13 +25,14 @@ export function AppShell({ children }: Props) {
     }
   }, [isMobileNavOpen]);
 
-  // Attach scroll listener directly to the DOM element (more reliable than
-  // React synthetic onScroll on iOS Safari momentum scrolling).
+  // Use capture-phase scroll on document so nested scrollable containers
+  // (e.g. InventoryDiscovery's own overflow-y-auto div) are also detected.
+  // Scroll events don't bubble, but capture phase reaches every target.
   useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
+    const handleScroll = (e: Event) => {
+      const el = e.target as HTMLElement;
+      if (!el || el === document.documentElement || el === document.body) return;
 
-    const handleScroll = () => {
       const currentScrollTop = el.scrollTop;
       const visible = getMobileTabBarVisibility({
         currentScrollTop,
@@ -49,8 +49,8 @@ export function AppShell({ children }: Props) {
       }
     };
 
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
+    document.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    return () => document.removeEventListener('scroll', handleScroll, { capture: true });
   }, []);
 
   return (
@@ -74,8 +74,7 @@ export function AppShell({ children }: Props) {
           onMobileClose={() => setIsMobileNavOpen(false)}
         />
         <main
-          ref={mainRef}
-          className="flex-1 overflow-y-auto overflow-x-hidden"
+          className={`flex-1 overflow-y-auto overflow-x-hidden md:pb-0 transition-[padding-bottom] duration-200 ${isTabBarVisible ? 'pb-16' : 'pb-0'}`}
         >
           {children}
         </main>
