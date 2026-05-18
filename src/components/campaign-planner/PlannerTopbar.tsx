@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDownUp, ChevronDown, Filter } from 'lucide-react';
+import { ArrowDownUp, ChevronDown, Filter, ClipboardList } from 'lucide-react';
 import { ViewToggle, ViewMode } from './ViewToggle';
 import { useI18n } from '@/i18n/I18nProvider';
 
@@ -12,6 +12,8 @@ interface Props {
   onViewChange: (view: ViewMode) => void;
   activeFilterCount?: number;
   onOpenFilters?: () => void;
+  onOpenSummary?: () => void;
+  selectedCount?: number;
 }
 
 const SORT_OPTIONS = [
@@ -31,6 +33,8 @@ export function PlannerTopbar({
   onViewChange,
   activeFilterCount = 0,
   onOpenFilters,
+  onOpenSummary,
+  selectedCount = 0,
 }: Props) {
   const { t } = useI18n();
 
@@ -88,10 +92,25 @@ export function PlannerTopbar({
           </div>
         )}
 
-        {/* View toggle — pinned right when there is room, wraps cleanly when narrow */}
+        {/* View toggle + mobile media plan button — pinned right */}
         <div className="ml-auto flex items-center gap-2 flex-shrink-0">
           {(showFilters || showSort) && <div className="hidden sm:block h-4 w-px bg-slate-200" />}
           <ViewToggle currentView={currentView} onViewChange={onViewChange} />
+          {onOpenSummary && (
+            <button
+              type="button"
+              onClick={onOpenSummary}
+              className="relative lg:hidden inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+              aria-label="開啟媒體計劃"
+            >
+              <ClipboardList className="h-4 w-4" />
+              {selectedCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+                  {selectedCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

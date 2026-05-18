@@ -21,6 +21,7 @@ interface Props {
   objective?: string;
   activeFilterCount?: number;
   onOpenFilters?: () => void;
+  onOpenSummary?: () => void;
   showTopbar?: boolean;
   flightStart: string | null;
   flightEnd: string | null;
@@ -41,6 +42,7 @@ export function InventoryDiscovery({
   objective,
   activeFilterCount,
   onOpenFilters,
+  onOpenSummary,
   showTopbar = true,
   flightStart,
   flightEnd,
@@ -57,6 +59,8 @@ export function InventoryDiscovery({
           onViewChange={onViewChange}
           activeFilterCount={activeFilterCount}
           onOpenFilters={currentView !== 'ai' ? onOpenFilters : undefined}
+          onOpenSummary={onOpenSummary}
+          selectedCount={selectedItems.length}
         />
       )}
       <div className="relative flex-1 overflow-y-auto custom-scrollbar">

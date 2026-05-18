@@ -455,6 +455,7 @@ function CampaignPlannerPageContent() {
                   objective={selectedObjective}
                   activeFilterCount={activeFilterCount}
                   onOpenFilters={currentView !== 'ai' && !isFilterOpen ? () => setIsFilterOpen(true) : undefined}
+                  onOpenSummary={() => setIsSummaryOpen(true)}
                   showTopbar
                   flightStart={flightStart}
                   flightEnd={flightEnd}
