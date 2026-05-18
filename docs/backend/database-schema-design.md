@@ -221,6 +221,10 @@ CREATE TABLE campaign_inventory_items (
   campaign_id           UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
   inventory_location_id UUID NOT NULL REFERENCES inventory_locations(id),
   days                  INT NOT NULL DEFAULT 7,
+  start_date            DATE,
+  -- 可選：單一版位子走期；未設定時使用 campaigns.start_date
+  end_date              DATE,
+  -- 可選：單一版位子走期；未設定時使用 campaigns.end_date
   price_per_day         NUMERIC(10, 2) NOT NULL,
   -- 下單時的價格快照，不隨 inventory 更新而變動
   daily_impressions     BIGINT NOT NULL,

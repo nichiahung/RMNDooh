@@ -290,7 +290,11 @@ function CampaignPlannerPageContent() {
 
       isCreatingDraft.current = true;
       try {
-        const draft = await createDraftCampaign();
+        const draft = await createDraftCampaign({
+          startDate: flightStart,
+          endDate: flightEnd,
+          campaignDays: flightStart && flightEnd ? flightDays(flightStart, flightEnd) : undefined,
+        });
         cId = draft.id;
         setCampaignId(draft.id);
         // Update the URL to reflect the new draft
@@ -308,7 +312,15 @@ function CampaignPlannerPageContent() {
         const alreadyMapped = dbItemIdMap.current.has(pending.item.id);
         if (!alreadyMapped) {
           try {
-            const dbRow = await addInventoryItem(cId, pending.item.id, pendingResolved.days, pending.item.pricePerDay, pending.item.dailyImpressions);
+            const dbRow = await addInventoryItem(
+              cId,
+              pending.item.id,
+              pendingResolved.days,
+              pending.item.pricePerDay,
+              pending.item.dailyImpressions,
+              pendingResolved.startDate,
+              pendingResolved.endDate,
+            );
             dbItemIdMap.current.set(pending.item.id, dbRow.id);
           } catch (err) {
             console.error('Failed to persist queued inventory item:', err);
@@ -323,7 +335,15 @@ function CampaignPlannerPageContent() {
     const alreadyMapped = dbItemIdMap.current.has(item.id);
     if (cId && !alreadyInPlan && !alreadyMapped) {
       try {
-        const dbRow = await addInventoryItem(cId, item.id, resolved.days, item.pricePerDay, item.dailyImpressions);
+        const dbRow = await addInventoryItem(
+          cId,
+          item.id,
+          resolved.days,
+          item.pricePerDay,
+          item.dailyImpressions,
+          resolved.startDate,
+          resolved.endDate,
+        );
         dbItemIdMap.current.set(item.id, dbRow.id);
       } catch (err) {
         console.error('Failed to persist inventory item:', err);
@@ -348,7 +368,11 @@ function CampaignPlannerPageContent() {
     );
     const dbRowId = dbItemIdMap.current.get(inventoryId);
     if (dbRowId) {
-      updateInventoryItemDays(dbRowId, days).catch(err => console.error('Failed to update inventory item days:', err));
+      const currentItem = selectedItems.find(item => item.inventoryId === inventoryId);
+      updateInventoryItemDays(dbRowId, days, {
+        startDate: currentItem?.startDate ?? null,
+        endDate: currentItem?.endDate ?? null,
+      }).catch(err => console.error('Failed to update inventory item days:', err));
     }
   };
 
@@ -370,7 +394,10 @@ function CampaignPlannerPageContent() {
     );
     const dbRowId = dbItemIdMap.current.get(inventoryId);
     if (dbRowId) {
-      updateInventoryItemDays(dbRowId, nextDays).catch(err => console.error('Failed to update inventory item days:', err));
+      updateInventoryItemDays(dbRowId, nextDays, {
+        startDate: start,
+        endDate: end,
+      }).catch(err => console.error('Failed to update inventory item days:', err));
     }
   };
 
@@ -389,13 +416,20 @@ function CampaignPlannerPageContent() {
       nextItems.forEach(item => {
         const dbRowId = dbItemIdMap.current.get(item.inventoryId);
         if (dbRowId) {
-          updateInventoryItemDays(dbRowId, days).catch(err => console.error('Failed to update inventory item days:', err));
+          updateInventoryItemDays(dbRowId, days, {
+            startDate: item.startDate ?? null,
+            endDate: item.endDate ?? null,
+          }).catch(err => console.error('Failed to update inventory item days:', err));
         }
       });
     }
     if (campaignId) {
       try {
-        await updateDraftCampaign(campaignId, { startDate: start ?? undefined, endDate: end ?? undefined });
+        await updateDraftCampaign(campaignId, {
+          startDate: start ?? undefined,
+          endDate: end ?? undefined,
+          campaignDays: start && end ? flightDays(start, end) : undefined,
+        });
       } catch (err) {
         console.error('Failed to save flight dates:', err);
       }

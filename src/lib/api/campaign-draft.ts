@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { canSubmitCreatives, computeLaunchReadiness, shouldAutoTransitionToReview } from '@/utils/campaignStateMachine';
 import { deriveRequiredFormats, FORMAT_SPECS } from '@/utils/creativeRequirements';
+import { flightDays } from '@/utils/dates';
 import type {
   CampaignCreativeRequirement,
   CampaignDraft,
@@ -26,6 +27,7 @@ function mapCampaignRow(row: Record<string, unknown>): CampaignDraft {
     objective: (row.objective as string) ?? null,
     startDate: (row.start_date as string) ?? null,
     endDate: (row.end_date as string) ?? null,
+    campaignDays: Number(row.campaign_days ?? 7),
     status: (row.status as CampaignDraftStatus) ?? 'draft',
     createdAt: (row.created_at as string) ?? new Date().toISOString(),
     updatedAt: (row.updated_at as string) ?? new Date().toISOString(),
@@ -38,6 +40,8 @@ function mapInventoryItemRow(row: Record<string, unknown>): CampaignInventoryIte
     campaignId: row.campaign_id as string,
     inventoryLocationId: row.inventory_location_id as string,
     days: Number(row.days),
+    startDate: (row.start_date as string) ?? null,
+    endDate: (row.end_date as string) ?? null,
     pricePerDaySnapshot: Number(row.price_per_day),
   };
 }
@@ -53,9 +57,24 @@ function mapRequirementRow(row: Record<string, unknown>): CampaignCreativeRequir
   };
 }
 
+function isMissingFlightColumnError(error: { message?: string } | null | undefined): boolean {
+  const message = error?.message ?? '';
+  return (
+    message.includes("Could not find the 'start_date' column") ||
+    message.includes("Could not find the 'end_date' column") ||
+    message.includes('schema cache')
+  );
+}
+
 // ─── Campaign CRUD ─────────────────────────────────────────
 
-export async function createDraftCampaign(): Promise<CampaignDraft> {
+interface CreateDraftCampaignInput {
+  startDate?: string | null;
+  endDate?: string | null;
+  campaignDays?: number;
+}
+
+export async function createDraftCampaign(input: CreateDraftCampaignInput = {}): Promise<CampaignDraft> {
   const { count } = await supabase
     .from('campaigns')
     .select('id', { count: 'exact', head: true })
@@ -65,6 +84,9 @@ export async function createDraftCampaign(): Promise<CampaignDraft> {
   const yyyymmdd = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
   const seq = String((count ?? 0) + 1).padStart(3, '0');
   const generatedName = `Campaign_${yyyymmdd}_${seq}`;
+  const campaignDays =
+    input.campaignDays ??
+    (input.startDate && input.endDate ? flightDays(input.startDate, input.endDate) : 7);
 
   const { data, error } = await supabase
     .from('campaigns')
@@ -75,7 +97,9 @@ export async function createDraftCampaign(): Promise<CampaignDraft> {
       objective: 'awareness',
       status: 'draft',
       buying_type: 'direct',
-      campaign_days: 7,
+      campaign_days: campaignDays,
+      start_date: input.startDate ?? null,
+      end_date: input.endDate ?? null,
     })
     .select('*')
     .single();
@@ -97,7 +121,7 @@ export async function getCampaign(campaignId: string): Promise<CampaignDraft> {
 
 export async function updateDraftCampaign(
   campaignId: string,
-  updates: Partial<Pick<CampaignDraft, 'name' | 'objective' | 'startDate' | 'endDate'>>,
+  updates: Partial<Pick<CampaignDraft, 'name' | 'objective' | 'startDate' | 'endDate' | 'campaignDays'>>,
 ): Promise<CampaignDraft> {
   // Map camelCase to snake_case
   const dbUpdates: Record<string, unknown> = {
@@ -107,6 +131,7 @@ export async function updateDraftCampaign(
   if (updates.objective !== undefined) dbUpdates.objective = updates.objective;
   if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate;
   if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate;
+  if (updates.campaignDays !== undefined) dbUpdates.campaign_days = updates.campaignDays;
 
   const { data, error } = await supabase
     .from('campaigns')
@@ -129,6 +154,8 @@ export async function addInventoryItem(
   days: number,
   pricePerDay: number,
   dailyImpressions: number,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<CampaignInventoryItemRow> {
   // Check for existing item to avoid duplicates
   const { data: existing } = await supabase
@@ -140,17 +167,35 @@ export async function addInventoryItem(
 
   if (existing) return mapInventoryItemRow(existing);
 
+  const insertPayload = {
+    campaign_id: campaignId,
+    inventory_location_id: inventoryLocationId,
+    days,
+    start_date: startDate ?? null,
+    end_date: endDate ?? null,
+    price_per_day: pricePerDay,
+    daily_impressions: dailyImpressions,
+  };
+
   const { data, error } = await supabase
     .from('campaign_inventory_items')
-    .insert({
-      campaign_id: campaignId,
-      inventory_location_id: inventoryLocationId,
-      days,
-      price_per_day: pricePerDay,
-      daily_impressions: dailyImpressions,
-    })
+    .insert(insertPayload)
     .select('*')
     .single();
+
+  if (isMissingFlightColumnError(error)) {
+    const { start_date: _startDate, end_date: _endDate, ...fallbackPayload } = insertPayload;
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('campaign_inventory_items')
+      .insert(fallbackPayload)
+      .select('*')
+      .single();
+
+    if (fallbackError || !fallbackData) {
+      throw new Error(fallbackError?.message ?? 'Failed to add inventory item');
+    }
+    return mapInventoryItemRow(fallbackData);
+  }
 
   if (error || !data) throw new Error(error?.message ?? 'Failed to add inventory item');
   return mapInventoryItemRow(data);
@@ -168,13 +213,32 @@ export async function removeInventoryItem(itemId: string): Promise<void> {
 export async function updateInventoryItemDays(
   itemId: string,
   days: number,
+  flight?: { startDate?: string | null; endDate?: string | null },
 ): Promise<CampaignInventoryItemRow> {
+  const updates: Record<string, unknown> = { days };
+  if (flight?.startDate !== undefined) updates.start_date = flight.startDate;
+  if (flight?.endDate !== undefined) updates.end_date = flight.endDate;
+
   const { data, error } = await supabase
     .from('campaign_inventory_items')
-    .update({ days })
+    .update(updates)
     .eq('id', itemId)
     .select('*')
     .single();
+
+  if (isMissingFlightColumnError(error)) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('campaign_inventory_items')
+      .update({ days })
+      .eq('id', itemId)
+      .select('*')
+      .single();
+
+    if (fallbackError || !fallbackData) {
+      throw new Error(fallbackError?.message ?? 'Failed to update inventory item days');
+    }
+    return mapInventoryItemRow(fallbackData);
+  }
 
   if (error || !data) throw new Error(error?.message ?? 'Failed to update inventory item days');
   return mapInventoryItemRow(data);
@@ -303,8 +367,41 @@ export async function uploadAssetToRequirement(
 
   if (error) throw new Error(error.message);
 
-  // Check if campaign should auto-transition
   const campaignId = req.campaign_id as string;
+  const { data: existingCreative, error: existingCreativeError } = await supabase
+    .from('creative_assets')
+    .select('id')
+    .eq('campaign_id', campaignId)
+    .eq('media_asset_id', mediaAssetId)
+    .maybeSingle();
+
+  if (existingCreativeError) throw new Error(existingCreativeError.message);
+
+  if (!existingCreative) {
+    const { data: mediaAsset } = await supabase
+      .from('media_assets')
+      .select('original_filename')
+      .eq('id', mediaAssetId)
+      .single();
+
+    const creativeName =
+      (mediaAsset?.original_filename as string | undefined) ??
+      `Creative ${mediaAssetId}`;
+
+    const { error: creativeError } = await supabase
+      .from('creative_assets')
+      .insert({
+        campaign_id: campaignId,
+        media_asset_id: mediaAssetId,
+        name: creativeName,
+        source: 'platform',
+        approval_status: 'pending_review',
+      });
+
+    if (creativeError) throw new Error(creativeError.message);
+  }
+
+  // Check if campaign should auto-transition
   const campaign = await getCampaign(campaignId);
   const allReqs = await getStoredCreativeRequirements(campaignId);
   if (campaign.status === 'blocked_by_creative' && shouldAutoTransitionToReview(campaign.status, allReqs)) {
@@ -361,6 +458,9 @@ export async function submitCampaignForConfirmation(campaignId: string): Promise
     .from('campaigns')
     .update({
       status: 'pending_review',
+      booking_status: 'pending_confirmation',
+      creative_status: 'pending_review',
+      launch_readiness: 'not_ready',
       submitted_at: now,
       updated_at: now,
     })

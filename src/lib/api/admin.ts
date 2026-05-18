@@ -6,34 +6,60 @@ import {
   deriveLaunchReadinessStatus,
 } from '@/utils/adminCampaignStatus';
 
+function isMissingFlightColumnError(error: { message?: string } | null | undefined): boolean {
+  const message = error?.message ?? '';
+  return (
+    message.includes("Could not find the 'start_date' column") ||
+    message.includes("Could not find the 'end_date' column") ||
+    message.includes('schema cache')
+  );
+}
+
 // ── Campaigns ────────────────────────────────────────────────────
 
+function campaignListSelect(includeItemFlightDates: boolean): string {
+  const itemFields = includeItemFlightDates
+    ? 'inventory_location_id, days, start_date, end_date, price_per_day, daily_impressions'
+    : 'inventory_location_id, days, price_per_day, daily_impressions';
+
+  return `
+    id, name, objective, status,
+    booking_status, creative_status, launch_readiness,
+    start_date, end_date, campaign_days,
+    total_budget, estimated_impressions,
+    submitted_at, approval_notes, advertiser_id,
+    advertisers ( name ),
+    campaign_inventory_items (
+      ${itemFields}
+    ),
+    creative_assets (
+      id, name, approval_status, created_at,
+      media_assets ( public_url, mime_type, file_size_bytes, duration_seconds )
+    )
+  `;
+}
+
 export async function fetchAllCampaigns(): Promise<Campaign[]> {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('campaigns')
-    .select(`
-      id, name, objective, status,
-      booking_status, creative_status, launch_readiness,
-      start_date, end_date, campaign_days,
-      total_budget, estimated_impressions,
-      submitted_at, approval_notes, advertiser_id,
-      advertisers ( name ),
-      campaign_inventory_items (
-        inventory_location_id, days, price_per_day, daily_impressions
-      ),
-      creative_assets (
-        id, name, approval_status, created_at,
-        media_assets ( public_url, mime_type, file_size_bytes, duration_seconds )
-      )
-    `)
+    .select(campaignListSelect(true))
     .order('submitted_at', { ascending: false, nullsFirst: false });
+
+  if (isMissingFlightColumnError(error)) {
+    const fallback = await supabase
+      .from('campaigns')
+      .select(campaignListSelect(false))
+      .order('submitted_at', { ascending: false, nullsFirst: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     console.error('Failed to fetch campaigns:', error.message);
     return [];
   }
 
-  return (data ?? []).map(mapCampaignRow);
+  return ((data ?? []) as unknown as Record<string, unknown>[]).map(mapCampaignRow);
 }
 
 export async function updateCampaignStatus(
@@ -54,6 +80,14 @@ export async function updateCampaignStatus(
 }
 
 export async function confirmBooking(campaignId: string, notes?: string): Promise<void> {
+  const { data: campaign, error: campaignError } = await supabase
+    .from('campaigns')
+    .select('start_date, end_date')
+    .eq('id', campaignId)
+    .single();
+
+  if (campaignError || !campaign) throw new Error(campaignError?.message ?? 'Campaign not found');
+
   const { data: items, error: itemsError } = await supabase
     .from('campaign_inventory_items')
     .select('days, price_per_day')
@@ -77,6 +111,8 @@ export async function confirmBooking(campaignId: string, notes?: string): Promis
   const now = new Date().toISOString();
   const creativeStatus = await getDerivedCreativeStatus(campaignId);
   const bookingPayload = {
+    start_date: campaign.start_date as string | null,
+    end_date: campaign.end_date as string | null,
     total_amount: totalAmount,
     booking_status: 'confirmed',
     confirmed_at: now,
@@ -89,7 +125,17 @@ export async function confirmBooking(campaignId: string, notes?: string): Promis
       .update(bookingPayload)
       .eq('id', existingBooking.id as string);
 
-    if (bookingError) throw new Error(bookingError.message);
+    if (isMissingFlightColumnError(bookingError)) {
+      const { start_date: _startDate, end_date: _endDate, ...fallbackPayload } = bookingPayload;
+      const { error: fallbackError } = await supabase
+        .from('campaign_bookings')
+        .update(fallbackPayload)
+        .eq('id', existingBooking.id as string);
+
+      if (fallbackError) throw new Error(fallbackError.message);
+    } else if (bookingError) {
+      throw new Error(bookingError.message);
+    }
   } else {
     const { error: bookingError } = await supabase
       .from('campaign_bookings')
@@ -98,7 +144,19 @@ export async function confirmBooking(campaignId: string, notes?: string): Promis
         ...bookingPayload,
       });
 
-    if (bookingError) throw new Error(bookingError.message);
+    if (isMissingFlightColumnError(bookingError)) {
+      const { start_date: _startDate, end_date: _endDate, ...fallbackPayload } = bookingPayload;
+      const { error: fallbackError } = await supabase
+        .from('campaign_bookings')
+        .insert({
+          campaign_id: campaignId,
+          ...fallbackPayload,
+        });
+
+      if (fallbackError) throw new Error(fallbackError.message);
+    } else if (bookingError) {
+      throw new Error(bookingError.message);
+    }
   }
 
   const { error } = await supabase
@@ -331,6 +389,8 @@ function mapCampaignRow(row: Record<string, unknown>): Campaign {
     selectedItems: items.map((item) => ({
       inventoryId: item.inventory_location_id as string,
       days: Number(item.days),
+      startDate: (item.start_date as string | null) ?? undefined,
+      endDate: (item.end_date as string | null) ?? undefined,
     })),
     creatives,
   };

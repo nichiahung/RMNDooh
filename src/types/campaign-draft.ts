@@ -42,6 +42,7 @@ export interface CampaignDraft {
   objective: string | null;
   startDate: string | null; // ISO date
   endDate: string | null;
+  campaignDays: number;
   status: CampaignDraftStatus;
   createdAt: string;
   updatedAt: string;
@@ -52,6 +53,8 @@ export interface CampaignInventoryItemRow {
   campaignId: string;
   inventoryLocationId: string;
   days: number;
+  startDate: string | null;
+  endDate: string | null;
   pricePerDaySnapshot: number;
 }
 
