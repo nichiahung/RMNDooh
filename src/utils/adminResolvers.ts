@@ -12,10 +12,3 @@ export function resolveAdvertiserName(advertiserId: string): string {
   return ADVERTISER_NAMES[advertiserId] ?? `${advertiserId.slice(0, 8)}...`;
 }
 
-export function resolveCampaignName(
-  campaignId: string,
-  drafts: Array<{ id: string; name: string }>,
-): string {
-  const draft = drafts.find(d => d.id === campaignId);
-  return draft?.name ?? `${campaignId.slice(0, 8)}...`;
-}

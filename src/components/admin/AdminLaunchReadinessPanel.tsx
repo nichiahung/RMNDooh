@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { listAdminLaunchReadinessApi } from '@/lib/api/tradingIterationApi';
-import type { CampaignReadinessResult, LaunchReadinessStatus } from '@/types/trading-models';
+import type { CampaignReadinessResult } from '@/types/trading-models';
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   not_ready: { label: 'Not Ready', cls: 'bg-slate-100 text-slate-600' },
