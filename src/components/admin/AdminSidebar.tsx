@@ -113,12 +113,12 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
       >
 
       {/* Brand */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
+      <div className={`h-16 flex items-center border-b border-slate-800 ${collapsed ? 'lg:justify-center lg:px-3 px-6 justify-between' : 'justify-between px-6'}`}>
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-indigo-500 rounded flex items-center justify-center mr-3">
+          <div className={`w-8 h-8 bg-indigo-500 rounded flex items-center justify-center flex-shrink-0 ${collapsed ? 'lg:mr-0 mr-3' : 'mr-3'}`}>
             <Monitor className="w-5 h-5 text-white" />
           </div>
-          <span className="text-white font-bold tracking-wide">{t('admin.brand')}</span>
+          <span className={`text-white font-bold tracking-wide ${collapsed ? 'lg:hidden' : ''}`}>{t('admin.brand')}</span>
         </div>
         <button
           onClick={onClose}
