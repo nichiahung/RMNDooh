@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { usePlannerStore } from '@/store/usePlannerStore';
 import { PlannerTopbar } from '../campaign-planner/PlannerTopbar';
 import { ListView } from './ListView';
@@ -9,7 +9,7 @@ import { InventoryLocation } from '@/types/inventory';
 
 export function InventoryDiscovery() {
   const { allInventory, filters, viewMode, setViewMode } = usePlannerStore();
-  const [sortBy, setSortBy] = useState('impressions_desc');
+  const sortBy: string = 'impressions_desc';
 
   // Filtering Logic
   const filteredInventory = useMemo(() => {
@@ -78,8 +78,6 @@ export function InventoryDiscovery() {
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
       <PlannerTopbar
         resultCount={sortedAndFilteredInventory.length}
-        sortOption={sortBy}
-        onSortChange={setSortBy}
         currentView={viewMode}
         onViewChange={setViewMode}
       />

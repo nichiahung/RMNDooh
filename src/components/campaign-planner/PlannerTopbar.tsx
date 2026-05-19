@@ -1,14 +1,11 @@
 'use client';
 
-import { ArrowDownUp, ChevronDown, Filter, Plus } from 'lucide-react';
+import { Filter, Plus } from 'lucide-react';
 import { ViewToggle, ViewMode } from './ViewToggle';
 import { useI18n } from '@/i18n/I18nProvider';
-import { getSortLabelCompact } from '@/utils/sortLabel';
 
 interface Props {
   resultCount: number;
-  sortOption: string;
-  onSortChange: (option: string) => void;
   currentView: ViewMode;
   onViewChange: (view: ViewMode) => void;
   activeFilterCount?: number;
@@ -17,19 +14,8 @@ interface Props {
   onAddAll?: () => void;
 }
 
-const SORT_OPTIONS = [
-  { value: 'impressions_desc', key: 'sort.impressionsDesc' },
-  { value: 'impressions_asc',  key: 'sort.impressionsAsc'  },
-  { value: 'price_desc',       key: 'sort.priceDesc'       },
-  { value: 'price_asc',        key: 'sort.priceAsc'        },
-  { value: 'cpm_desc',         key: 'sort.cpmDesc'         },
-  { value: 'cpm_asc',          key: 'sort.cpmAsc'          },
-] as const;
-
 export function PlannerTopbar({
   resultCount,
-  sortOption,
-  onSortChange,
   currentView,
   onViewChange,
   activeFilterCount = 0,
@@ -39,9 +25,14 @@ export function PlannerTopbar({
 }: Props) {
   const { t } = useI18n();
 
-  const showSort = currentView === 'list';
   const showFilters = currentView !== 'ai' && Boolean(onOpenFilters);
   const showAddAll = currentView !== 'ai' && Boolean(onAddAll);
+  const addAllLabel =
+    addAllCount === 0
+      ? '全部已加入'
+      : addAllCount === resultCount
+        ? '全部加入'
+        : `剩餘${addAllCount}個`;
 
   return (
     <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-20 shadow-sm min-w-0">
@@ -73,7 +64,7 @@ export function PlannerTopbar({
           >
             <Plus className="mr-0.5 h-3.5 w-3.5" />
             <span className="whitespace-nowrap">
-              {addAllCount > 0 ? `${addAllCount}個版位` : '全部已加入'}
+              {addAllLabel}
             </span>
           </button>
         )}
@@ -84,34 +75,9 @@ export function PlannerTopbar({
           </span>
         )}
 
-        {/* Sort control — only in List view */}
-        {showSort && (
-          <div className="relative flex h-10 w-32 flex-shrink-0 items-center sm:w-36">
-            {/* Visual pill */}
-            <div className="flex h-full w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-white pl-2.5 pr-7 shadow-sm transition-colors pointer-events-none select-none hover:border-slate-300">
-              <ArrowDownUp className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-700 sm:text-sm">
-                {getSortLabelCompact(sortOption)}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 absolute right-2" />
-            </div>
-            {/* Native select overlaid */}
-            <select
-              aria-label="Sort inventory"
-              className="absolute inset-0 w-full opacity-0 cursor-pointer"
-              value={sortOption}
-              onChange={(e) => onSortChange(e.target.value)}
-            >
-              {SORT_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{t(o.key)}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {/* View toggle — pinned right */}
         <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-          {(showFilters || showSort || showAddAll) && <div className="hidden sm:block h-4 w-px bg-slate-200" />}
+          {(showFilters || showAddAll) && <div className="hidden sm:block h-4 w-px bg-slate-200" />}
           <ViewToggle currentView={currentView} onViewChange={onViewChange} />
         </div>
       </div>

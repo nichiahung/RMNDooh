@@ -55,8 +55,6 @@ export function InventoryDiscovery({
       {showTopbar && (
         <PlannerTopbar
           resultCount={inventory.length}
-          sortOption={sortOption}
-          onSortChange={onSortChange}
           currentView={currentView}
           onViewChange={onViewChange}
           activeFilterCount={activeFilterCount}
@@ -69,6 +67,8 @@ export function InventoryDiscovery({
         {currentView === 'list' ? (
           <ListView
             inventory={inventory}
+            sortOption={sortOption}
+            onSortChange={onSortChange}
             selectedItems={selectedItems}
             onViewDetails={onViewDetails}
             onAdd={onAdd}
