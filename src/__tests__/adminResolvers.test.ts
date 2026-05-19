@@ -15,7 +15,7 @@ describe('resolveAdvertiserName', () => {
     expect(resolveAdvertiserName('xxxxxxxx-yyyy-zzzz-0000-111111111111')).toBe('xxxxxxxx...');
   });
 
-  it('returns truncated ID for adv-default', () => {
+  it('returns known name for adv-default', () => {
     expect(resolveAdvertiserName('adv-default')).toBe('Demo Advertiser');
   });
 });
