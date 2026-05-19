@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { listAdminBookingsApi } from '@/lib/api/tradingIterationApi';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface BookingRow {
   id: string;
@@ -34,6 +35,22 @@ const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-700' },
   blocked: { label: 'Blocked', cls: 'bg-red-100 text-red-700' },
 };
+
+const BOOL_MAP: Record<string, string> = {
+  true: 'bg-emerald-100 text-emerald-700',
+  false: 'bg-red-100 text-red-700',
+};
+
+function BoolBadge({ value, trueLabel, falseLabel }: { value: boolean; trueLabel: string; falseLabel: string }) {
+  return (
+    <StatusBadge
+      value={String(value)}
+      map={BOOL_MAP}
+      label={value ? trueLabel : falseLabel}
+      shape="pill"
+    />
+  );
+}
 
 export function AdminBookingsPanel() {
   const [bookings, setBookings] = useState<BookingRow[] | null>(null);
@@ -72,7 +89,9 @@ export function AdminBookingsPanel() {
             const statusBadge = STATUS_BADGE[b.bookingStatus] ?? { label: b.bookingStatus, cls: 'bg-slate-100 text-slate-600' };
             return (
               <tr key={b.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3 font-mono text-xs text-slate-600">{b.id}</td>
+                <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                  <span title={b.id}>{b.id.slice(0, 8)}…</span>
+                </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${sourceBadge.cls}`}>{sourceBadge.label}</span>
                 </td>
@@ -80,9 +99,15 @@ export function AdminBookingsPanel() {
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.cls}`}>{statusBadge.label}</span>
                 </td>
                 <td className="px-4 py-3 text-slate-500">{b.inventoryIds.length} locations</td>
-                <td className="px-4 py-3">{b.playlistAssigned ? '✅' : '❌'}</td>
-                <td className="px-4 py-3">{b.paymentCleared ? '✅' : '❌'}</td>
-                <td className="px-4 py-3">{b.policyPassed ? '✅' : '❌'}</td>
+                <td className="px-4 py-3">
+                  <BoolBadge value={b.playlistAssigned} trueLabel="Assigned" falseLabel="Missing" />
+                </td>
+                <td className="px-4 py-3">
+                  <BoolBadge value={b.paymentCleared} trueLabel="Cleared" falseLabel="Pending" />
+                </td>
+                <td className="px-4 py-3">
+                  <BoolBadge value={b.policyPassed} trueLabel="Passed" falseLabel="Failed" />
+                </td>
                 <td className="px-4 py-3 text-slate-400 text-xs">{new Date(b.createdAt).toLocaleDateString()}</td>
               </tr>
             );
