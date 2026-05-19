@@ -40,6 +40,7 @@ const TAB_LABELS: Record<AdminTab, string> = {
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   // Data from Supabase
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -107,6 +108,11 @@ export function AdminDashboardPage() {
     syncSelectedCampaign(updatedCampaigns);
   };
 
+  const handleWorkQueueNavigate = (tab: AdminTab, filter: string) => {
+    setActiveTab(tab);
+    setActiveFilter(filter);
+  };
+
   // Determine which tabs use the legacy Supabase data vs the new trading iteration data
   const isLegacyTab = activeTab === 'overview' || activeTab === 'campaigns' || activeTab === 'creative' || activeTab === 'inventory' || activeTab === 'screens';
 
@@ -144,7 +150,7 @@ export function AdminDashboardPage() {
 
               {activeTab === 'overview' && (
                 <>
-                  <AdminWorkQueuesPanel />
+                  <AdminWorkQueuesPanel onNavigate={handleWorkQueueNavigate} />
                   <OverviewPanel campaigns={campaigns} inventory={inventory} screens={screens} />
                 </>
               )}
