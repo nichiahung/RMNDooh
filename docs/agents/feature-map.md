@@ -66,21 +66,43 @@ Active component:
 
 - `src/components/admin/AdminDashboardPage.tsx`
 
-Tabs:
+The Admin Dashboard serves two distinct business paths that converge at Bookings:
+- **Advertiser self-service path**: Advertiser creates Campaign Draft via planner → Admin reviews Draft → Booking created
+- **Sales-assisted path**: Sales builds Proposal → Advertiser approves → Admin converts to Booking
 
-| Tab | Component | Data/action source |
-| --- | --- | --- |
-| Overview | `OverviewPanel` | campaigns, inventory, screens from Supabase helpers |
-| Campaigns | `CampaignTable`, `CampaignDetailPanel` | `fetchAllCampaigns`, `updateCampaignStatus`, `confirmBooking` |
-| Creative Review | `CreativeReviewQueue` | `updateCreativeApprovalStatus` |
-| Inventory | `InventoryManagementTable` | `fetchInventoryLocations` |
-| Screens | `ScreenManagementTable` | `fetchAllScreens` |
+Tabs (current 12-tab layout, grouped by sidebar section):
+
+| Section | Tab | Component | Data/action source |
+| --- | --- | --- | --- |
+| Operations | Overview | `OverviewPanel` + `AdminWorkQueuesPanel` | Supabase campaigns/inventory/screens + `getAdminDashboardWorkQueuesApi()` |
+| Operations | Proposals | `AdminProposalsPanel` | `listAdminProposalsApi()` (trading iteration) |
+| Operations | Campaign Drafts | `AdminCampaignDraftsPanel` | `listAdminCampaignDraftsApi()` (trading iteration) |
+| Operations | Bookings | `AdminBookingsPanel` | `listAdminBookingsApi()` (trading iteration) |
+| Operations | Campaigns *(legacy)* | `CampaignTable`, `CampaignDetailPanel` | `fetchAllCampaigns`, `updateCampaignStatus`, `confirmBooking` |
+| Commerce | Inventory | `InventoryManagementTable` | `fetchInventoryLocations` |
+| Commerce | Pricing & Rate Cards | `AdminPricingPanel` | — |
+| Commerce | Screens | `ScreenManagementTable` | `fetchAllScreens` |
+| Creative | Creative Library | `AdminCreativeLibraryPanel` | — |
+| Creative | Creative Review | `CreativeReviewQueue` | `updateCreativeApprovalStatus`, `fetchStandaloneCreatives` |
+| Creative | Coverage | `AdminCreativeCoveragePanel` | `listAdminCreativeCoverageApi()` (trading iteration) |
+| Launch | Launch Readiness | `AdminLaunchReadinessPanel` | `listAdminLaunchReadinessApi()` (trading iteration) |
 
 Business behavior:
 
 - Campaign status is reviewed separately from creative status and booking status in the Step 15 model.
 - `confirmBooking()` in admin creates or updates the formal `campaign_bookings` record, then updates campaign booking status to confirmed and campaign status to approved.
 - Creative approval updates `creative_assets.approval_status` and recomputes parent campaign creative status.
+- The "Campaigns" tab is a legacy Supabase-backed view; the Proposals/Drafts/Bookings tabs use the newer trading iteration API. Both paths produce Booking records.
+- `AdminWorkQueuesPanel` shows 5 work-queue counts (needsSalesAction, needsBookingAction, needsCreativeReview, needsCreativeCoverage, needsLaunchAction) but cards are currently non-interactive.
+
+## CMS Integration Architecture Direction
+
+Screens in the DOOH platform may be controlled by different CMS systems depending on the venue operator (in-house CMS or third-party such as Broadsign, Scala, Signagelive). The intended architecture uses a **CMS Adapter pattern**:
+
+- Each CMS type has an adapter implementing a common interface: `pushSchedule`, `cancelSchedule`, `getProofOfPlay`, `getScreenStatus`.
+- The admin dashboard interacts only with the adapter interface — CMS differences are hidden from the UI.
+- The `screens` table will need `cms_type` and `cms_screen_id` columns to support routing to the correct adapter.
+- Current implementation is demo/mock; this architecture is the target direction.
 
 ## Reports
 

@@ -14,7 +14,7 @@ This file describes what the app actually does today. Treat it as higher priorit
 | Campaign Submit / Booking | `/campaign-planner` | Supabase campaign draft helpers | `submitCampaignForConfirmation(campaignId)` marks `pending_confirmation`; booking rows created only by Admin. |
 | Campaign Draft API Helpers | `/campaign-planner` draft flow | Supabase | `src/lib/api/campaign-draft.ts`. New campaigns auto-named `Campaign_YYYYMMDD_NNN` on create. |
 | Creative Library | `/assets` | Supabase `media_assets` via `listMediaAssets()` | Lists all uploaded assets for the current advertiser. |
-| Admin Dashboard | `/admin` | Supabase campaigns, inventory, screens | Uses `AdminSidebar` with collapse toggle. Falls back to empty lists on fetch errors. |
+| Admin Dashboard | `/admin` | Mixed: legacy tabs use Supabase helpers; trading-iteration tabs use `tradingIterationApi` | 12 tabs across 4 sidebar sections. Legacy tabs (Overview, Campaigns, Creative Review, Inventory, Screens) pull from Supabase. Trading-iteration tabs (Proposals, Campaign Drafts, Bookings, Coverage, Launch Readiness) pull from `src/lib/api/tradingIterationApi.ts`. `AdminWorkQueuesPanel` work-queue cards are non-interactive (counts only, no navigation). UUID displayed raw in Proposals, Campaign Drafts, and Launch Readiness panels instead of human-readable names. CampaignTable search input has no onChange handler (non-functional). |
 | Reports | `/reports` | `src/data/mockReportData.ts` | No live Supabase reporting integration yet. |
 | Web Player | `/player/[screenId]` | `src/data/mockScreens.ts`, `src/data/mockPlaylists.ts` | Simulates heartbeat, playback loop, and POP logs locally. |
 | i18n | global layout/provider | `src/i18n` dictionaries | Lightweight custom provider, no heavy i18n framework. |
@@ -81,6 +81,21 @@ The active route imports `src/components/campaign-planner/CampaignPlannerPage.ts
 - `viewMode` defaults to `map` in Zustand, but `CampaignPlannerPage` local state initializes `currentView` to `list`.
 - Campaign status models are split between `CampaignStatus`, Step 15 three-status model, and draft lifecycle types. Do not collapse them without checking the business flow.
 - Existing campaigns in DB with null/empty names display as `Campaign_YYYYMMDD_NNN` fallback in HomeView only. They are not backfilled in DB — only new campaigns get the auto-generated name on insert.
+
+## CMS Integration Direction
+
+This platform is the **business logic layer** (booking decisions, creative approval, scheduling intent). Actual content delivery to physical screens is handled by CMS systems, which vary by venue operator.
+
+Current state: `ScreenManagementTable` shows screen records from Supabase. No CMS push integration exists yet — the Web Player (`/player/[screenId]`) is a local simulator only.
+
+Target architecture:
+- A **CMS Adapter Layer** sits between the Admin Dashboard and the downstream CMS systems.
+- Each adapter implements a common interface: `pushSchedule`, `cancelSchedule`, `getProofOfPlay`, `getScreenStatus`.
+- The `screens` table will need `cms_type` (`'inhouse' | 'broadsign' | 'scala' | 'signagelive' | ...`) and `cms_screen_id` columns.
+- Admin triggers "Schedule Campaign" once; the platform routes to the correct adapter based on `cms_type`.
+- Proof-of-Play logs flow back through the same adapter layer into the Reports surface.
+
+Do not build CMS-specific logic directly into admin components. Route through the adapter interface.
 
 ## Agent Rule
 

@@ -34,11 +34,16 @@ Use these terms exactly:
 | Role | Primary jobs | Current UI |
 | --- | --- | --- |
 | Advertiser | Find inventory, build Media Plan, upload creative, submit campaign, review reports. | `/campaign-planner`, `/reports` |
-| Admin / Media Owner Ops | Review Campaigns, approve/reject creatives, confirm bookings, manage inventory and screens. | `/admin` |
+| Sales (業務) | Build proposals for advertisers, negotiate pricing, manage the sales pipeline. | `/proposal-builder`, `/proposal-review`, SalesHome at `/` |
+| Admin / Ad Ops | Operational fulfillment: review campaign drafts, lock inventory, confirm bookings, review creatives, schedule campaigns, manage inventory and screens. NOT a second-approval role — the admin handles fulfillment after commercial agreement is reached. | `/admin` |
 | Screen Runtime | Play assigned content, emit heartbeat, produce POP logs. | `/player/[screenId]` |
 | Platform Operator | Maintain schema, API contracts, deploy pipeline, and seed data. | Docs, Supabase, GitHub Pages |
 
-## Advertiser Flow
+## Two Business Paths
+
+The platform supports two distinct paths for bringing a campaign to air. Both converge at the Booking stage.
+
+### Path 1: Advertiser Self-Service
 
 1. Advertiser searches or filters InventoryLocations by city, district, venue type, screen type, audience, budget, impressions, and availability.
 2. Advertiser compares List and Map views, then opens InventoryLocation details.
@@ -46,16 +51,28 @@ Use these terms exactly:
 4. The app creates a draft Campaign and persists selected InventoryLocations as campaign inventory items when Supabase is available.
 5. Required creative formats are derived from selected Screen types and can be uploaded from the Media Plan or Review surfaces.
 6. Advertiser reviews the Campaign summary and submits only after required creative formats are uploaded.
-7. Admin reviews inventory availability, booking fit, and creative compliance.
-8. Approved Campaigns can be confirmed, scheduled, and later reported with POP logs.
+7. Admin sees the Campaign Draft and performs fulfillment operations (inventory check, booking confirmation).
+8. Campaign proceeds through Creative Review → Launch Readiness → goes live.
 
-## Admin Flow
+### Path 2: Sales-Assisted (Proposal Flow)
 
-1. Admin checks overview KPIs: campaign count, pending review, approved/live, active screens, pipeline budget, estimated reach.
-2. Admin opens Campaign details to inspect Advertiser, objective, selected InventoryLocations, creatives, budget, and approval notes.
-3. Admin approves, rejects, or confirms booking depending on Campaign readiness.
-4. Admin reviews creative assets independently from booking status.
-5. Admin monitors InventoryLocations and Screen heartbeat/playback status.
+1. Sales builds a Proposal (media plan) on behalf of an Advertiser using the Proposal Builder.
+2. Proposal is sent to the Advertiser for review and negotiation.
+3. Advertiser comments, requests changes, or approves. Once approved, commercial agreement is reached.
+4. Admin converts the approved Proposal to a Booking — this is an operational step (inventory lock, schedule setup), not a second approval.
+5. Campaign proceeds through Creative Review → Launch Readiness → goes live.
+
+## Admin / Ad Ops Flow
+
+The Admin role is operational fulfillment (Ad Ops), not a gatekeeper. By the time an item reaches Admin for booking confirmation, the commercial decision is already made.
+
+1. Admin checks Dashboard work queue to see what needs attention today (pending drafts, booking actions, creative reviews, launch blockers).
+2. For Campaign Drafts: verify inventory availability, confirm the booking (locks inventory).
+3. For Proposals: after advertiser approval, convert to booking (lock inventory, set up schedule).
+4. For Bookings: verify payment cleared, mark fulfilled.
+5. For Creative Review: approve or reject creative assets. Check that all screen formats are covered.
+6. For Launch Readiness: verify all prerequisites (booking confirmed, creative approved, inventory locked, payment cleared). Schedule the campaign to go live.
+7. Monitor InventoryLocations and Screen status via CMS integration.
 
 ## Commercial Rules
 
