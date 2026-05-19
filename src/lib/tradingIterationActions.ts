@@ -1188,12 +1188,20 @@ export async function listAdminCreativeCoverage() {
   const payload = state.campaignDraftInventory.size > 0
     ? Array.from(state.campaignDraftInventory.keys())
     : [];
-  return Promise.all(payload.map(id => getCampaignCreativeCoverage(id)));
+  return Promise.all(payload.map(async id => {
+    const coverage = await getCampaignCreativeCoverage(id);
+    const draft = state.campaignDrafts.find(d => d.id === id);
+    return { ...coverage, campaignName: draft?.name };
+  }));
 }
 
 export async function listAdminLaunchReadiness() {
   const campaigns = Array.from(state.campaignDraftInventory.keys());
-  const values = await Promise.all(campaigns.map(async id => getCampaignLaunchReadiness(id)));
+  const values = await Promise.all(campaigns.map(async id => {
+    const result = await getCampaignLaunchReadiness(id);
+    const draft = state.campaignDrafts.find(d => d.id === id);
+    return { ...result, campaignName: draft?.name };
+  }));
   return values;
 }
 

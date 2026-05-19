@@ -355,6 +355,7 @@ export interface CampaignReadinessBlockingReason {
 
 export interface CampaignReadinessResult {
   campaignId: string;
+  campaignName?: string;
   status: LaunchReadinessStatus;
   readyLineItemIds: string[];
   blockedLineItemIds: string[];
