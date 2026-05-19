@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FileText, ClipboardList, CalendarCheck, ImageIcon, CheckCircle, Rocket, AlertTriangle } from 'lucide-react';
+import { FileText, ClipboardList, CalendarCheck, CheckCircle, Rocket, AlertTriangle } from 'lucide-react';
 import { getAdminDashboardWorkQueuesApi } from '@/lib/api/tradingIterationApi';
 import { getWorkQueueNavTarget, type WorkQueueKey } from '@/utils/adminWorkQueueNav';
 import type { AdminTab } from '@/components/admin/AdminSidebar';

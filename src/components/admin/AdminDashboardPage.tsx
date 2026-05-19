@@ -40,8 +40,6 @@ const TAB_LABELS: Record<AdminTab, string> = {
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-
   // Data from Supabase
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [inventory, setInventory] = useState<InventoryLocation[]>([]);
@@ -108,9 +106,9 @@ export function AdminDashboardPage() {
     syncSelectedCampaign(updatedCampaigns);
   };
 
-  const handleWorkQueueNavigate = (tab: AdminTab, filter: string) => {
+  // TODO(P2): pass filter to destination panel when panels support pre-filtering
+  const handleWorkQueueNavigate = (tab: AdminTab, _filter: string) => {
     setActiveTab(tab);
-    setActiveFilter(filter);
   };
 
   // Determine which tabs use the legacy Supabase data vs the new trading iteration data
