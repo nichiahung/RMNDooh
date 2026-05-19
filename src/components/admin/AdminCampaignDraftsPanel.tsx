@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { listAdminCampaignDraftsApi } from '@/lib/api/tradingIterationApi';
 import type { CampaignDraftProfile, CampaignDraftStatus } from '@/types/trading-models';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { resolveAdvertiserName } from '@/utils/adminResolvers';
 
 const DRAFT_STATUS_MAP: Record<CampaignDraftStatus, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-slate-100 text-slate-600' },
@@ -52,7 +53,9 @@ export function AdminCampaignDraftsPanel() {
           {drafts.map((d) => (
               <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{d.name}</td>
-                <td className="px-4 py-3 text-slate-500">{d.advertiserId}</td>
+                <td className="px-4 py-3 text-slate-600 font-medium">
+                  {resolveAdvertiserName(d.advertiserId)}
+                </td>
                 <td className="px-4 py-3">
                   <StatusBadge value={d.status} map={DRAFT_STATUS_CLS} label={DRAFT_STATUS_MAP[d.status]?.label} shape="pill" />
                 </td>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
 import type { Proposal, ProposalStatus } from '@/types/trading-models';
+import { resolveAdvertiserName } from '@/utils/adminResolvers';
 
 const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-slate-100 text-slate-600' },
@@ -51,7 +52,9 @@ export function AdminProposalsPanel() {
             return (
               <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
-                <td className="px-4 py-3 text-slate-500">{p.advertiserId}</td>
+                <td className="px-4 py-3 text-slate-600 font-medium">
+                  {resolveAdvertiserName(p.advertiserId)}
+                </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${badge.cls}`}>{badge.label}</span>
                 </td>

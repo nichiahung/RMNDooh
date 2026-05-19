@@ -42,7 +42,9 @@ export function AdminLaunchReadinessPanel() {
           <div key={campaign.campaignId} className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
             <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100">
               <div>
-                <h3 className="font-semibold text-slate-800">Campaign: {campaign.campaignId}</h3>
+                <h3 className="font-semibold text-slate-800">
+                  {campaign.campaignName ?? `Campaign ${campaign.campaignId.slice(0, 8)}...`}
+                </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {campaign.readyLineItemIds.length} ready / {campaign.blockedLineItemIds.length} blocked
                 </p>
