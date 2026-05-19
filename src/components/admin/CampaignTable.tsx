@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Campaign } from '@/types/inventory';
 import { formatCurrency } from '@/utils/formatters';
 import { Search } from 'lucide-react';
@@ -48,6 +49,16 @@ const LAUNCH_BADGE: Record<string, string> = {
 
 export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Props) {
   const { t } = useI18n();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCampaigns = campaigns.filter(c => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.advertiserName.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div className="flex flex-col h-full">
@@ -57,6 +68,8 @@ export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Pr
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder={t('admin.campaigns.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           />
@@ -77,7 +90,7 @@ export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Pr
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
-            {campaigns.map(campaign => (
+            {filteredCampaigns.map(campaign => (
               <tr key={campaign.id} className="hover:bg-slate-50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-semibold text-slate-900">{campaign.name}</div>
@@ -116,7 +129,7 @@ export function CampaignTable({ campaigns, onViewDetails, onConfirmBooking }: Pr
                 </td>
               </tr>
             ))}
-            {campaigns.length === 0 && (
+            {filteredCampaigns.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                   {t('admin.campaigns.noResults')}
