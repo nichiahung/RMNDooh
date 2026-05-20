@@ -7,27 +7,27 @@ beforeEach(async () => {
 });
 
 describe('markProposalRevised', () => {
-  it('sets proposal status to revised', () => {
-    const seedProposal = tradingSeedProposals[0];
-    const result = markProposalRevised(seedProposal.id);
+  it('sets proposal status to revised', async () => {
+    const seedProposal = tradingSeedProposals.find(p => p.status === 'change_requested')!;
+    const result = await markProposalRevised(seedProposal.id);
     const updated = result.proposals.find(p => p.id === seedProposal.id);
     expect(updated?.status).toBe('revised');
   });
 
-  it('throws when proposal id does not exist', () => {
-    expect(() => markProposalRevised('nonexistent-id-xyz')).toThrow('Proposal nonexistent-id-xyz not found');
+  it('throws when proposal id does not exist', async () => {
+    await expect(markProposalRevised('nonexistent-id-xyz')).rejects.toThrow('Proposal nonexistent-id-xyz not found');
   });
 });
 
 describe('adminSendProposalToAdvertiser', () => {
-  it('sets proposal status to sent_to_advertiser', () => {
-    const seedProposal = tradingSeedProposals[0];
-    const result = adminSendProposalToAdvertiser(seedProposal.id);
+  it('sets proposal status to sent_to_advertiser', async () => {
+    const seedProposal = tradingSeedProposals.find(p => p.status === 'draft')!;
+    const result = await adminSendProposalToAdvertiser(seedProposal.id);
     const updated = result.proposals.find(p => p.id === seedProposal.id);
     expect(updated?.status).toBe('sent_to_advertiser');
   });
 
-  it('throws when proposal id does not exist', () => {
-    expect(() => adminSendProposalToAdvertiser('nonexistent-id-abc')).toThrow('Proposal nonexistent-id-abc not found');
+  it('throws when proposal id does not exist', async () => {
+    await expect(adminSendProposalToAdvertiser('nonexistent-id-abc')).rejects.toThrow('Proposal nonexistent-id-abc not found');
   });
 });

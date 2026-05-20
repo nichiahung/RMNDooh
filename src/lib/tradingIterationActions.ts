@@ -867,17 +867,19 @@ export async function sendProposalToAdvertiser(proposalId: string) {
   return cloneDeep(proposal);
 }
 
-export function markProposalRevised(proposalId: string): { proposals: Proposal[] } {
+export async function markProposalRevised(proposalId: string): Promise<{ proposals: Proposal[] }> {
   const proposal = state.proposals.find(p => p.id === proposalId);
   if (!proposal) throw new Error(`Proposal ${proposalId} not found`);
   proposal.status = 'revised';
+  proposal.updatedAt = nowIso();
   return { proposals: cloneDeep(state.proposals) };
 }
 
-export function adminSendProposalToAdvertiser(proposalId: string): { proposals: Proposal[] } {
+export async function adminSendProposalToAdvertiser(proposalId: string): Promise<{ proposals: Proposal[] }> {
   const proposal = state.proposals.find(p => p.id === proposalId);
   if (!proposal) throw new Error(`Proposal ${proposalId} not found`);
   proposal.status = 'sent_to_advertiser';
+  proposal.updatedAt = nowIso();
   return { proposals: cloneDeep(state.proposals) };
 }
 

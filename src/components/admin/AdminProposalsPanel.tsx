@@ -29,8 +29,9 @@ export function AdminProposalsPanel() {
     setActionInProgress(proposalId);
     setActionErrors(prev => { const next = { ...prev }; delete next[proposalId]; return next; });
     try {
-      const result = await adminSendProposalToAdvertiserApi(proposalId);
-      setData(prev => prev ? { ...prev, proposals: result.proposals } : prev);
+      await adminSendProposalToAdvertiserApi(proposalId);
+      const fresh = await listAdminProposalsApi();
+      setData(fresh);
     } catch {
       setActionErrors(prev => ({ ...prev, [proposalId]: '操作失敗' }));
     } finally {
@@ -42,8 +43,9 @@ export function AdminProposalsPanel() {
     setActionInProgress(proposalId);
     setActionErrors(prev => { const next = { ...prev }; delete next[proposalId]; return next; });
     try {
-      const result = await markProposalRevisedApi(proposalId);
-      setData(prev => prev ? { ...prev, proposals: result.proposals } : prev);
+      await markProposalRevisedApi(proposalId);
+      const fresh = await listAdminProposalsApi();
+      setData(fresh);
     } catch {
       setActionErrors(prev => ({ ...prev, [proposalId]: '操作失敗' }));
     } finally {
