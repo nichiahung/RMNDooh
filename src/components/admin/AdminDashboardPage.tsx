@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
-import { CampaignTable } from './CampaignTable';
-import { CampaignDetailPanel } from './CampaignDetailPanel';
-import { CreativeReviewQueue } from './CreativeReviewQueue';
+import { CreativeReviewPanel } from './CreativeReviewPanel';
 import { InventoryManagementTable } from './InventoryManagementTable';
 import { ScreenManagementTable } from './ScreenManagementTable';
 import { OverviewPanel } from './OverviewPanel';
@@ -14,86 +12,50 @@ import { AdminProposalsPanel } from './AdminProposalsPanel';
 import { AdminCampaignDraftsPanel } from './AdminCampaignDraftsPanel';
 import { AdminBookingsPanel } from './AdminBookingsPanel';
 import { AdminPricingPanel } from './AdminPricingPanel';
-import { AdminCreativeLibraryPanel } from './AdminCreativeLibraryPanel';
-import { AdminCreativeCoveragePanel } from './AdminCreativeCoveragePanel';
 import { AdminLaunchReadinessPanel } from './AdminLaunchReadinessPanel';
 
 import { Campaign, InventoryLocation, Screen } from '@/types/inventory';
-import { fetchAllCampaigns, fetchAllScreens, updateCampaignStatus, updateCreativeApprovalStatus, confirmBooking, fetchStandaloneCreatives, StandaloneCreative } from '@/lib/api/admin';
+import { fetchAllCampaigns, fetchAllScreens, updateCreativeApprovalStatus, fetchStandaloneCreatives, StandaloneCreative } from '@/lib/api/admin';
 import { fetchInventoryLocations } from '@/lib/api/inventory';
 
 const TAB_LABELS: Record<AdminTab, string> = {
-  overview: 'Overview',
-  proposals: 'Proposals',
+  overview: 'Dashboard',
   'campaign-drafts': 'Campaign Drafts',
+  proposals: 'Proposals',
   bookings: 'Bookings',
-  campaigns: 'Campaigns',
-  inventory: 'Inventory',
-  pricing: 'Pricing & Rate Cards',
-  'creative-library': 'Creative Library',
   creative: 'Creative Review',
-  'creative-coverage': 'Creative Coverage',
   'launch-readiness': 'Launch Readiness',
+  inventory: 'Inventory',
   screens: 'Screens',
+  pricing: 'Pricing',
 };
 
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // Data from Supabase
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [inventory, setInventory] = useState<InventoryLocation[]>([]);
   const [screens, setScreens] = useState<Screen[]>([]);
   const [standaloneCreatives, setStandaloneCreatives] = useState<StandaloneCreative[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  const refreshDashboardData = async () => {
-    const [c, i, s, sc] = await Promise.all([
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
       fetchAllCampaigns(),
       fetchInventoryLocations(),
       fetchAllScreens(),
       fetchStandaloneCreatives(),
-    ]);
-    setCampaigns(c);
-    setInventory(i);
-    setScreens(s);
-    setStandaloneCreatives(sc);
-  };
-
-  const syncSelectedCampaign = (updatedCampaigns: Campaign[]) => {
-    if (selectedCampaign) {
-      const next = updatedCampaigns.find(item => item.id === selectedCampaign.id);
-      setSelectedCampaign(next ? { ...next } : null);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      await refreshDashboardData();
-      if (mounted) setIsLoading(false);
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
+    ]).then(([c, i, s, sc]) => {
+      if (!mounted) return;
+      setCampaigns(c);
+      setInventory(i);
+      setScreens(s);
+      setStandaloneCreatives(sc);
+      setIsLoading(false);
+    });
+    return () => { mounted = false; };
   }, []);
-
-  const handleUpdateCampaignStatus = async (id: string, newStatus: Campaign['status'], notes?: string) => {
-    await updateCampaignStatus(id, newStatus, notes);
-    const updated = await fetchAllCampaigns();
-    setCampaigns(updated);
-    syncSelectedCampaign(updated);
-  };
-
-  const handleConfirmBooking = async (campaignId: string) => {
-    await confirmBooking(campaignId);
-    const updated = await fetchAllCampaigns();
-    setCampaigns(updated);
-    syncSelectedCampaign(updated);
-  };
 
   const handleUpdateCreativeStatus = async (campaignId: string | null, creativeId: string, newStatus: string) => {
     await updateCreativeApprovalStatus(creativeId, newStatus as 'approved' | 'rejected');
@@ -103,7 +65,6 @@ export function AdminDashboardPage() {
     ]);
     setCampaigns(updatedCampaigns);
     setStandaloneCreatives(updatedCreatives);
-    syncSelectedCampaign(updatedCampaigns);
   };
 
   // TODO(P2): pass filter to destination panel when panels support pre-filtering
@@ -111,12 +72,10 @@ export function AdminDashboardPage() {
     setActiveTab(tab);
   };
 
-  // Determine which tabs use the legacy Supabase data vs the new trading iteration data
-  const isLegacyTab = activeTab === 'overview' || activeTab === 'campaigns' || activeTab === 'creative' || activeTab === 'inventory' || activeTab === 'screens';
+  const isLegacyTab = activeTab === 'overview' || activeTab === 'creative' || activeTab === 'inventory' || activeTab === 'screens';
 
   return (
     <main className="h-screen flex bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans">
-
       <AdminSidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -153,15 +112,15 @@ export function AdminDashboardPage() {
                 </>
               )}
 
-              {activeTab === 'proposals' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <AdminProposalsPanel />
-                </div>
-              )}
-
               {activeTab === 'campaign-drafts' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                   <AdminCampaignDraftsPanel />
+                </div>
+              )}
+
+              {activeTab === 'proposals' && (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <AdminProposalsPanel />
                 </div>
               )}
 
@@ -171,20 +130,18 @@ export function AdminDashboardPage() {
                 </div>
               )}
 
-              {activeTab === 'campaigns' && (
+              {activeTab === 'creative' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <CampaignTable
+                  <CreativeReviewPanel
                     campaigns={campaigns}
-                    onViewDetails={setSelectedCampaign}
-                    onConfirmBooking={handleConfirmBooking}
+                    standaloneCreatives={standaloneCreatives}
+                    onUpdateStatus={handleUpdateCreativeStatus}
                   />
                 </div>
               )}
 
-              {activeTab === 'creative' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <CreativeReviewQueue campaigns={campaigns} standaloneCreatives={standaloneCreatives} onUpdateStatus={handleUpdateCreativeStatus} />
-                </div>
+              {activeTab === 'launch-readiness' && (
+                <AdminLaunchReadinessPanel />
               )}
 
               {activeTab === 'inventory' && (
@@ -199,20 +156,6 @@ export function AdminDashboardPage() {
                 </div>
               )}
 
-              {activeTab === 'creative-library' && (
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-5">
-                  <AdminCreativeLibraryPanel />
-                </div>
-              )}
-
-              {activeTab === 'creative-coverage' && (
-                <AdminCreativeCoveragePanel />
-              )}
-
-              {activeTab === 'launch-readiness' && (
-                <AdminLaunchReadinessPanel />
-              )}
-
               {activeTab === 'screens' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                   <ScreenManagementTable screens={screens} inventory={inventory} />
@@ -222,16 +165,6 @@ export function AdminDashboardPage() {
             </div>
           )}
         </div>
-
-        {selectedCampaign && (
-          <CampaignDetailPanel
-            campaign={selectedCampaign}
-            inventory={inventory}
-            onClose={() => setSelectedCampaign(null)}
-            onUpdateStatus={handleUpdateCampaignStatus}
-          />
-        )}
-
       </div>
     </main>
   );
