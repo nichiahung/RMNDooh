@@ -108,6 +108,23 @@ export type PricingRuleType =
 
 export type SourceType = 'proposal' | 'campaign_draft' | 'booking';
 
+export interface BookingRow {
+  id: string;
+  bookingStatus: BookingStatus;
+  bookingSource: BookingSource;
+  sourceType: SourceType;
+  sourceId: string;
+  campaignId: string | null;
+  proposalId: string | null;
+  campaignDraftId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  inventoryIds: string[];
+  playlistAssigned: boolean;
+  paymentCleared: boolean;
+  policyPassed: boolean;
+}
+
 export type RequirementCoverageStatus = 'missing' | 'partial' | 'covered';
 
 export type AssetValidationStatus = 'not_validated' | 'valid' | 'invalid' | 'pending_validation';

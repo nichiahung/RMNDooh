@@ -1,4 +1,5 @@
 import type {
+  BookingRow,
   CampaignDraftProfile,
   CreativeAsset,
   CreativeAssetStatus,
@@ -399,14 +400,14 @@ export async function adminSendProposalToAdvertiserApi(proposalId: string): Prom
   return adminSendProposalToAdvertiserAction(proposalId);
 }
 
-export async function confirmBookingActionApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+export async function confirmBookingActionApi(bookingId: string): Promise<{ bookings: BookingRow[] }> {
   return confirmBookingAction(bookingId);
 }
 
-export async function markPaymentClearedApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+export async function markPaymentClearedApi(bookingId: string): Promise<{ bookings: BookingRow[] }> {
   return markPaymentCleared(bookingId);
 }
 
-export async function cancelBookingActionApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+export async function cancelBookingActionApi(bookingId: string): Promise<{ bookings: BookingRow[] }> {
   return cancelBookingAction(bookingId);
 }

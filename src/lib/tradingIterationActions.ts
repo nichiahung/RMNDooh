@@ -1,5 +1,6 @@
 import {
   DateMatchStatus,
+  BookingRow,
   BookingSource,
   BookingStatus,
   BuyingMethod,
@@ -188,23 +189,6 @@ interface CreativeLibraryReplaceInput {
   fileUrl: string;
   fileType: string;
   fileSizeMb: number;
-}
-
-interface BookingRow {
-  id: string;
-  bookingStatus: BookingStatus;
-  bookingSource: BookingSource;
-  sourceType: SourceType;
-  sourceId: string;
-  campaignId: string | null;
-  proposalId: string | null;
-  campaignDraftId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  inventoryIds: string[];
-  playlistAssigned: boolean;
-  paymentCleared: boolean;
-  policyPassed: boolean;
 }
 
 interface ProposalVersion {

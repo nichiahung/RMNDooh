@@ -8,23 +8,8 @@ import {
   markPaymentClearedApi,
   cancelBookingActionApi,
 } from '@/lib/api/tradingIterationApi';
+import type { BookingRow } from '@/types/trading-models';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-
-interface BookingRow {
-  id: string;
-  bookingStatus: string;
-  bookingSource: string;
-  sourceType: string;
-  sourceId: string;
-  campaignId: string | null;
-  proposalId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  inventoryIds: string[];
-  playlistAssigned: boolean;
-  paymentCleared: boolean;
-  policyPassed: boolean;
-}
 
 const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
   proposal: { label: 'Proposal', cls: 'bg-blue-100 text-blue-700' },
@@ -65,7 +50,7 @@ export function AdminBookingsPanel() {
   const [cancelConfirming, setCancelConfirming] = useState<string | null>(null);
 
   const refresh = () => {
-    listAdminBookingsApi().then(setBookings as (data: unknown) => void);
+    listAdminBookingsApi().then(setBookings);
   };
 
   useEffect(() => { refresh(); }, []);
