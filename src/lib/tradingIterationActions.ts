@@ -1150,6 +1150,32 @@ export async function scheduleCampaignLaunch(campaignId: string) {
   };
 }
 
+// ---------------- Booking actions ----------------
+
+export async function confirmBookingAction(bookingId: string): Promise<{ bookings: BookingRow[] }> {
+  const booking = state.bookings.get(bookingId);
+  if (!booking) throw new Error(`Booking ${bookingId} not found`);
+  booking.bookingStatus = 'confirmed';
+  booking.updatedAt = nowIso();
+  return { bookings: Array.from(state.bookings.values()).map(item => cloneDeep(item)) };
+}
+
+export async function markPaymentCleared(bookingId: string): Promise<{ bookings: BookingRow[] }> {
+  const booking = state.bookings.get(bookingId);
+  if (!booking) throw new Error(`Booking ${bookingId} not found`);
+  booking.paymentCleared = true;
+  booking.updatedAt = nowIso();
+  return { bookings: Array.from(state.bookings.values()).map(item => cloneDeep(item)) };
+}
+
+export async function cancelBookingAction(bookingId: string): Promise<{ bookings: BookingRow[] }> {
+  const booking = state.bookings.get(bookingId);
+  if (!booking) throw new Error(`Booking ${bookingId} not found`);
+  booking.bookingStatus = 'cancelled';
+  booking.updatedAt = nowIso();
+  return { bookings: Array.from(state.bookings.values()).map(item => cloneDeep(item)) };
+}
+
 // ---------------- Admin ----------------
 
 export async function getAdminDashboardWorkQueues() {

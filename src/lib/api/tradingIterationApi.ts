@@ -68,6 +68,9 @@ import {
   listPricingApprovalRequests as listPricingApprovalRequestsAction,
   markProposalRevised as markProposalRevisedAction,
   adminSendProposalToAdvertiser as adminSendProposalToAdvertiserAction,
+  confirmBookingAction,
+  markPaymentCleared,
+  cancelBookingAction,
 } from '@/lib/tradingIterationActions';
 
 export interface CreateCampaignDraftRequest {
@@ -394,4 +397,16 @@ export async function markProposalRevisedApi(proposalId: string): Promise<{ prop
 
 export async function adminSendProposalToAdvertiserApi(proposalId: string): Promise<{ proposals: Proposal[] }> {
   return adminSendProposalToAdvertiserAction(proposalId);
+}
+
+export async function confirmBookingActionApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+  return confirmBookingAction(bookingId);
+}
+
+export async function markPaymentClearedApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+  return markPaymentCleared(bookingId);
+}
+
+export async function cancelBookingActionApi(bookingId: string): Promise<{ bookings: unknown[] }> {
+  return cancelBookingAction(bookingId);
 }
