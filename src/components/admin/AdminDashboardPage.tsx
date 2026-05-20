@@ -57,7 +57,7 @@ export function AdminDashboardPage() {
     return () => { mounted = false; };
   }, []);
 
-  const handleUpdateCreativeStatus = async (campaignId: string | null, creativeId: string, newStatus: string) => {
+  const handleUpdateCreativeStatus = async (_campaignId: string | null, creativeId: string, newStatus: string) => {
     await updateCreativeApprovalStatus(creativeId, newStatus as 'approved' | 'rejected');
     const [updatedCampaigns, updatedCreatives] = await Promise.all([
       fetchAllCampaigns(),

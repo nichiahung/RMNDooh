@@ -54,6 +54,41 @@ interface NavSection {
   items: NavItem[];
 }
 
+interface NavButtonProps {
+  item: NavItem;
+  activeTab: AdminTab;
+  badges: SidebarBadges | null;
+  collapsed: boolean;
+  onTabChange: (tab: AdminTab) => void;
+}
+
+function NavButton({ item, activeTab, badges, collapsed, onTabChange }: NavButtonProps) {
+  const Icon = item.icon;
+  const isActive = activeTab === item.id;
+  const badge = item.badgeKey ? (badges?.[item.badgeKey] ?? 0) : 0;
+  return (
+    <button
+      onClick={() => onTabChange(item.id)}
+      className={`relative group w-full flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+        isActive ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-slate-800 hover:text-white'
+      }`}
+    >
+      <Icon className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'} ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+      <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
+      {!collapsed && badge > 0 && (
+        <span className="ml-auto min-w-[18px] h-[18px] bg-indigo-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
+      {collapsed && (
+        <span className="absolute left-[52px] z-50 hidden lg:group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
+          {item.label}{badge > 0 ? ` (${badge})` : ''}
+        </span>
+      )}
+    </button>
+  );
+}
+
 const NAV_SECTIONS: NavSection[] = [
   {
     label: '廣告主自助',
@@ -105,33 +140,6 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
     onTabChange(tab);
     onClose();
   };
-
-  function NavButton({ item }: { item: NavItem }) {
-    const Icon = item.icon;
-    const isActive = activeTab === item.id;
-    const badge = item.badgeKey ? (badges?.[item.badgeKey] ?? 0) : 0;
-    return (
-      <button
-        onClick={() => handleTabChange(item.id)}
-        className={`relative group w-full flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-          isActive ? 'bg-indigo-500/10 text-indigo-400' : 'hover:bg-slate-800 hover:text-white'
-        }`}
-      >
-        <Icon className={`w-4 h-4 flex-shrink-0 ${collapsed ? 'mr-3 lg:mr-0' : 'mr-3'} ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
-        <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
-        {!collapsed && badge > 0 && (
-          <span className="ml-auto min-w-[18px] h-[18px] bg-indigo-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-            {badge > 99 ? '99+' : badge}
-          </span>
-        )}
-        {collapsed && (
-          <span className="absolute left-[52px] z-50 hidden lg:group-hover:block bg-slate-800 text-slate-100 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-700 whitespace-nowrap shadow-lg pointer-events-none">
-            {item.label}{badge > 0 ? ` (${badge})` : ''}
-          </span>
-        )}
-      </button>
-    );
-  }
 
   const overviewBadge = badges?.overview ?? 0;
 
@@ -199,7 +207,14 @@ export function AdminSidebar({ activeTab, onTabChange, isOpen, onClose }: Props)
               </div>
               <div className="space-y-0.5">
                 {section.items.map((item) => (
-                  <NavButton key={item.id} item={item} />
+                  <NavButton
+                    key={item.id}
+                    item={item}
+                    activeTab={activeTab}
+                    badges={badges}
+                    collapsed={collapsed}
+                    onTabChange={handleTabChange}
+                  />
                 ))}
               </div>
             </div>
