@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { listAdminProposalsApi } from '@/lib/api/tradingIterationApi';
+import { Loader2 } from 'lucide-react';
+import { listAdminProposalsApi, markProposalRevisedApi, adminSendProposalToAdvertiserApi } from '@/lib/api/tradingIterationApi';
 import type { Proposal, ProposalStatus } from '@/types/trading-models';
 import { resolveAdvertiserName } from '@/utils/adminResolvers';
 
@@ -19,8 +20,36 @@ const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
 
 export function AdminProposalsPanel() {
   const [data, setData] = useState<{ proposals: Proposal[]; countsByStatus: Record<ProposalStatus, number> } | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
 
   useEffect(() => { listAdminProposalsApi().then(setData); }, []);
+
+  async function handleSendToAdvertiser(proposalId: string) {
+    setActionInProgress(proposalId);
+    setActionErrors(prev => { const next = { ...prev }; delete next[proposalId]; return next; });
+    try {
+      const result = await adminSendProposalToAdvertiserApi(proposalId);
+      setData(prev => prev ? { ...prev, proposals: result.proposals } : prev);
+    } catch {
+      setActionErrors(prev => ({ ...prev, [proposalId]: '操作失敗' }));
+    } finally {
+      setActionInProgress(null);
+    }
+  }
+
+  async function handleMarkRevised(proposalId: string) {
+    setActionInProgress(proposalId);
+    setActionErrors(prev => { const next = { ...prev }; delete next[proposalId]; return next; });
+    try {
+      const result = await markProposalRevisedApi(proposalId);
+      setData(prev => prev ? { ...prev, proposals: result.proposals } : prev);
+    } catch {
+      setActionErrors(prev => ({ ...prev, [proposalId]: '操作失敗' }));
+    } finally {
+      setActionInProgress(null);
+    }
+  }
 
   if (!data) return <div className="text-slate-400 text-sm animate-pulse p-8">Loading proposals...</div>;
 
@@ -44,11 +73,14 @@ export function AdminProposalsPanel() {
             <th className="px-4 py-3">Flight</th>
             <th className="px-4 py-3">Quote</th>
             <th className="px-4 py-3">Updated</th>
+            <th className="px-4 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {data.proposals.map((p) => {
             const badge = STATUS_BADGE[p.status];
+            const isLoading = actionInProgress === p.id;
+            const error = actionErrors[p.id];
             return (
               <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
@@ -65,6 +97,43 @@ export function AdminProposalsPanel() {
                   {p.finalQuote != null ? `NT$${p.finalQuote.toLocaleString()}` : '—'}
                 </td>
                 <td className="px-4 py-3 text-slate-400 text-xs">{new Date(p.updatedAt).toLocaleDateString()}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    {p.status === 'draft' && (
+                      <button
+                        onClick={() => handleSendToAdvertiser(p.id)}
+                        disabled={isLoading}
+                        className="px-3 py-1 text-xs rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                        Send to Advertiser
+                      </button>
+                    )}
+                    {p.status === 'change_requested' && (
+                      <button
+                        onClick={() => handleMarkRevised(p.id)}
+                        disabled={isLoading}
+                        className="px-3 py-1 text-xs rounded-lg font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                      >
+                        {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                        Mark Revised
+                      </button>
+                    )}
+                    {p.status === 'approved_by_advertiser' && (
+                      <button
+                        disabled
+                        title="即將推出"
+                        className="px-3 py-1 text-xs rounded-lg font-medium bg-slate-100 text-slate-400 cursor-not-allowed"
+                      >
+                        Convert to Booking
+                      </button>
+                    )}
+                    {!['draft', 'change_requested', 'approved_by_advertiser'].includes(p.status) && (
+                      <span className="text-slate-300 text-xs">—</span>
+                    )}
+                    {error && <span className="text-red-500 text-xs">{error}</span>}
+                  </div>
+                </td>
               </tr>
             );
           })}

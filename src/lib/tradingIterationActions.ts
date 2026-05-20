@@ -867,6 +867,20 @@ export async function sendProposalToAdvertiser(proposalId: string) {
   return cloneDeep(proposal);
 }
 
+export function markProposalRevised(proposalId: string): { proposals: Proposal[] } {
+  const proposal = state.proposals.find(p => p.id === proposalId);
+  if (!proposal) throw new Error(`Proposal ${proposalId} not found`);
+  proposal.status = 'revised';
+  return { proposals: cloneDeep(state.proposals) };
+}
+
+export function adminSendProposalToAdvertiser(proposalId: string): { proposals: Proposal[] } {
+  const proposal = state.proposals.find(p => p.id === proposalId);
+  if (!proposal) throw new Error(`Proposal ${proposalId} not found`);
+  proposal.status = 'sent_to_advertiser';
+  return { proposals: cloneDeep(state.proposals) };
+}
+
 export async function approveProposalVersion(proposalId: string) {
   const proposal = state.proposals.find(item => item.id === proposalId);
   if (!proposal) return null;

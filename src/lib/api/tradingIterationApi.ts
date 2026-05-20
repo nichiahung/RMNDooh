@@ -66,6 +66,8 @@ import {
   listCreativeLibraryAssets as listCreativeLibraryAssetsAction,
   listCreativeAssetVersions as listCreativeAssetVersionsAction,
   listPricingApprovalRequests as listPricingApprovalRequestsAction,
+  markProposalRevised as markProposalRevisedAction,
+  adminSendProposalToAdvertiser as adminSendProposalToAdvertiserAction,
 } from '@/lib/tradingIterationActions';
 
 export interface CreateCampaignDraftRequest {
@@ -384,4 +386,12 @@ export async function listAdminPricingApi() {
 
 export async function resetTradingIterationStateApi() {
   return resetTradingIterationState();
+}
+
+export async function markProposalRevisedApi(proposalId: string): Promise<{ proposals: Proposal[] }> {
+  return markProposalRevisedAction(proposalId);
+}
+
+export async function adminSendProposalToAdvertiserApi(proposalId: string): Promise<{ proposals: Proposal[] }> {
+  return adminSendProposalToAdvertiserAction(proposalId);
 }
