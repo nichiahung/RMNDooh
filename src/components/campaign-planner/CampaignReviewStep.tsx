@@ -41,6 +41,10 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
   const [approvedFormats, setApprovedFormats] = useState<Set<CanonicalFormat>>(new Set());
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
 
+  const [isMobileListExpanded, setIsMobileListExpanded] = useState(false);
+  const [justUploadedFormat, setJustUploadedFormat] = useState<CanonicalFormat | null>(null);
+  const [showAura, setShowAura] = useState(false);
+
   // Campaign name editing
   const [campaignName, setCampaignName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -121,7 +125,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
     setActiveModal({ format, requirementId: req.id, venueCount });
   };
 
-  const handleUploadSuccess = useCallback(async (_asset: CreativeAsset, _format: CanonicalFormat) => {
+  const handleUploadSuccess = useCallback(async (_asset: CreativeAsset, format: CanonicalFormat) => {
     if (!campaignId) return;
     // Re-fetch from DB to pick up auto-approval (asset already approved in library)
     try {
@@ -135,6 +139,18 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
       setUploadedFormats(uploaded);
       setApprovedFormats(approved);
       onStoredRequirementsChange(reqs.map(r => ({ id: r.id, canonicalFormat: r.canonicalFormat, status: r.status })));
+      
+      // 設置剛上傳成功的格式，並智慧平滑滾動與閃爍提示
+      setJustUploadedFormat(format);
+      setTimeout(() => {
+        const el = document.getElementById(`creative-card-${format}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      setTimeout(() => {
+        setJustUploadedFormat(null);
+      }, 2000);
     } catch (err) {
       console.error('Failed to refresh requirements after upload:', err);
     }
@@ -150,6 +166,36 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
       console.error('Failed to unlink asset:', err);
     }
   }, [storedRequirements]);
+
+  const handleSetPresetFlight = (days: number) => {
+    const start = new Date();
+    const end = new Date();
+    end.setDate(start.getDate() + days - 1);
+    const startStr = start.toISOString().slice(0, 10);
+    const endStr = end.toISOString().slice(0, 10);
+    onFlightDateChange(startStr, endStr);
+  };
+
+  const handleDisabledSubmitClick = () => {
+    setShowAura(true);
+    setTimeout(() => setShowAura(false), 1200);
+
+    if (!flightDatesSet) {
+      const el = document.getElementById('flight-date-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-4', 'ring-rose-500/30', 'border-rose-300', 'scale-[1.01]');
+        setTimeout(() => el.classList.remove('ring-4', 'ring-rose-500/30', 'border-rose-300', 'scale-[1.01]'), 2000);
+      }
+    } else if (!allFormatsReady) {
+      const el = document.getElementById('creative-requirements-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-4', 'ring-indigo-500/30', 'border-indigo-300', 'scale-[1.01]');
+        setTimeout(() => el.classList.remove('ring-4', 'ring-indigo-500/30', 'border-indigo-300', 'scale-[1.01]'), 2000);
+      }
+    }
+  };
 
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
@@ -413,50 +459,63 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                             <div className="text-[10px] text-slate-400 font-mono mt-0.5 leading-none">{startDate} ~ {endDate}</div>
                           )}
                         </td>
-                        <td className="px-4 py-3.5 text-right font-extrabold text-indigo-600 font-mono text-base">{formatCurrency(inventory.pricePerDay * days)}</td>
+                        <td className="px-4 py-3.5 text-right font-semibold font-mono text-indigo-600">
+                          {formatCurrency(inventory.pricePerDay * days)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-
+ 
               {/* Mobile Card List View: visible < md */}
               <div className="md:hidden space-y-3">
-                {selectedDetails.map(({ inventoryId, days, startDate, endDate, inventory }) => (
-                  <div key={inventoryId} className="bg-slate-50/40 p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 hover:scale-[1.01] transition-transform">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <div className="font-bold text-slate-955 text-sm truncate leading-tight">{inventory.name}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">{inventory.district}, {inventory.city}</div>
+                {selectedDetails
+                  .slice(0, isMobileListExpanded ? selectedDetails.length : 3)
+                  .map(({ inventoryId, days, startDate, endDate, inventory }) => (
+                    <div key={inventoryId} className="bg-gradient-to-br from-slate-50/80 to-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 transition-all duration-200 hover:shadow-md hover:border-indigo-300/80 active:scale-[0.99] active:bg-slate-100/50">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-900 text-sm truncate leading-tight">{inventory.name}</div>
+                          <div className="text-xs text-slate-500 mt-0.5">{inventory.district}, {inventory.city}</div>
+                        </div>
+                        <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-lg text-[10px] font-bold flex-shrink-0">
+                          {inventory.screenType}
+                        </span>
                       </div>
-                      <span className="bg-indigo-50 text-indigo-750 border border-indigo-100 px-2 py-0.5 rounded-lg text-[10px] font-bold flex-shrink-0">
-                        {inventory.screenType}
-                      </span>
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100/70 text-xs">
+                        <div>
+                          <div className="text-slate-400 text-[10px] uppercase font-bold">日曝光</div>
+                          <div className="font-semibold text-slate-800 font-mono mt-0.5">{formatNumber(inventory.dailyImpressions)}</div>
+                        </div>
+                        <div>
+                          <div className="text-slate-400 text-[10px] uppercase font-bold">天數</div>
+                          <div className="font-semibold text-slate-800 font-mono mt-0.5">{days} 天</div>
+                          {startDate && endDate && (
+                            <div className="text-[9px] text-slate-400 font-mono mt-0.5 leading-none">{startDate.slice(5)}~{endDate.slice(5)}</div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-slate-400 text-[10px] uppercase font-bold">預算</div>
+                          <div className="font-bold text-indigo-600 font-mono mt-0.5">{formatCurrency(inventory.pricePerDay * days)}</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100/70 text-xs">
-                      <div>
-                        <div className="text-slate-400 text-[10px] uppercase font-bold">日曝光</div>
-                        <div className="font-semibold text-slate-800 font-mono mt-0.5">{formatNumber(inventory.dailyImpressions)}</div>
-                      </div>
-                      <div>
-                        <div className="text-slate-400 text-[10px] uppercase font-bold">天數</div>
-                        <div className="font-semibold text-slate-800 font-mono mt-0.5">{days} 天</div>
-                        {startDate && endDate && (
-                          <div className="text-[9px] text-slate-400 font-mono mt-0.5 leading-none">{startDate.slice(5)}~{endDate.slice(5)}</div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-slate-400 text-[10px] uppercase font-bold">預算</div>
-                        <div className="font-bold text-indigo-600 font-mono mt-0.5">{formatCurrency(inventory.pricePerDay * days)}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+
+                {selectedDetails.length > 3 && (
+                  <button
+                    onClick={() => setIsMobileListExpanded(!isMobileListExpanded)}
+                    className="w-full py-2.5 px-4 text-xs font-bold text-indigo-600 bg-indigo-50/60 hover:bg-indigo-100/80 border border-indigo-200/80 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] transition-transform"
+                  >
+                    {isMobileListExpanded ? '收合版位清單' : `顯示全部 ${selectedDetails.length} 個版位`}
+                  </button>
+                )}
               </div>
             </ReviewSection>
 
             {/* Creative Requirements */}
-            <ReviewSection title={`廣告素材 (${uploadedFormats.size}/${groups.length})`} icon={<ImageIcon />}>
+            <ReviewSection id="creative-requirements-section" title={`廣告素材 (${uploadedFormats.size}/${groups.length})`} icon={<ImageIcon />}>
               {groups.length === 0 ? (
                 <p className="text-sm text-slate-500">無需上傳素材</p>
               ) : (
@@ -465,12 +524,24 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                     const isUploaded = uploadedFormats.has(group.format);
                     const req = storedRequirements?.find(r => r.canonicalFormat === group.format);
                     return (
-                      <div key={group.format} className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isUploaded ? 'bg-emerald-50/50 border-emerald-200' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                      <div 
+                        key={group.format} 
+                        id={`creative-card-${group.format}`}
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all gap-3 ${
+                          justUploadedFormat === group.format 
+                            ? 'bg-emerald-100 border-emerald-400 ring-4 ring-emerald-500/20 scale-[1.01] shadow-md animate-pulse duration-1000'
+                            : isUploaded 
+                              ? 'bg-emerald-50/50 border-emerald-200' 
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
                         <div className="flex items-center gap-3 min-w-0">
                           {isUploaded ? (
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                           ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 flex-shrink-0" />
+                            <div className="w-5 h-5 rounded-lg bg-indigo-50 border border-indigo-200/60 flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <ImageIcon className="w-3 h-3 text-indigo-500" />
+                            </div>
                           )}
                           <div className="min-w-0">
                             <div className={`text-sm font-semibold truncate ${isUploaded ? 'text-emerald-800' : 'text-slate-800'}`}>{group.label}</div>
@@ -478,21 +549,21 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                           </div>
                         </div>
                         {isUploaded ? (
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto border-t sm:border-t-0 border-slate-100/80 pt-2.5 sm:pt-0 flex-shrink-0">
                             <span className="text-[10px] sm:text-xs font-bold text-emerald-600 bg-emerald-100/70 px-2.5 py-1 rounded-full">已上傳</span>
-                            <button onClick={() => handleUnlink(group.format)} className="p-1 text-slate-400 hover:text-red-500 transition-colors" title="移除並重新上傳">
-                              <XIcon className="w-3.5 h-3.5" />
+                            <button onClick={() => handleUnlink(group.format)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="移除並重新上傳">
+                              <XIcon className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => handleFormatUploadClick(group.format, group.locationCount)}
                             disabled={!req}
-                            className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/80 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 shadow-sm"
+                            className="flex items-center justify-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200/80 px-3 py-2 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed w-full sm:w-auto flex-shrink-0 shadow-sm cursor-pointer"
                           >
                             <Upload className="w-3.5 h-3.5" /> 上傳素材
                           </button>
-                        )}
+                         )}
                       </div>
                     );
                   })}
@@ -513,9 +584,9 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
 
           {/* Right: eligibility checklist + CTAs */}
           <div className="w-full lg:w-88 flex-shrink-0 lg:sticky lg:top-6 space-y-4">
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
+            <div id="flight-date-section" className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm transition-all duration-500">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3.5">送審資格確認</h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-3">
                 {checks.map(item => {
                   const s = statusStyle[item.status];
                   return (
@@ -548,22 +619,33 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                         <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
                         <p className="text-[10px] text-red-600 font-bold">請設定主要走期</p>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center mt-1">
                         <input
                           type="date"
                           value={flightStart ?? ''}
                           min={new Date().toISOString().slice(0, 10)}
                           onChange={e => onFlightDateChange(e.target.value || null, flightEnd)}
-                          className="flex-1 text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all min-w-0 shadow-sm"
+                          className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all min-w-0 shadow-sm font-mono"
                         />
-                        <span className="text-xs text-slate-400 font-semibold">–</span>
                         <input
                           type="date"
                           value={flightEnd ?? ''}
                           min={flightStart ?? new Date().toISOString().slice(0, 10)}
                           onChange={e => onFlightDateChange(flightStart, e.target.value || null)}
-                          className="flex-1 text-xs border border-slate-200 rounded-xl px-3 py-2 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all min-w-0 shadow-sm"
+                          className="w-full text-xs border border-slate-200 rounded-xl px-3 py-2.5 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 focus:outline-none transition-all min-w-0 shadow-sm font-mono"
                         />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="text-[10px] text-slate-400 font-bold">快速預設:</span>
+                        {[7, 14, 30].map(days => (
+                          <button
+                            key={days}
+                            onClick={() => handleSetPresetFlight(days)}
+                            className="px-2.5 py-0.5 text-[10px] font-extrabold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 rounded-full transition-all active:scale-95 shadow-sm"
+                          >
+                            {days}天
+                          </button>
+                        ))}
                       </div>
                     </div>
                   ) : (
@@ -581,8 +663,14 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
               {campaignStatus === 'draft' || campaignStatus === 'pending_creative_review' ? (
                 <div className="space-y-2">
                   <button
-                    disabled={isSubmitting || !allFormatsReady || !flightDatesSet}
+                    disabled={isSubmitting}
                     onClick={async () => {
+                      if (isSubmitting) return;
+                      const canSubmit = allFormatsReady && flightDatesSet;
+                      if (!canSubmit) {
+                        handleDisabledSubmitClick();
+                        return;
+                      }
                       setIsSubmitting(true);
                       setSubmitError(null);
                       try {
@@ -596,7 +684,11 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                         setIsSubmitting(false);
                       }
                     }}
-                    className="w-full py-3 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                    className={`w-full py-3 text-sm font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform cursor-pointer ${
+                      (allFormatsReady && flightDatesSet)
+                        ? 'bg-indigo-600 hover:bg-indigo-700'
+                        : 'bg-slate-400 hover:bg-slate-400/90 opacity-60'
+                    } ${showAura ? 'ring-4 ring-rose-500/40 border-rose-300 scale-[0.97]' : ''}`}
                   >
                     {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-4 h-4" /></>}
                   </button>
@@ -641,10 +733,23 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
           </div>
           <div className="flex gap-2 flex-1 justify-end max-w-[220px]">
             {campaignStatus === 'draft' || campaignStatus === 'pending_creative_review' ? (
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-2 w-full relative">
+                {/* 行動端資格未齊 Tooltip 提示 */}
+                {(!allFormatsReady || !flightDatesSet) && (
+                  <div className="absolute -top-11 right-0 bg-gradient-to-r from-rose-500 to-indigo-600 text-white text-[9px] font-extrabold py-1 px-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] animate-bounce flex items-center gap-1 whitespace-nowrap z-50">
+                    <span>✨ 尚缺 {checks.filter(c => c.status === 'blocked').length} 項資格，點我引導</span>
+                    <div className="absolute bottom-[-3px] right-6 w-1.5 h-1.5 bg-indigo-600 rotate-45"></div>
+                  </div>
+                )}
                 <button
-                  disabled={isSubmitting || !allFormatsReady || !flightDatesSet}
+                  disabled={isSubmitting}
                   onClick={async () => {
+                    if (isSubmitting) return;
+                    const canSubmit = allFormatsReady && flightDatesSet;
+                    if (!canSubmit) {
+                      handleDisabledSubmitClick();
+                      return;
+                    }
                     setIsSubmitting(true);
                     setSubmitError(null);
                     try {
@@ -658,7 +763,11 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
                       setIsSubmitting(false);
                     }
                   }}
-                  className="flex-1 py-2.5 px-3 text-xs font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 active:scale-[0.97] transition-transform"
+                  className={`flex-1 py-2.5 px-3 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.97] transition-transform cursor-pointer ${
+                    (allFormatsReady && flightDatesSet)
+                      ? 'bg-indigo-600 hover:bg-indigo-700'
+                      : 'bg-slate-400 hover:bg-slate-400/90 opacity-60'
+                  } ${showAura ? 'ring-4 ring-rose-500/40 border-rose-300 scale-[0.97]' : ''}`}
                 >
                   {isSubmitting ? '送出中...' : <>{t('review.submit')} <Send className="w-3.5 h-3.5" /></>}
                 </button>

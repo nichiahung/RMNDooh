@@ -5,11 +5,12 @@ interface Props {
   icon?: React.ReactNode;
   children: React.ReactNode;
   action?: React.ReactNode;
+  id?: string;
 }
 
-export function ReviewSection({ title, icon, children, action }: Props) {
+export function ReviewSection({ title, icon, children, action, id }: Props) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+    <div id={id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6 transition-all duration-300">
       <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
         <h3 className="font-semibold text-slate-900 flex items-center">
           {icon && <span className="mr-2 text-indigo-600">{icon}</span>}
