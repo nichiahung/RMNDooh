@@ -14,7 +14,7 @@ const CHECKLIST_ITEMS: Array<{ code: string; label: string }> = [
   { code: 'blocked_by_schedule',  label: '排程已設定 (Schedule Set)' },
 ];
 
-export function AdminLaunchReadinessPanel() {
+export function AdminLaunchReadinessPanel({ statusFilter }: { statusFilter?: string | null }) {
   const [data, setData] = useState<CampaignReadinessResult[] | null>(null);
   const [scheduling, setScheduling] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, 'success' | 'error'>>({});
@@ -23,11 +23,24 @@ export function AdminLaunchReadinessPanel() {
 
   if (!data) return <div className="text-slate-400 text-sm animate-pulse p-8">載入中...</div>;
 
-  if (data.length === 0) {
+  const dataToRender = data.filter(campaign => {
+    if (!statusFilter) return true;
+    if (statusFilter === 'ready_for_launch') {
+      return campaign.status === 'ready_for_launch' || campaign.status === 'ready_for_scheduling';
+    }
+    if (statusFilter === 'blocked_by_creative') {
+      return campaign.blockers.some(b => b.code === 'blocked_by_creative');
+    }
+    return true;
+  });
+
+  if (dataToRender.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400">
-        <p className="text-lg font-medium">無待上線活動</p>
-        <p className="text-sm mt-1">確認訂單後，活動將出現在此處進行排程。</p>
+      <div className="p-8 text-center text-slate-400 bg-white rounded-xl shadow-sm border border-slate-200">
+        <p className="text-lg font-medium">無符合條件的活動</p>
+        <p className="text-sm mt-1">
+          {statusFilter ? '目前沒有符合該篩選條件的活動。' : '確認訂單後，活動將出現在此處進行排程。'}
+        </p>
       </div>
     );
   }
@@ -46,7 +59,7 @@ export function AdminLaunchReadinessPanel() {
 
   return (
     <div className="space-y-4">
-      {data.map((campaign) => {
+      {dataToRender.map((campaign) => {
         const blockerCodes = new Set(campaign.blockers.map(b => b.code));
         const isReady = campaign.status === 'ready_for_launch' || campaign.status === 'ready_for_scheduling';
         const isScheduling = scheduling === campaign.campaignId;

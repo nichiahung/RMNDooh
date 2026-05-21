@@ -32,6 +32,7 @@ const TAB_LABELS: Record<AdminTab, string> = {
 
 export function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [tabFilter, setTabFilter] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [inventory, setInventory] = useState<InventoryLocation[]>([]);
@@ -67,9 +68,14 @@ export function AdminDashboardPage() {
     setStandaloneCreatives(updatedCreatives);
   };
 
-  // TODO(P2): pass filter to destination panel when panels support pre-filtering
-  const handleWorkQueueNavigate = (tab: AdminTab, _filter: string) => {
+  const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
+    setTabFilter(null);
+  };
+
+  const handleWorkQueueNavigate = (tab: AdminTab, filter: string) => {
+    setActiveTab(tab);
+    setTabFilter(filter);
   };
 
   const isLegacyTab = activeTab === 'overview' || activeTab === 'creative' || activeTab === 'inventory' || activeTab === 'screens';
@@ -78,7 +84,7 @@ export function AdminDashboardPage() {
     <main className="h-screen flex bg-[#F8FAFC] overflow-hidden text-slate-900 font-sans">
       <AdminSidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
@@ -105,6 +111,21 @@ export function AdminDashboardPage() {
           ) : (
             <div className="max-w-7xl mx-auto space-y-6">
 
+              {tabFilter && activeTab !== 'overview' && (
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 flex items-center justify-between text-indigo-800 text-sm animate-fade-in shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                    <span>目前已啟用工作佇列篩選：僅顯示需要立即處理的項目。</span>
+                  </div>
+                  <button
+                    onClick={() => setTabFilter(null)}
+                    className="text-xs font-semibold underline hover:text-indigo-950 transition-colors"
+                  >
+                    顯示全部 (Show All)
+                  </button>
+                </div>
+              )}
+
               {activeTab === 'overview' && (
                 <>
                   <AdminWorkQueuesPanel onNavigate={handleWorkQueueNavigate} />
@@ -114,19 +135,19 @@ export function AdminDashboardPage() {
 
               {activeTab === 'campaign-drafts' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <AdminCampaignDraftsPanel />
+                  <AdminCampaignDraftsPanel statusFilter={tabFilter} />
                 </div>
               )}
 
               {activeTab === 'proposals' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <AdminProposalsPanel />
+                  <AdminProposalsPanel statusFilter={tabFilter} />
                 </div>
               )}
 
               {activeTab === 'bookings' && (
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <AdminBookingsPanel />
+                  <AdminBookingsPanel statusFilter={tabFilter} />
                 </div>
               )}
 
@@ -141,7 +162,7 @@ export function AdminDashboardPage() {
               )}
 
               {activeTab === 'launch-readiness' && (
-                <AdminLaunchReadinessPanel />
+                <AdminLaunchReadinessPanel statusFilter={tabFilter} />
               )}
 
               {activeTab === 'inventory' && (

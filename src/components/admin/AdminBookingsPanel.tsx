@@ -7,8 +7,10 @@ import {
   confirmBookingActionApi,
   markPaymentClearedApi,
   cancelBookingActionApi,
+  listAdminProposalsApi,
+  listAdminCampaignDraftsApi,
 } from '@/lib/api/tradingIterationApi';
-import type { BookingRow } from '@/types/trading-models';
+import type { BookingRow, Proposal, CampaignDraftProfile } from '@/types/trading-models';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 
 const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
@@ -43,8 +45,10 @@ function BoolBadge({ value, trueLabel, falseLabel }: { value: boolean; trueLabel
   );
 }
 
-export function AdminBookingsPanel() {
+export function AdminBookingsPanel({ statusFilter }: { statusFilter?: string | null }) {
   const [bookings, setBookings] = useState<BookingRow[] | null>(null);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [drafts, setDrafts] = useState<CampaignDraftProfile[]>([]);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   const [cancelConfirming, setCancelConfirming] = useState<string | null>(null);
@@ -53,7 +57,11 @@ export function AdminBookingsPanel() {
     listAdminBookingsApi().then(setBookings);
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    listAdminProposalsApi().then(res => setProposals(res.proposals));
+    listAdminCampaignDraftsApi().then(setDrafts);
+  }, []);
 
   const handleConfirm = async (bookingId: string) => {
     setActionInProgress(bookingId);
@@ -97,14 +105,31 @@ export function AdminBookingsPanel() {
 
   if (!bookings) return <div className="text-slate-400 text-sm animate-pulse p-8">Loading bookings...</div>;
 
-  if (bookings.length === 0) {
+  const bookingsToRender = bookings.filter(b => !statusFilter || b.bookingStatus === statusFilter);
+
+  if (bookingsToRender.length === 0) {
     return (
       <div className="p-8 text-center text-slate-400">
-        <p className="text-lg font-medium">No bookings yet</p>
-        <p className="text-sm mt-1">Bookings from proposals or confirmed campaign drafts will appear here.</p>
+        <p className="text-lg font-medium">No bookings found</p>
+        <p className="text-sm mt-1">
+          {statusFilter ? `No bookings matching filter: ${statusFilter}` : 'Bookings from proposals or confirmed campaign drafts will appear here.'}
+        </p>
       </div>
     );
   }
+
+  // Helper to resolve friendly source name
+  const resolveSourceName = (b: BookingRow) => {
+    if (b.bookingSource === 'proposal') {
+      const prop = proposals.find(p => p.id === b.proposalId || p.id === b.sourceId);
+      return prop ? `[提案] ${prop.name}` : `Proposal ${b.proposalId?.slice(0, 5) ?? '—'}`;
+    }
+    if (b.bookingSource === 'self_service') {
+      const draft = drafts.find(d => d.id === b.campaignDraftId || d.id === b.sourceId);
+      return draft ? `[草稿] ${draft.name}` : `Draft ${b.campaignDraftId?.slice(0, 5) ?? '—'}`;
+    }
+    return `Manual Booking`;
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -112,6 +137,7 @@ export function AdminBookingsPanel() {
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
             <th className="px-4 py-3">Booking ID</th>
+            <th className="px-4 py-3">Campaign / Proposal</th>
             <th className="px-4 py-3">Source</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Inventory</th>
@@ -123,7 +149,7 @@ export function AdminBookingsPanel() {
           </tr>
         </thead>
         <tbody>
-          {bookings.map((b) => {
+          {bookingsToRender.map((b) => {
             const sourceBadge = SOURCE_BADGE[b.bookingSource] ?? { label: b.bookingSource, cls: 'bg-slate-100 text-slate-600' };
             const statusBadge = STATUS_BADGE[b.bookingStatus] ?? { label: b.bookingStatus, cls: 'bg-slate-100 text-slate-600' };
             const isInFlight = actionInProgress === b.id;
@@ -135,6 +161,9 @@ export function AdminBookingsPanel() {
               <tr key={b.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                 <td className="px-4 py-3 font-mono text-xs text-slate-600">
                   <span title={b.id}>{b.id.slice(0, 8)}…</span>
+                </td>
+                <td className="px-4 py-3 font-medium text-slate-800">
+                  {resolveSourceName(b)}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${sourceBadge.cls}`}>{sourceBadge.label}</span>

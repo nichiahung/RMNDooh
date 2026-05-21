@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { listAdminProposalsApi, markProposalRevisedApi, adminSendProposalToAdvertiserApi } from '@/lib/api/tradingIterationApi';
+import {
+  listAdminProposalsApi,
+  markProposalRevisedApi,
+  adminSendProposalToAdvertiserApi,
+  confirmProposalBookingApi,
+} from '@/lib/api/tradingIterationApi';
 import type { Proposal, ProposalStatus } from '@/types/trading-models';
 import { resolveAdvertiserName } from '@/utils/adminResolvers';
 
@@ -18,7 +23,7 @@ const STATUS_BADGE: Record<ProposalStatus, { label: string; cls: string }> = {
   cancelled: { label: 'Cancelled', cls: 'bg-slate-200 text-slate-500' },
 };
 
-export function AdminProposalsPanel() {
+export function AdminProposalsPanel({ statusFilter }: { statusFilter?: string | null }) {
   const [data, setData] = useState<{ proposals: Proposal[]; countsByStatus: Record<ProposalStatus, number> } | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
@@ -53,13 +58,31 @@ export function AdminProposalsPanel() {
     }
   }
 
+  async function handleConvertToBooking(proposalId: string) {
+    setActionInProgress(proposalId);
+    setActionErrors(prev => { const next = { ...prev }; delete next[proposalId]; return next; });
+    try {
+      await confirmProposalBookingApi(proposalId);
+      const fresh = await listAdminProposalsApi();
+      setData(fresh);
+    } catch {
+      setActionErrors(prev => ({ ...prev, [proposalId]: '操作失敗' }));
+    } finally {
+      setActionInProgress(null);
+    }
+  }
+
   if (!data) return <div className="text-slate-400 text-sm animate-pulse p-8">Loading proposals...</div>;
 
-  if (data.proposals.length === 0) {
+  const proposalsToRender = data.proposals.filter(p => !statusFilter || p.status === statusFilter);
+
+  if (proposalsToRender.length === 0) {
     return (
       <div className="p-8 text-center text-slate-400">
-        <p className="text-lg font-medium">No proposals yet</p>
-        <p className="text-sm mt-1">Proposals created via the Sales Builder will appear here.</p>
+        <p className="text-lg font-medium">No proposals found</p>
+        <p className="text-sm mt-1">
+          {statusFilter ? `No proposals matching filter: ${statusFilter}` : 'Proposals created via the Sales Builder will appear here.'}
+        </p>
       </div>
     );
   }
@@ -79,7 +102,7 @@ export function AdminProposalsPanel() {
           </tr>
         </thead>
         <tbody>
-          {data.proposals.map((p) => {
+          {proposalsToRender.map((p) => {
             const badge = STATUS_BADGE[p.status];
             const isLoading = actionInProgress === p.id;
             const error = actionErrors[p.id];
@@ -123,10 +146,11 @@ export function AdminProposalsPanel() {
                     )}
                     {p.status === 'approved_by_advertiser' && (
                       <button
-                        disabled
-                        title="即將推出"
-                        className="px-3 py-1 text-xs rounded-lg font-medium bg-slate-100 text-slate-400 cursor-not-allowed"
+                        onClick={() => handleConvertToBooking(p.id)}
+                        disabled={isLoading}
+                        className="px-3 py-1 text-xs rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                       >
+                        {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                         Convert to Booking
                       </button>
                     )}
