@@ -22,6 +22,7 @@ interface Props {
   flightStart: string | null;
   flightEnd: string | null;
   onFlightDateChange: (start: string | null, end: string | null) => void;
+  onReset: () => void;
 }
 
 type ActiveModal = {
@@ -30,7 +31,7 @@ type ActiveModal = {
   venueCount: number;
 };
 
-export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack, flightStart, flightEnd, onFlightDateChange }: Props) {
+export function CampaignReviewStep({ selectedItems, allInventory, campaignId, storedRequirements, onStoredRequirementsChange, onBack, flightStart, flightEnd, onFlightDateChange, onReset }: Props) {
   const { t } = useI18n();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -228,7 +229,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
               <span className="text-sm font-bold text-slate-900">{selectedItems.length}</span>
             </div>
           </div>
-          <button onClick={() => window.location.reload()} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors w-full">
+          <button onClick={onReset} className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors w-full">
             {t('review.submitted.createNew')}
           </button>
         </div>

@@ -485,10 +485,32 @@ function CampaignPlannerPageContent() {
     }
   };
 
+  const handleResetPlanner = () => {
+    setStep('inventory');
+    setCampaignId(null);
+    setStoredRequirements(null);
+    setIsSaving(false);
+    setCampaignStatus('draft');
+    setFlightStart(null);
+    setFlightEnd(null);
+    setSelectedItems([]);
+    dbItemIdMap.current = new Map();
+    isCreatingDraft.current = false;
+    pendingItemsRef.current = [];
+    setFilters({});
+    setSearchQuery('');
+  };
+
   // Mount logic: check query params
   useEffect(() => {
-    if (queryId && queryId !== campaignId && !isCreatingDraft.current) {
-      handleResumeCampaign(queryId);
+    if (queryId) {
+      if (queryId !== campaignId && !isCreatingDraft.current) {
+        handleResumeCampaign(queryId);
+      }
+    } else {
+      if (campaignId !== null) {
+        handleResetPlanner();
+      }
     }
   }, [queryId, campaignId]);
 
@@ -615,6 +637,10 @@ function CampaignPlannerPageContent() {
                 flightStart={flightStart}
                 flightEnd={flightEnd}
                 onFlightDateChange={handleFlightDateChange}
+                onReset={() => {
+                  handleResetPlanner();
+                  router.replace('/campaign-planner/new', { scroll: true });
+                }}
               />
             )}
       </div>
