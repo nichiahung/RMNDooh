@@ -238,9 +238,9 @@ export function MediaPlanSummary({
         </div>
 
         {/* Main flight date picker */}
-        <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/40 flex-shrink-0">
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <Calendar className="w-3 h-3" /> 主要走期
+        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/40 flex-shrink-0">
+          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-slate-400" /> 主要走期
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -248,19 +248,19 @@ export function MediaPlanSummary({
               value={flightStart ?? ''}
               min={new Date().toISOString().slice(0, 10)}
               onChange={e => onFlightDateChange(e.target.value || null, flightEnd)}
-              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-xl px-2.5 py-2 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all focus:outline-none cursor-pointer"
             />
-            <span className="text-[10px] text-slate-400 flex-shrink-0">至</span>
+            <span className="text-[10px] text-slate-400 flex-shrink-0 font-medium">至</span>
             <input
               type="date"
               value={flightEnd ?? ''}
               min={flightStart ?? new Date().toISOString().slice(0, 10)}
               onChange={e => onFlightDateChange(flightStart, e.target.value || null)}
-              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+              className="min-w-0 flex-1 text-xs border border-slate-200 rounded-xl px-2.5 py-2 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all focus:outline-none cursor-pointer"
             />
           </div>
           {flightStart && flightEnd && (
-            <p className="text-[10px] text-indigo-600 font-medium mt-1.5">
+            <p className="text-[10px] text-indigo-600 font-medium mt-2">
               全 Campaign {flightDays(flightStart, flightEnd)} 天，版位可設定子走期
             </p>
           )}
@@ -296,26 +296,26 @@ export function MediaPlanSummary({
                 const itemStart = startDate ?? flightStart ?? '';
                 const itemEnd = endDate ?? flightEnd ?? '';
                 return (
-                <div key={inventoryId} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors group relative">
+                <div key={inventoryId} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-200 group relative">
                   <button
                     onClick={() => onRemove(inventoryId)}
-                    className="absolute top-3 right-3 text-slate-400 hover:text-red-500 transition-colors"
+                    className="absolute top-4 right-4 text-slate-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-lg transition-all"
                     title="Remove from plan"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                   <div className="pr-6">
-                    <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1">{inventory?.name}</h4>
+                    <h4 className="text-sm font-semibold text-slate-900 leading-tight mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{inventory?.name}</h4>
                     <p className="text-xs text-slate-500 mb-3">{inventory?.district}, {inventory?.city}</p>
                   </div>
                   <div className="space-y-3 pt-3 border-t border-slate-100">
                     {mainFlightIsSet ? (
                       <div>
-                        <div className="mb-1.5 flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                            <Calendar className="w-3 h-3" /> 版位子走期
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                            <Calendar className="w-3 h-3 text-slate-400" /> 版位子走期
                           </span>
-                          <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                          <span className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
                             {days} 天
                           </span>
                         </div>
@@ -326,26 +326,26 @@ export function MediaPlanSummary({
                             min={flightStart ?? undefined}
                             max={flightEnd ?? undefined}
                             onChange={e => updateSubFlight(inventoryId, e.target.value || null, itemEnd || null)}
-                            className="min-w-0 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+                            className="min-w-0 text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all focus:outline-none cursor-pointer"
                           />
-                          <span className="text-[10px] text-slate-400">至</span>
+                          <span className="text-[10px] text-slate-400 font-medium">至</span>
                           <input
                             type="date"
                             value={itemEnd}
                             min={itemStart || flightStart || undefined}
                             max={flightEnd ?? undefined}
                             onChange={e => updateSubFlight(inventoryId, itemStart || null, e.target.value || null)}
-                            className="min-w-0 text-[11px] border border-slate-200 rounded px-1.5 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+                            className="min-w-0 text-[11px] border border-slate-200 rounded-lg px-2 py-1.5 text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all focus:outline-none cursor-pointer"
                           />
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center space-x-1 text-slate-500">
-                        <Calendar className="w-3.5 h-3.5" />
+                      <div className="flex items-center space-x-2 text-slate-500">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <input
                           type="number"
                           min="1"
-                          className="w-12 text-xs border-b border-slate-300 focus:border-indigo-500 focus:ring-0 p-0 text-center font-medium text-slate-700 bg-transparent"
+                          className="w-14 text-xs border border-slate-200 rounded-lg px-2 py-1 text-center font-semibold text-slate-700 bg-slate-50/80 hover:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 transition-all focus:outline-none"
                           value={days}
                           onChange={(e) => {
                             const d = parseInt(e.target.value) || 1;
@@ -355,7 +355,7 @@ export function MediaPlanSummary({
                             }
                           }}
                         />
-                        <span className="text-xs">{t('mediaPlan.days')}</span>
+                        <span className="text-xs font-medium text-slate-600">{t('mediaPlan.days')}</span>
                       </div>
                     )}
                     <div className="text-right text-sm font-semibold text-slate-900">
@@ -429,11 +429,11 @@ export function MediaPlanSummary({
 }
 
 function OrientationMark({ format }: { format: string }) {
-  const cls = 'rounded-sm bg-slate-300 flex-shrink-0';
-  if (format === 'landscape_16_9') return <div className={`${cls} w-7 h-[18px] mt-0.5`} />;
-  if (format === 'portrait_9_16') return <div className={`${cls} w-[14px] h-6 mt-0.5`} />;
-  if (format === 'square_1_1')    return <div className={`${cls} w-5 h-5 mt-0.5`} />;
-  return <div className={`${cls} w-8 h-2.5 mt-1`} />;
+  const cls = 'rounded-md bg-gradient-to-br from-indigo-500 to-violet-500 shadow-sm border border-indigo-400/20 flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-white/95 select-none transition-transform group-hover/item:scale-105 duration-200';
+  if (format === 'landscape_16_9') return <div className={`${cls} w-8 h-5 mt-0.5`} title="橫式 16:9">H</div>;
+  if (format === 'portrait_9_16') return <div className={`${cls} w-[18px] h-8 mt-0.5`} title="直式 9:16">V</div>;
+  if (format === 'square_1_1')    return <div className={`${cls} w-6 h-6 mt-0.5`} title="方形 1:1">S</div>;
+  return <div className={`${cls} w-8 h-3 mt-1`} title="其他格式">-</div>;
 }
 
 function CreativeRequirementsPanel({
@@ -470,27 +470,29 @@ function CreativeRequirementsPanel({
         {groups.map(group => {
           const isUploaded = uploadedFormats.has(group.format);
           return (
-            <div key={group.format} className={`w-full flex items-start gap-2.5 p-2 rounded-lg transition-colors ${
+            <div key={group.format} className={`w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-200 group/item ${
               isUploaded
-                ? 'bg-emerald-50 border border-emerald-100'
+                ? 'bg-emerald-50/60 border border-emerald-100 hover:border-emerald-200'
                 : hasActiveCampaign
-                ? 'border border-transparent'
-                : 'border border-transparent opacity-60'
+                ? 'border border-slate-100 bg-slate-50/50 hover:border-indigo-300 hover:bg-white hover:shadow-sm'
+                : 'border border-slate-100 bg-slate-50/30 opacity-60'
             }`}>
               <button
                 onClick={() => !isUploaded && hasActiveCampaign && onFormatClick(group.format, group.locationCount)}
                 disabled={isUploaded || !hasActiveCampaign || isEnsuring}
-                className="flex items-start gap-2.5 flex-1 min-w-0 text-left"
+                className="flex items-start gap-3 flex-1 min-w-0 text-left cursor-pointer disabled:cursor-not-allowed"
               >
                 <OrientationMark format={group.format} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <span className={`text-xs font-semibold truncate ${isUploaded ? 'text-emerald-700' : 'text-slate-800'}`}>
+                    <span className={`text-xs font-semibold truncate transition-colors ${
+                      isUploaded ? 'text-emerald-700' : 'text-slate-800 group-hover/item:text-indigo-600'
+                    }`}>
                       {group.label}
                     </span>
                     {isUploaded ? (
                       <span className="flex items-center gap-0.5 flex-shrink-0 text-[10px] font-semibold text-emerald-600">
-                        <CheckCircle2 className="w-3 h-3" /> 已上傳
+                        <CheckCircle2 className="w-3.5 h-3.5" /> 已上傳
                       </span>
                     ) : (
                       <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600">
@@ -509,7 +511,7 @@ function CreativeRequirementsPanel({
               {isUploaded && (
                 <button
                   onClick={() => onUnlink(group.format)}
-                  className="flex-shrink-0 p-0.5 text-emerald-400 hover:text-red-500 transition-colors"
+                  className="flex-shrink-0 p-1 text-emerald-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                   title="移除素材"
                 >
                   <X className="w-3.5 h-3.5" />
