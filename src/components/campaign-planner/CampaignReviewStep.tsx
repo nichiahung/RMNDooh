@@ -311,12 +311,7 @@ export function CampaignReviewStep({ selectedItems, allInventory, campaignId, st
               </>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <p className="text-sm text-slate-500">{t('review.subtitle')}</p>
-            <button onClick={onBack} className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-medium transition-colors">
-              <ArrowLeft className="w-3 h-3" /> 調整版位
-            </button>
-          </div>
+          <p className="text-sm text-slate-500">{t('review.subtitle')}</p>
         </div>
 
         {/* 2-column layout */}
